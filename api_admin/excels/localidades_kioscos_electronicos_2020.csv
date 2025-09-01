@@ -1,0 +1,201 @@
+N,Departamento,Provincia,Municipio,Localidad
+1,Beni,José Ballivian,Rurrenabaque,RURRENABAQUE
+2,Beni,José Ballivian,San Borja,SAN BORJA
+3,Beni,Mamore,San Ramén,SAN RAMON
+4,Beni,Yacuma,Santa Ana de Yacuma,SANTA ANA DEL YACUMA
+5,Beni,José Balliviân,Santa Rosa,SANTA ROSA DE YACUMA
+6,Chuquisaca,Azurduy,Azurduy,AZURDUY
+7,Chuquisaca,Nor Cinti,Camargo,CAMARGO
+8,Chuquisaca,Hernando Siles,Huacareta,SAN PABLO DE HUACARETA
+9,Chuquisaca,Luis Calvo,Machareti,MACHARETI
+10,Chuquisaca,Tomina,Sopachuy,HUY
+11,Chuquisaca,Yamparaez,Tarabuco,TARABUCO
+12,Chuquisaca,Tomina,Tomina,TOMINA
+13,Chuquisaca,Sud Cinti,Villa Abecia,VILLA ABECIA
+14,Chuquisaca,Belisario Boeto,Villa Serrano,VILLA SERRANO
+15,Chuquisaca,Luis Calvo,Muyupampa,MUYUPAMPA
+16,Cochabamba,Campero,Aiquile,AIQUILE
+17,Cochabamba,Arani,Arani,ARANI
+18,Cochabamba,Carrasco,Chimoré,CHIMORE
+19,Cochabamba,German Jordan,Cliza,CLIZA
+20,Cochabamba,Chapare,Colomi,COLOMI
+21,Cochabamba,Carrasco,Puerto Villarroel,IVIRGARZAMA
+22,Cochabamba,Mizque,Mizque,MIZQUE
+23,Cochabamba,Punata,San Benito,SAN BENITO
+24,Cochabamba,Capinota,Santivañez,SANTIVANEZ
+25,Cochabamba,Tiraque,Shinahota,SHINAHOTA
+26,Cochabamba,Quillacollo,Sipe Sipe,SIPE SIPE
+27,Cochabamba,Chapare,Villa Tunari,VILLA TUNARI
+28,La Paz,Murillo,Achocalla,ACHOCALLA
+29,La Paz,Los Andes,Batallas,BATALLAS
+30,La Paz,Aroma,Calamarca,CALAMARCA
+31,La Paz,Caranavi,Caranavi,CARANAVI
+32,La Paz,Aroma,Collana,COLLANA
+33,La Paz,Aroma,Colquencha,COLQUENCHA
+34,La Paz,Inquisivi,Colquiri,COLQUIRI
+35,La Paz,Manco Kapac,Copacabana,COPACABANA
+36,La Paz,Ingavi,Desaguadero,DESAGUADERO
+37,La Paz,Ingavi,Guaqui,PUERTO GUAQUI
+38,La Paz,Omasuyos,Huarina,HUARINA
+39,LaPaz,Omasuyos,Huatajata,HUATAJATA
+40,LaPaz,Ingavi,Jesus de Machaca,JESUS DE MACHACA
+41,LaPaz,Los Andes,Laja,LAJA
+42,LaPaz,Aroma,Patacamaya,PATACAMAYA
+43,LaPaz,Los Andes,Pucarani,PUCARANI
+44,LaPaz,Aroma,Sica Sica,SICA SICA
+45,LaPaz,Larecaja,Sorata,SORATA
+46,LaPaz,Ingavi,Tiahuanacu,TIAWANACU
+47,LaPaz,Ingavi,Viacha,VIACHA
+48,Oruro,Cercado,Caracollo,CARACOLLO
+49,Oruro,Abaroa,Challapata,CHALLAPATA
+50,Oruro,Tomas Barron,Eucaliptus,EUCALIPTUS
+51,Oruro,Pantaleon Dalence,Huanuni,HUANUNI
+52,Oruro,Sebastian Pagador,Huari,SANTIAGO DE HUARI
+53,Oruro,Ladislao Cabrera,Pampa Aullagas,PAMPA AULLAGAS
+54,Oruro,Poopo,Pazf\a,PAZNA
+55,Oruro,Abaroa,Quillacas,SANTUARIO DE QUILLACAS
+56,Oruro,Sajama,Turco,TAMBO QUEMADO
+57,Pando,Madre de Dios,Sena,EL SENA
+58,Pando,Manuripi,Filadelfia,FILADELFIA
+59,Pando,Nicolas Suârez,Porvenir,PORVENIR
+60,Pando,Manuripi,Puerto Rico,PUERTO RICO
+61,Potosi,Antonio Quijarro,Porco,AGUA CASTILLA
+62,Potosi,Sur Chichas,Atocha,ATOCHA
+63,Potosi,Cornelio Saavedra,Betanzos,BETANZOS
+64,Potosi,Rafael Bustillo,Chayanta,CHAYANTA
+65,Potosi,Chayanta,Colquechaca,COLQUECHACA
+66,Potosi,Nor Chichas,Cotagaita,COTAGAITA
+67,Potosi,Rafael Bustillo,Llallagua,LLALLAGUA
+68,Potosi,Antonio Quijarro,Porco,PORCO
+69,Potosi,Nor Lipez,Colcha K,SAN CRISTOBAL
+70,Potosi,Sur Chichas,Tupiza,TUPIZA
+71,Potosi,Rafael Bustillo,Uncia,UNCIA
+72,Potosi,Antonio Quijarro,Uyuni,UYUNI
+73,Potosi,Modesto Omiste,Villazdn,VILLAZON
+74,Potosi,Tomas Frias,Yocalla,YOCALLA
+75,Santa Cruz,Guarayos,Ascensidn de Guarayos,ASCENCION DE GUARAYOS
+76,Santa Cruz,Cordillera,Cabezas,CABEZAS
+77,Santa Cruz,Cordillera,Camiri,CAMIRI
+78,  Santa Cruz,Manuel Maria Caballero,Comarapa,COMARAPA
+79,  Santa Cruz,Ñuflo de Chávez,Cuatro Cañadas,CUATRO CANADAS
+80,  Santa Cruz,Cordillera,Cuevo,CUEVO
+81,   Santa Cruz,Cordillera,Gutiérrez,GUTIERREZ
+82,  Santa Cruz,Florida,Mairana,MAIRANA
+83,  Santa Cruz,German Busch,Puerto Quijarro,PUERTO QUIJARRO
+84,  Santa Cruz,German Busch,Puerto Suarez,PUERTO SUAREZ
+85,  Santa Cruz,Florida,Samaipata,SAMAIPATA
+86,  Santa Cruz,Chiquitos,San Joséde Chiquitos,SAN JOSE DE CHIQUITOS
+87,  Santa Cruz,Ñuflo de Chávez,San Julian,SAN JULIAN
+88,  Santa Cruz,Vallegrande,Vallegrande,VALLEGRANDE
+89,  Santa Cruz,Warnes,Warnes,WARNES
+90,  Santa Cruz,Ichilo,Yapacani,YAPACANI
+91,       Tarija,Aniceto Arce,Bermejo,BERMEJO
+92,      Tarija,Gran Chaco,Caraparl,CARAPARI
+93,      Tarija,Méndez,El Puente,EL PUENTE
+94,      Tarija,Aniceto Arce,Padcaya,EMBOROZU
+95,      Tarija,Burnet Oconnor,Entre Rios,ENTRE RIOS
+96,      Tarija,Gran Chaco,Yacuiba,YACUIBA (San Jose de Pocitos)
+97,      Tarija,Méndez,Villa San Lorenzo,SAN LORENZO
+98,      Tarija,Aviles,Uriondo,VALLE DE CONCEPCION
+99,      Tarija,Gran Chaco,Villamontes,VILLAMONTES
+100,       Tarija,Gran Chaco,Yacuiba,YACUIBA
+101,         Beni,ltenez,Baures,Baures
+102,        Beni,Vaca Diez,Guayaramerin,Guayaramerin
+103,        Beni,ltenez,Huacaraje,Huacaraje
+104,        Beni,ltenez,Magdalena,Magdalena
+105,        Beni,Mamore,Reyes,Reyes
+106,        Beni,Vaca Diez,Riberalta,Riberalta
+107,        Beni,Moxos,San lgnacio,San lgnacio de Moxos
+108,        Beni,Mamore,San Joaquin,San Joaquin
+109,   Chuquisaca,Tomina,El Villar,El Villar
+110,   Chuquisaca,Zudañez,lcla,Icla
+111,   Chuquisaca,Nor Cinti,Inca Huasi,Inca Huasi
+112,   Chuquisaca,Tomina,Padilla,Padilla
+113,   Chuquisaca,Oropeza,Poroma,Poroma
+114,   Chuquisaca,Zudañez,Presto,Presto
+115,   Chuquisaca,Zudañez,Mojocoya,Redención Pampa
+116,   Chuquisaca,Azurduy,Tarvita,Tarvita
+117,Chuquisaca,Tomina,Villa Alcala,Villa Alcala
+118,Cochabamba,Arque,Arque,Arque
+119,Cochabamba,Bolivar,Bolivar,Bolivar
+120,Cochabamba,Carrasco,Entre Rios,Entre Rios (Bulo Bulo)
+121,Cochabamba,Punata,Punata,Punata
+122,Cochabamba,Quillacollo,Quillacollo,Quillacollo
+123,Cochabamba,Esteban Arce,Sacabamba,Sacabamba
+124,Cochabamba,Arque,Tacopaya,Tacopaya
+125,Cochabamba,Esteban Arce,Tarata,Tarata
+126,Cochabamba,Quillacollo,Tiquipaya,Tiquipaya
+127,Cochabamba,Tiraque,Tiraque,Tiraque
+128,Cochabamba,German Jordan,Tolata,Tolata
+129,Cochabamba,Quillacollo,Tiquipaya,TOtora
+130,Cochabamba,Mizque,Vila Vila,Vila Vila
+131,La Paz,Omasuyos,Ancoraimes,Ancoraimes
+132,La Paz,Aroma,Ayo Ayo,Ayo Ayo
+133,La Paz,Bautista,Charazani,Charazani
+134,La Paz,Aroma,Escoma,Escoma
+135,La Paz,Aroma,Sica Sica,Lahuachaca
+136,La Paz,Aroma,Puerto Acosta,Puerto Acosta
+137,La Paz,Bautista Saavedra,Puerto Carabuco,Puerto Carabuco
+138,La Paz,Los Andes,Puerto Perez,Puerto Perez
+139,La Paz,Inquisivi,Quime,Quime
+140,La Paz,Ingavi,San Andrés de Machaca,San Andrés de Machaca
+141,La Paz,Manco Kapac,San Pedro de Tiquina,San Pedro de Tiquina
+142,La Paz,Pacajes,Callapa,Santiago de Callapa
+143,La Paz,Omasuyos,Santiago de Huata,Santiago de Huata
+144,La Paz,Manco Kapac,Tito Yupanqui,Tito Yupanqui
+145,La Paz,Aroma,Umala,Umala
+146,Oruro,Carangas,Corque,Corque
+147,Oruro,Abaroa,Challapata,Cruce Culta
+148,Oruro,Sajama,Curahuara De Carangas,Curahuara De Carangas
+149,Oruro,Pantaleon Dalence,Machacamarca,Machacamarca
+150,Oruro,Sur Carangas,Santiago de Andamarca,Orinoca
+151,Oruro,Poopo,Poopé,Poopd
+152,Oruro,Cercado,Soracachi,Soracachi
+153,Oruro,Saucari,Toledo,Toledo
+154,Pando,Madre de Dios,San Lorenzo,Localidad Blanca Flor
+155,Pando,Federico Roman,Lorna Alta,Lorna Alta
+156,Pando,Madre de Dios,Puerto Gonzalo Moreno,Puerto Gonzalo Moreno
+157,Pando,Nicolas Suarez,Bella Flor,Santa Lucia
+158,Potosí,José Maria Linares,Caiza D,Caiza D
+159,Potosí,Rafael Bustillo,Llallagua,Catavi
+160,Potosí,Cornelio Saavedra,Chaqui,Chaqui
+161,Potosí,Chayanta,Pocoata,Pocoata
+162,Potosí,José Maria Linares,Puna,Puna
+163,Potosí,Chayanta,Ravelo,Ravelo
+164,Potosí,Alonso de Ibañez,Villa de Sacaca,Sacaca
+165,Potosí,Charcas,San Pedro de Buena Vista,San Pedro de Buena Vista
+166,Potosí,Sur Chichas,Atocha,Santa Barbara
+167,Potosí,Rafael Bustillo,Llallagua,Siglo XX
+168,Potosí,Tomas Frias,Tinguipaya,Tinguipaya
+169,Potosí,Charcas,Toro Toro,Toro Toro
+170,Potosí,Nor Chichas,Vitichi,Vitichi
+171,Santa Cruz,Cordillera,Boyuibe,Boyuibe
+172,Santa Cruz,Andres Ibañez,Cotoca,Cotoca
+173,Santa Cruz,Guarayos,El Puente,El Puente
+174,Santa Cruz,Valle Grande,Trigal,El Trigal
+175,Santa Cruz,Obispo Santisteban,Fernandez Alonso,Fernandez Alonso
+176,Santa Cruz,Obispo Santisteban,General Saavedra,General Saavedra
+177,Santa Cruz,Andres lbaflez,La Guardia,La Guardia
+178,Santa Cruz,Obispo Santisteban,Mineros,Mineros
+179,Santa Cruz,Warnes,Okinawa Uno,Okinawa Uno
+180,Santa Cruz,Chiquitos,Pailón,Pailón
+181,Santa Cruz,Florida,Pampa Grande,Pampa Grande
+182,Santa Cruz,Sara,Portachuelo,Portachuelo
+183,Santa Cruz,Chiquitos,Robore,Robore
+184,Santa Cruz,Velasco,San lgnacio de Velasco,San lgnacio de Velasco
+185,Santa Cruz,Manuel Maria Caballero,Comarapa,San lsidro
+186,Santa Cruz,Ñufo de Chavez,San Javier,San Javier
+187,Santa Cruz,lchilo,San Juan de Yapacani,San Juan de Yapacani
+188,Santa Cruz,Obispo Santisteban,San Pedro,San Pedro
+189,Santa Cruz,Nuflo De Chavez,San Ramdn,San Ramdn
+190,Santa Cruz,Sara,Santa Rosa del Sara,Santa Rosa del Sara
+191,Tarija,Gran Chaco,Yacuiba,Campo Pajoso
+192,Tarija,Aniceto Arce,Bermejo,Colonia Linares
+193,Tarija,Gran Chaco,Yacuiba,El Palmar
+194,Tarija,Mendez,El puente,Iscayachi
+195,Tarija,Aniceto Arce,Padcaya,La Mamora
+196,Tarija,Aniceto Arce,Padcaya,Padcaya
+197,Tarija,O'connor,Entre Rios,Palos Blancos
+198,Tarija,Aniceto Arce,Padcaya,San Telmo
+199,Tarija,Gran Chaco,Yacuiba,Villa El Carmen
+200,Tarija,Aviles,Yunchara,Yunchara
