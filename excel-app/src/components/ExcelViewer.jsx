@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import ExcelContent from "./ExcelContent";
 
 export default function ExcelViewer({ refreshFiles }) {
   const [files, setFiles] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
 
   // Traer archivos desde la API cada vez que refreshFiles cambie
   useEffect(() => {
