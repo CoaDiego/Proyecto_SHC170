@@ -90,7 +90,6 @@ async def calcular(data: DataInput):
     try:
         if tipo == "media":
             return {"resultado": statistics.mean(datos)}
-
         elif tipo == "mediana":
             return {"resultado": statistics.median(datos)}
 
@@ -109,9 +108,47 @@ async def calcular(data: DataInput):
             for x in datos:
                 tabla[x] = tabla.get(x, 0) + 1
             return {"resultado": [{"valor": k, "f": v} for k, v in tabla.items()]}
+        
+        
+        #Nuevos Calculos#########
+        elif tipo == "frecuencia_absoluta":
+        # contar ocurrencias de cada valor
+            tabla = {}
+            for x in datos:
+                tabla[x] = tabla.get(x, 0) + 1
+            return {"resultado": [{"valor": k, "f": v} for k, v in tabla.items()]}
+        elif tipo == "frecuencia_relativa":
+            tabla = {}
+            for x in datos:
+                tabla[x] = tabla.get(x, 0) + 1
+            n = len(datos)
+            return {"resultado": [{"valor": k, "h": v / n} for k, v in tabla.items()]}
+        
+        elif tipo == "frecuencia_acumulada":
+            tabla = {}
+            for x in datos:
+                tabla[x] = tabla.get(x, 0) + 1
+            acumulada = 0
+            resultado = []
+            for k, v in sorted(tabla.items()):
+                acumulada += v
+                resultado.append({"valor": k, "F": acumulada})
+            return {"resultado": resultado}
+        
+        elif tipo == "frecuencia_acumulada_relativa":
+            tabla = {}
+            for x in datos:
+                tabla[x] = tabla.get(x, 0) + 1
+            n = len(datos)
+            acumulada = 0
+            resultado = []
+            for k, v in sorted(tabla.items()):
+                acumulada += v / n
+                resultado.append({"valor": k, "H": acumulada})
+            return {"resultado": resultado}
 
-        else:
-            return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
+
+        ###########################
 
     except Exception as e:
         return {"error": str(e)}

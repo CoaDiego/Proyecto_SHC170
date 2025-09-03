@@ -46,7 +46,7 @@ export default function Menu() {
         </li>
         <li>
           <NavLink to="/about" className={({ isActive }) => (isActive ? "active" : "")}>
-            About
+            Sobre la App
           </NavLink>
         </li>
       </ul>
