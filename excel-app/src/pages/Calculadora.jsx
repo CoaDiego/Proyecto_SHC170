@@ -1,8 +1,24 @@
+/* 
+import Calculator from "../components/Calculator";
+
 export default function Calculadora() {
   return (
     <div>
-      <h2>Calculadora MAT151</h2>
-      <p>Próximamente: distribuciones de frecuencias y gráficas 📊</p>
+      <h1>Calculadora Estadística (MAT151)</h1>
+      <Calculator />
     </div>
   );
 }
+ */
+
+import Calculator from "../components/Calculator";
+
+export default function Calculadora() {
+  return (
+    <div>
+      <h1>Calculadora Estadística</h1>
+      <Calculator />
+    </div>
+  );
+}
+

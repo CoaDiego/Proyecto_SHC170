@@ -1,0 +1,43 @@
+/* Barra de navegación */
+nav {
+  background-color: #222;   /* fondo oscuro */
+  padding: 15px 0;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Lista de enlaces */
+nav ul {
+  display: flex;
+  justify-content: center;   /* centra horizontal */
+  align-items: center;       /* centra verticalmente (por si acaso) */
+  gap: 40px;                 /* más separación */
+  list-style: none;
+  margin: 0 auto;            /* asegura que quede centrado */
+  padding: 0;
+  max-width: 900px;          /* evita que se extienda demasiado */
+}
+
+
+/* Estilo de los enlaces */
+nav ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 5px 10px;
+  transition: color 0.3s, border-bottom 0.3s;
+}
+
+/* Hover (cuando pasas el mouse) */
+nav ul li a:hover {
+  color: #4dabf7;
+  border-bottom: 2px solid #4dabf7;
+}
+
+/* Página activa (NavLink activo) */
+.active {
+  font-weight: bold;
+  border-bottom: 2px solid #4dabf7;
+}
