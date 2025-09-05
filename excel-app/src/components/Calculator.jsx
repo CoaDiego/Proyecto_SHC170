@@ -71,6 +71,9 @@ const handleCalculate = async () => {
             <option value="frecuencia_relativa">Frecuencia relativa</option>
             <option value="frecuencia_acumulada">Frecuencia acumulada</option>
             <option value="frecuencia_acumulada_relativa">Frecuencia acumulada relativa</option>
+{/*             <option value="numero_clases">Número de clases (Sturges)</option>
+            <option value="tabla_frecuencias">Tabla de frecuencias agrupadas</option> */}
+            <option value="tabla_clases">Tabla por intervalos (con marcas de clase)</option>
         </>
         )}
 

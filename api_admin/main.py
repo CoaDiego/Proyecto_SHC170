@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
 from MAT151 import tema2   # 👈 importamos las funciones del Tema 2
+from MAT151.tema2 import tabla_por_clases
 
 from pydantic import BaseModel
 import statistics
@@ -107,6 +108,12 @@ async def calcular(data: DataInput):
             return tema2.calcular_frecuencia_acumulada(datos)
         elif tipo == "frecuencia_acumulada_relativa":
             return tema2.calcular_frecuencia_acumulada_relativa(datos)
+        elif tipo == "numero_clases":
+            return {"resultado": tema2.calcular_numero_clases(datos)}
+        elif tipo == "tabla_clases":
+          resultado = tabla_por_clases(datos)
+          return {"resultado": resultado}
+        
         else:
             return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
     except Exception as e:
