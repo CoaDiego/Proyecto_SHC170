@@ -1,65 +1,49 @@
 import { useState } from "react";
 
 export default function Calculator() {
-  // ==========================
-  // ESTADOS
-  // ==========================
-  const [curso, setCurso] = useState("MAT151"); 
-  const [tema, setTema] = useState("Tema2");   
-  const [tipo, setTipo] = useState("media");   
-  const [input, setInput] = useState("");      
-  const [resultado, setResultado] = useState(null); 
-  const [pesos, setPesos] = useState("");      
+  // Estados
+  const [curso, setCurso] = useState("MAT151"); // Curso seleccionado
+  const [tema, setTema] = useState("Tema2");   // Tema seleccionado
+  const [tipo, setTipo] = useState("media");   // Tipo de cálculo seleccionado
+  const [input, setInput] = useState("");      // Datos ingresados por el usuario
+  const [resultado, setResultado] = useState(null); // Resultado recibido de la API
+  const [pesos, setPesos] = useState(""); // Input adicional de pesos
 
-  // ✅ Para Tema5 (bivariado)
-  const [inputX, setInputX] = useState(""); 
-  const [inputY, setInputY] = useState(""); 
-
-  // ==========================
-  // FUNCIÓN PRINCIPAL
-  // ==========================
   const handleCalculate = async () => {
-    setResultado(null);
+    setResultado(null); // limpia el resultado viejo
 
-    let bodyData = { tipo, tema };
-    let url = "http://127.0.0.1:8000/calcular"; // por defecto
+    // Convertir input en números
+    const datos = input.split(",").map(Number).filter((x) => !isNaN(x));
+    const pesosList = pesos.split(",").map(Number).filter((x) => !isNaN(x));
 
-    if (tema === "Tema5") {
-      // Para Tema5 usamos el otro endpoint
-      const datosX = inputX.split(",").map(Number).filter((x) => !isNaN(x));
-      const datosY = inputY.split(",").map(Number).filter((x) => !isNaN(x));
-      bodyData = { x: datosX, y: datosY, tipo };
-      url = "http://127.0.0.1:8000/calcular_bivariada";
-    } else {
-      // Para los demás temas solo una lista de datos
-      const datos = input.split(",").map(Number).filter((x) => !isNaN(x));
-      bodyData.datos = datos;
+    const [inputX, setInputX] = useState("");
+    const [inputY, setInputY] = useState("");
 
-      // Para media ponderada enviamos pesos
-      if (tipo === "media_ponderada") {
-        const pesosList = pesos.split(",").map(Number).filter((x) => !isNaN(x));
-        bodyData.pesos = pesosList;
-      }
+
+
+    // Preparamos body para enviar a la API
+    let bodyData = { datos, tipo, tema };
+
+    // Si es media ponderada, agregamos pesos
+    if (tipo === "media_ponderada") {
+      bodyData.pesos = pesosList;
     }
 
     try {
-      const res = await fetch(url, {
+      const res = await fetch("http://127.0.0.1:8000/calcular", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),
       });
 
       const data = await res.json();
-      setResultado(data);
+      setResultado(data); // Guardamos el resultado
     } catch (err) {
       console.error("Error:", err);
       setResultado({ error: "No se pudo conectar con la API" });
     }
   };
 
-  // ==========================
-  // RENDER DEL COMPONENTE
-  // ==========================
   return (
     <div>
       <h2>Calculadora Estadística</h2>
@@ -78,7 +62,7 @@ export default function Calculator() {
         <option value="Tema2">Tema 2 - Distribución de frecuencias</option>
         <option value="Tema3">Tema 3 - Tendencia central</option>
         <option value="Tema4">Tema 4 - Dispersión y forma</option>
-        <option value="Tema5">Tema 5 - Distribuciones bivariantes</option>
+        <option value="Tema5">Tema 5 - Distribuciones Bivariantes</option>
       </select>
       <br />
 
@@ -91,14 +75,13 @@ export default function Calculator() {
           setResultado(null);
         }}
       >
-        {/* Opciones según tema */}
         {tema === "Tema2" && (
           <>
             <option value="frecuencia_absoluta">Frecuencia absoluta</option>
             <option value="frecuencia_relativa">Frecuencia relativa</option>
             <option value="frecuencia_acumulada">Frecuencia acumulada</option>
             <option value="frecuencia_acumulada_relativa">Frecuencia acumulada relativa</option>
-            <option value="tabla_clases">Tabla por intervalos</option>
+            <option value="tabla_clases">Tabla por intervalos (con marcas de clase)</option>
           </>
         )}
 
@@ -116,6 +99,7 @@ export default function Calculator() {
           <>
             <option value="varianza">Varianza</option>
             <option value="desviacion">Desviación estándar</option>
+            <option value="rango">Rango</option>
             <option value="coef_variacion">Coeficiente de variación</option>
           </>
         )}
@@ -123,30 +107,12 @@ export default function Calculator() {
         {tema === "Tema5" && (
           <>
             <option value="covarianza">Covarianza</option>
-            <option value="correlacion">Coeficiente de correlación</option>
-            <option value="regresion">Regresión lineal (Y sobre X)</option>
+            <option value="correlacion">Correlación</option>
+            <option value="regresion">Regresión lineal</option>
           </>
         )}
       </select>
       <br />
-
-      {/* ========================== */}
-      {/* Inputs de datos según tema */}
-      {/* ========================== */}
-
-      {/* Tema2, Tema3 y Tema4 usan un solo input */}
-      {(tema === "Tema2" || tema === "Tema3" || tema === "Tema4") && (
-        <>
-          <textarea
-            rows="4"
-            cols="40"
-            placeholder="Escribe los datos separados por coma, ej: 10,20,15,18"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <br />
-        </>
-      )}
 
       {/* Input adicional de pesos solo para media ponderada */}
       {tipo === "media_ponderada" && (
@@ -155,7 +121,7 @@ export default function Calculator() {
           <textarea
             rows="2"
             cols="40"
-            placeholder="Ej: 1,2,1,3"
+            placeholder="Escribe los pesos separados por coma, ej: 1,2,1,3"
             value={pesos}
             onChange={(e) => setPesos(e.target.value)}
           />
@@ -163,31 +129,41 @@ export default function Calculator() {
         </>
       )}
 
-      {/* Tema5 requiere dos listas de datos (X e Y) */}
-      {tema === "Tema5" && (
-        <>
-          <label>Variable X:</label>
-          <textarea
-            rows="2"
-            cols="40"
-            placeholder="Ej: 2,4,6,8"
-            value={inputX}
-            onChange={(e) => setInputX(e.target.value)}
-          />
-          <br />
-          <label>Variable Y:</label>
-          <textarea
-            rows="2"
-            cols="40"
-            placeholder="Ej: 3,5,7,9"
-            value={inputY}
-            onChange={(e) => setInputY(e.target.value)}
-          />
-          <br />
-        </>
-      )}
+// Entrada de datos para variables x e y
+{tema === "Tema5" && (
+  <>
+    <label>Variable X:</label>
+    <textarea
+      rows="2"
+      cols="40"
+      placeholder="Ej: 2,4,6,8"
+      value={inputX}
+      onChange={(e) => setInputX(e.target.value)}
+    />
+    <br />
+    <label>Variable Y:</label>
+    <textarea
+      rows="2"
+      cols="40"
+      placeholder="Ej: 3,5,7,9"
+      value={inputY}
+      onChange={(e) => setInputY(e.target.value)}
+    />
+    <br />
+  </>
+)}
 
-      {/* Botón */}
+      {/* Entrada de datos */}
+      <textarea
+        rows="4"
+        cols="40"
+        placeholder="Escribe los datos separados por coma, ej: 10,20,15,18"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <br />
+
+      {/* Botón para calcular */}
       <button onClick={handleCalculate}>Calcular</button>
 
       {/* Mostrar resultado */}

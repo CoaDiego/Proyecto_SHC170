@@ -22,28 +22,27 @@ export default function Calculator() {
     setResultado(null);
 
     let bodyData = { tipo, tema };
-    let url = "http://127.0.0.1:8000/calcular"; // por defecto
 
     if (tema === "Tema5") {
-      // Para Tema5 usamos el otro endpoint
+      // Para Tema5 usamos variables X e Y
       const datosX = inputX.split(",").map(Number).filter((x) => !isNaN(x));
       const datosY = inputY.split(",").map(Number).filter((x) => !isNaN(x));
-      bodyData = { x: datosX, y: datosY, tipo };
-      url = "http://127.0.0.1:8000/calcular_bivariada";
+      bodyData.datosX = datosX;
+      bodyData.datosY = datosY;
     } else {
       // Para los demás temas solo una lista de datos
       const datos = input.split(",").map(Number).filter((x) => !isNaN(x));
       bodyData.datos = datos;
+    }
 
-      // Para media ponderada enviamos pesos
-      if (tipo === "media_ponderada") {
-        const pesosList = pesos.split(",").map(Number).filter((x) => !isNaN(x));
-        bodyData.pesos = pesosList;
-      }
+    // Para media ponderada enviamos pesos
+    if (tipo === "media_ponderada") {
+      const pesosList = pesos.split(",").map(Number).filter((x) => !isNaN(x));
+      bodyData.pesos = pesosList;
     }
 
     try {
-      const res = await fetch(url, {
+      const res = await fetch("http://127.0.0.1:8000/calcular", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),
@@ -116,7 +115,7 @@ export default function Calculator() {
           <>
             <option value="varianza">Varianza</option>
             <option value="desviacion">Desviación estándar</option>
-            <option value="coef_variacion">Coeficiente de variación</option>
+            <option value="cv">Coeficiente de variación</option>
           </>
         )}
 
@@ -124,7 +123,7 @@ export default function Calculator() {
           <>
             <option value="covarianza">Covarianza</option>
             <option value="correlacion">Coeficiente de correlación</option>
-            <option value="regresion">Regresión lineal (Y sobre X)</option>
+            <option value="recta_regresion">Recta de regresión (Y sobre X)</option>
           </>
         )}
       </select>

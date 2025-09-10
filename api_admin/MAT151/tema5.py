@@ -1,57 +1,48 @@
-""" from fastapi import APIRouter
-from pydantic import BaseModel
-import numpy as np
-import statistics as stats
+import statistics
+from typing import List
 
-router = APIRouter()
+# Covarianza
+def calcular_covarianza(x: List[float], y: List[float]):
+    if len(x) != len(y) or len(x) == 0:
+        return {"error": "Las listas deben tener la misma longitud y no estar vacías"}
+    
+    n = len(x)
+    media_x = statistics.mean(x)
+    media_y = statistics.mean(y)
+    cov = sum((xi - media_x)*(yi - media_y) for xi, yi in zip(x, y)) / n
+    return {"resultado": cov}
 
-class DatosEntrada(BaseModel):
-    datos: list[float]
-    tipo: str
+# Coeficiente de correlación de Pearson
+def calcular_correlacion(x: List[float], y: List[float]):
+    if len(x) != len(y) or len(x) == 0:
+        return {"error": "Las listas deben tener la misma longitud y no estar vacías"}
+    
+    n = len(x)
+    media_x = statistics.mean(x)
+    media_y = statistics.mean(y)
+    cov = sum((xi - media_x)*(yi - media_y) for xi, yi in zip(x, y)) / n
+    std_x = statistics.stdev(x)
+    std_y = statistics.stdev(y)
+    if std_x == 0 or std_y == 0:
+        return {"error": "Desviación estándar cero, correlación no definida"}
+    r = cov / (std_x * std_y)
+    return {"resultado": r}
 
-@router.post("/calcular")
-async def calcular(entrada: DatosEntrada):
-    datos = entrada.datos
-    tipo = entrada.tipo.lower()
-
-    if not datos:
-        return {"error": "No se recibieron datos"}
-
-    if tipo == "media":
-        return {"resultado": np.mean(datos)}
-
-    elif tipo == "mediana":
-        return {"resultado": np.median(datos)}
-
-    elif tipo == "moda":
-        try:
-            return {"resultado": stats.mode(datos)}
-        except:
-            return {"resultado": "No existe moda única"}
-
-    elif tipo == "varianza":
-        return {"resultado": np.var(datos, ddof=1)}
-
-    elif tipo == "desviacion":
-        return {"resultado": np.std(datos, ddof=1)}
-
-    elif tipo == "frecuencias":
-        valores, frec_abs = np.unique(datos, return_counts=True)
-        n = len(datos)
-        frec_rel = frec_abs / n
-        frec_abs_acum = np.cumsum(frec_abs)
-        frec_rel_acum = np.cumsum(frec_rel)
-
-        tabla = []
-        for i in range(len(valores)):
-            tabla.append({
-                "valor": float(valores[i]),
-                "f": int(frec_abs[i]),
-                "fr": round(float(frec_rel[i]), 3),
-                "F": int(frec_abs_acum[i]),
-                "Fr": round(float(frec_rel_acum[i]), 3)
-            })
-        return {"resultado": tabla}
-
-    return {"error": "Tipo de cálculo no válido"}
- """
+# Regresión lineal simple
+def calcular_regresion_lineal(x: List[float], y: List[float]):
+    if len(x) != len(y) or len(x) == 0:
+        return {"error": "Las listas deben tener la misma longitud y no estar vacías"}
+    
+    n = len(x)
+    media_x = statistics.mean(x)
+    media_y = statistics.mean(y)
+    
+    numerador = sum((xi - media_x)*(yi - media_y) for xi, yi in zip(x, y))
+    denominador = sum((xi - media_x)**2 for xi in x)
+    
+    if denominador == 0:
+        return {"error": "No se puede calcular pendiente, denominador cero"}
+    
+    b = numerador / denominador  # pendiente
+    a = media_y - b * media_x    # intercepto
+    return {"pendiente": b, "intercepto": a}

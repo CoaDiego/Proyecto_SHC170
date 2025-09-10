@@ -1,34 +1,38 @@
 import pandas as pd
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from MAT151 import tema2   # importamos las funciones del Tema 2
 from MAT151.tema2 import tabla_por_clases
 from MAT151 import tema3  # importar funciones de Tema 3
 from MAT151 import tema4
 from MAT151 import tema5
 
+
 from pydantic import BaseModel
+import statistics
+import math
+from typing import Optional
+
 import os
 import shutil
-from typing import Optional, List
 
 app = FastAPI()
 
-# =======================
-# Configuración CORS
-# =======================
+# Configuración CORS para React local
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # ⚠️ en producción restringe esto
+    # allow_origins=["http://127.0.0.1:5173"],  # tu app React
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# =======================
 # Carpeta donde se guardan los Excel
-# =======================
 EXCEL_FOLDER = "excels"
+
+# Crear carpeta si no existe
 os.makedirs(EXCEL_FOLDER, exist_ok=True)
 
 # =======================
@@ -50,7 +54,7 @@ async def list_files():
     return {"files": files}
 
 # =======================
-# Descargar archivo Excel
+# Descargar/abrir un archivo Excel
 # =======================
 @app.get("/files/{filename}")
 async def get_file(filename: str):
@@ -60,15 +64,13 @@ async def get_file(filename: str):
     return {"error": "Archivo no encontrado"}
 
 # =======================
-# Ruta raíz de prueba
+# Ruta raíz para prueba
 # =======================
 @app.get("/")
 async def root():
     return {"message": "API funcionando correctamente"}
 
-# =======================
-# Ver archivo Excel en JSON
-# =======================
+
 @app.get("/view/{filename}")
 async def view_excel(filename: str):
     file_path = os.path.join(EXCEL_FOLDER, filename)
@@ -78,35 +80,31 @@ async def view_excel(filename: str):
     return {"error": "Archivo no encontrado"}
 
 
-# =======================
-# MODELOS DE DATOS
-# =======================
+ 
+# Modelo de entrada
 class DataInput(BaseModel):
-    datos: List[float]
-    tipo: str   # media, mediana, moda, varianza, etc.
-    tema: str
-    pesos: Optional[List[float]] = None  # para media ponderada
+    datos: list[float]
+    tipo: str  # media, mediana, moda, varianza, etc.
+    tema: str 
+    pesos: Optional[list[float]] = None  # para media ponderada
 
+# Modelo de entrada para Tema 5 (dos variables)
 class DataBivariada(BaseModel):
-    x: List[float]
-    y: List[float]
+    x: list[float]
+    y: list[float]
     tipo: str  # covarianza, correlacion, regresion
 
-
-# =======================
-# ENDPOINTS DE CÁLCULOS
-# =======================
 @app.post("/calcular")
 async def calcular(data: DataInput):
     datos = data.datos
     tipo = data.tipo.lower()
-    tema = data.tema.lower()
 
     if len(datos) == 0:
         return {"error": "No se enviaron datos"}
 
     try:
-        # ----------------- TEMA 2 -----------------
+         # ----------------- TEMA 2 -----------------
+
         if tipo == "frecuencia_absoluta":
             return tema2.calcular_frecuencia_absoluta(datos)
         elif tipo == "frecuencia_relativa":
@@ -118,26 +116,29 @@ async def calcular(data: DataInput):
         elif tipo == "numero_clases":
             return {"resultado": tema2.calcular_numero_clases(datos)}
         elif tipo == "tabla_clases":
-            resultado = tabla_por_clases(datos)
-            return {"resultado": resultado}
+          resultado = tabla_por_clases(datos)
+          return {"resultado": resultado}
+        
+         # ----------------- TEMA 3 -----------------
 
-        # ----------------- TEMA 3 -----------------
-        elif tema == "tema3":
-            if tipo == "media":
-                return tema3.calcular_media(datos)
-            elif tipo == "media_geometrica":
-                return tema3.calcular_media_geometrica(datos)
-            elif tipo == "media_ponderada":
-                if not data.pesos:
-                    return {"error": "Se requieren los pesos para calcular la media ponderada"}
-                return tema3.calcular_media_ponderada(datos, data.pesos)
-            elif tipo == "mediana":
-                return tema3.calcular_mediana(datos)
-            elif tipo == "moda":
-                return tema3.calcular_moda(datos)
+        elif data.tema.lower() == "tema3":
+          if tipo == "media":
+            return tema3.calcular_media(datos)
+          elif tipo == "media_geometrica":
+           return tema3.calcular_media_geometrica(datos)
+          elif tipo == "media_ponderada":
+           if not data.pesos:
+               return {"error": "Se requieren los pesos para calcular la media ponderada"}
+           return tema3.calcular_media_ponderada(datos, data.pesos)
 
-        # ----------------- TEMA 4 -----------------
-        elif tema == "tema4":
+          elif tipo == "mediana":
+            return tema3.calcular_mediana(datos)
+          elif tipo == "moda":
+            return tema3.calcular_moda(datos)
+            # si más adelante agregas media ponderada o geométrica, aquí van
+
+      # ----------------- TEMA 4 -----------------
+        elif data.tema.lower() == "tema4":
             if tipo == "varianza":
                 return tema4.calcular_varianza(datos)
             elif tipo == "desviacion":
@@ -147,29 +148,26 @@ async def calcular(data: DataInput):
             elif tipo == "coef_variacion":
                 return tema4.calcular_coef_variacion(datos)
 
-        return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
-    except Exception as e:
-        return {"error": str(e)}
 
-
-# =======================
-# ENDPOINT PARA TEMA 5
-# =======================
-@app.post("/calcular_bivariada")
-async def calcular_bivariada(data: DataBivariada):
-    x = data.x
-    y = data.y
-    tipo = data.tipo.lower()
-
-    try:
-        if tipo == "covarianza":
-            return tema5.calcular_covarianza(x, y)
-        elif tipo == "correlacion":
-            return tema5.calcular_correlacion(x, y)
-        elif tipo in ("regresion", "recta_regresion"):
-            return tema5.calcular_regresion_lineal(x, y)
         else:
             return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
-            return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
     except Exception as e:
         return {"error": str(e)}
+    
+    @app.post("/calcular_bivariada")
+    async def calcular_bivariada(data: DataBivariada):
+        x = data.x
+        y = data.y
+        tipo = data.tipo.lower()
+
+    try:
+         if tipo == "covarianza":
+               return tema5.calcular_covarianza(x, y)
+         elif tipo == "correlacion":
+                return tema5.calcular_correlacion(x, y)
+         elif tipo == "regresion":
+             return tema5.calcular_regresion_lineal(x, y)
+         else:
+                return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
+    except Exception as e:
+            return {"error": str(e)}

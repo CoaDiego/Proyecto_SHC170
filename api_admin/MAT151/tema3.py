@@ -1,57 +1,30 @@
-""" from fastapi import APIRouter
-from pydantic import BaseModel
-import numpy as np
-import statistics as stats
 
-router = APIRouter()
+import statistics
+import math
 
-class DatosEntrada(BaseModel):
-    datos: list[float]
-    tipo: str
 
-@router.post("/calcular")
-async def calcular(entrada: DatosEntrada):
-    datos = entrada.datos
-    tipo = entrada.tipo.lower()
+def calcular_media(datos):
+    return {"resultado": statistics.mean(datos)}
 
-    if not datos:
-        return {"error": "No se recibieron datos"}
+# Media ponderada
+def calcular_media_ponderada(datos, pesos):
+    if len(datos) != len(pesos) or len(datos) == 0:
+        return {"error": "Los datos y pesos deben tener la misma longitud y no estar vacíos"}
+    suma_pesos = sum(pesos)
+    media = sum(x * w for x, w in zip(datos, pesos)) / suma_pesos
+    return {"resultado": media}
 
-    if tipo == "media":
-        return {"resultado": np.mean(datos)}
+# Media geométrica
+def calcular_media_geometrica(datos):
+    if any(x <= 0 for x in datos):
+        return {"error": "Todos los datos deben ser positivos para la media geométrica"}
+    producto = math.prod(datos)
+    n = len(datos)
+    media = producto ** (1/n)
+    return {"resultado": media}
 
-    elif tipo == "mediana":
-        return {"resultado": np.median(datos)}
+def calcular_mediana(datos):
+    return {"resultado": statistics.median(datos)}
 
-    elif tipo == "moda":
-        try:
-            return {"resultado": stats.mode(datos)}
-        except:
-            return {"resultado": "No existe moda única"}
-
-    elif tipo == "varianza":
-        return {"resultado": np.var(datos, ddof=1)}
-
-    elif tipo == "desviacion":
-        return {"resultado": np.std(datos, ddof=1)}
-
-    elif tipo == "frecuencias":
-        valores, frec_abs = np.unique(datos, return_counts=True)
-        n = len(datos)
-        frec_rel = frec_abs / n
-        frec_abs_acum = np.cumsum(frec_abs)
-        frec_rel_acum = np.cumsum(frec_rel)
-
-        tabla = []
-        for i in range(len(valores)):
-            tabla.append({
-                "valor": float(valores[i]),
-                "f": int(frec_abs[i]),
-                "fr": round(float(frec_rel[i]), 3),
-                "F": int(frec_abs_acum[i]),
-                "Fr": round(float(frec_rel_acum[i]), 3)
-            })
-        return {"resultado": tabla}
-
-    return {"error": "Tipo de cálculo no válido"}
- """
+def calcular_moda(datos):
+    return {"resultado": statistics.mode(datos)}

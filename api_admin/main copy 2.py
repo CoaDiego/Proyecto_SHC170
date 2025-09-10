@@ -170,6 +170,5 @@ async def calcular_bivariada(data: DataBivariada):
             return tema5.calcular_regresion_lineal(x, y)
         else:
             return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
-            return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
     except Exception as e:
         return {"error": str(e)}
