@@ -189,14 +189,52 @@ export default function Calculator() {
 
       {/* Botón */}
       <button onClick={handleCalculate}>Calcular</button>
+{/* Mostrar resultado */}
+{resultado && (
+  <div>
+    <h3>Resultado:</h3>
 
-      {/* Mostrar resultado */}
-      {resultado && (
-        <div>
-          <h3>Resultado:</h3>
-          <pre>{JSON.stringify(resultado, null, 2)}</pre>
-        </div>
-      )}
+    {/* Caso 1: array de objetos → tabla */}
+    {Array.isArray(resultado.resultado) ? (
+      <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+        <thead>
+          <tr>
+            {Object.keys(resultado.resultado[0]).map((col) => (
+              <th key={col}>{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {resultado.resultado.map((row, idx) => (
+            <tr key={idx}>
+              {Object.values(row).map((val, i) => (
+                <td key={i}>{val}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : resultado.resultado !== undefined ? (
+      // Caso 2: valor simple
+      <p>{resultado.resultado}</p>
+    ) : (
+      // Caso 3: varios campos (ej. regresión lineal)
+      <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+        <tbody>
+          {Object.entries(resultado).map(([key, value]) => (
+            <tr key={key}>
+              <td><b>{key}</b></td>
+              <td>{value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+)}
+
+
+
     </div>
   );
 }

@@ -1,22 +1,10 @@
 import statistics
 import math
-import pandas as pd
+
 
 # ================================
 # Funciones Tema 2 (Distribución de Frecuencias)
 # ================================
-
-def calcular_media(datos):
-    return {"resultado": statistics.mean(datos)}
-
-def calcular_mediana(datos):
-    return {"resultado": statistics.median(datos)}
-
-def calcular_moda(datos):
-    return {"resultado": statistics.mode(datos)}
-
-def calcular_varianza(datos):
-    return {"resultado": statistics.variance(datos)}
 
 def calcular_desviacion(datos):
     return {"resultado": statistics.stdev(datos)}
