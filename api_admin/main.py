@@ -7,6 +7,8 @@ from MAT151.tema2 import tabla_por_clases
 from MAT151 import tema3  # importar funciones de Tema 3
 from MAT151 import tema4
 from MAT151 import tema5
+from MAT151 import tema6
+
 
 from pydantic import BaseModel
 import os
@@ -92,6 +94,12 @@ class DataBivariada(BaseModel):
     y: List[float]
     tipo: str  # covarianza, correlacion, regresion
 
+class DataMultivariante(BaseModel):
+    X: List[List[float]]  # Lista de listas: cada sublista es una variable independiente
+    y: List[float]        # Variable dependiente
+    tipo: str             # Solo "regresion_multivariante"
+
+
 
 # =======================
 # ENDPOINTS DE CÁLCULOS
@@ -166,10 +174,46 @@ async def calcular_bivariada(data: DataBivariada):
             return tema5.calcular_covarianza(x, y)
         elif tipo == "correlacion":
             return tema5.calcular_correlacion(x, y)
+        # Regresion lineal de Tema5
         elif tipo in ("regresion", "recta_regresion"):
             return tema5.calcular_regresion_lineal(x, y)
+        # Regresion de Tema6
+        elif tipo == "regresion_lineal":
+            return tema6.regresion_lineal(x, y)
+        elif tipo == "regresion_no_lineal":
+            return tema6.regresion_no_lineal(x, y)
+        elif tipo == "regresion_multivariante":
+            return tema6.regresion_multivariante(x, y)
         else:
-            return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
             return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
     except Exception as e:
         return {"error": str(e)}
+
+    
+@app.post("/calcular_multivariante")
+async def calcular_multivariante(data: DataMultivariante):
+    X = data.X
+    y = data.y
+    tipo = data.tipo.lower()
+
+    if tipo != "regresion_multivariante":
+        return {"error": f"Tipo de cálculo '{tipo}' no soportado en este endpoint"}
+
+    try:
+        import numpy as np
+        from sklearn.linear_model import LinearRegression
+
+        X_array = np.array(X).T  # Transponemos para que cada columna sea una variable
+        y_array = np.array(y)
+
+        modelo = LinearRegression()
+        modelo.fit(X_array, y_array)
+
+        coef = modelo.coef_.tolist()
+        intercept = modelo.intercept_.item() if hasattr(modelo.intercept_, 'item') else modelo.intercept_
+
+        return {"intercepto": intercept, "coeficientes": coef}
+
+    except Exception as e:
+        return {"error": str(e)}
+

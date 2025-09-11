@@ -24,7 +24,7 @@ export default function Calculator() {
     let bodyData = { tipo, tema };
     let url = "http://127.0.0.1:8000/calcular"; // por defecto
 
-    if (tema === "Tema5") {
+    if (tema === "Tema5" || tema === "Tema6") {
       // Para Tema5 usamos el otro endpoint
       const datosX = inputX.split(",").map(Number).filter((x) => !isNaN(x));
       const datosY = inputY.split(",").map(Number).filter((x) => !isNaN(x));
@@ -41,6 +41,9 @@ export default function Calculator() {
         bodyData.pesos = pesosList;
       }
     }
+
+
+
 
     try {
       const res = await fetch(url, {
@@ -79,6 +82,7 @@ export default function Calculator() {
         <option value="Tema3">Tema 3 - Tendencia central</option>
         <option value="Tema4">Tema 4 - Dispersión y forma</option>
         <option value="Tema5">Tema 5 - Distribuciones bivariantes</option>
+        <option value="Tema6">Tema 6 - Análisis de Regresión</option>  {/* <-- Nuevo */}
       </select>
       <br />
 
@@ -127,6 +131,15 @@ export default function Calculator() {
             <option value="regresion">Regresión lineal (Y sobre X)</option>
           </>
         )}
+
+        {tema === "Tema6" && (
+          <>
+            <option value="regresion_lineal">Regresión Lineal</option>
+            <option value="regresion_no_lineal">Regresión No Lineal</option>
+            <option value="regresion_multivariante">Regresión Multivariante</option>
+          </>
+         )}
+
       </select>
       <br />
 
@@ -164,28 +177,29 @@ export default function Calculator() {
       )}
 
       {/* Tema5 requiere dos listas de datos (X e Y) */}
-      {tema === "Tema5" && (
-        <>
-          <label>Variable X:</label>
-          <textarea
-            rows="2"
-            cols="40"
-            placeholder="Ej: 2,4,6,8"
-            value={inputX}
-            onChange={(e) => setInputX(e.target.value)}
-          />
-          <br />
-          <label>Variable Y:</label>
-          <textarea
-            rows="2"
-            cols="40"
-            placeholder="Ej: 3,5,7,9"
-            value={inputY}
-            onChange={(e) => setInputY(e.target.value)}
-          />
-          <br />
-        </>
-      )}
+     {tema === "Tema5" || tema === "Tema6" ? (
+  <>
+    <label>Variable X:</label>
+    <textarea
+      rows="2"
+      cols="40"
+      placeholder="Ej: 2,4,6,8"
+      value={inputX}
+      onChange={(e) => setInputX(e.target.value)}
+    />
+    <br />
+    <label>Variable Y:</label>
+    <textarea
+      rows="2"
+      cols="40"
+      placeholder="Ej: 3,5,7,9"
+      value={inputY}
+      onChange={(e) => setInputY(e.target.value)}
+    />
+    <br />
+  </>
+) : null}
+
 
       {/* Botón */}
       <button onClick={handleCalculate}>Calcular</button>

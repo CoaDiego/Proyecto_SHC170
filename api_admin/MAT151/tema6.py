@@ -1,57 +1,71 @@
-""" from fastapi import APIRouter
-from pydantic import BaseModel
 import numpy as np
-import statistics as stats
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import r2_score
 
-router = APIRouter()
+# ======================
+# Regresión Lineal Simple
+# ======================
+def regresion_lineal(x, y):
+    X = np.array(x).reshape(-1, 1)
+    Y = np.array(y)
 
-class DatosEntrada(BaseModel):
-    datos: list[float]
-    tipo: str
+    modelo = LinearRegression()
+    modelo.fit(X, Y)
 
-@router.post("/calcular")
-async def calcular(entrada: DatosEntrada):
-    datos = entrada.datos
-    tipo = entrada.tipo.lower()
+    pendiente = modelo.coef_[0]
+    intercepto = modelo.intercept_
+    r2 = modelo.score(X, Y)
 
-    if not datos:
-        return {"error": "No se recibieron datos"}
+    return {
+        "tipo": "regresion_lineal",
+        "pendiente": float(pendiente),
+        "intercepto": float(intercepto),
+        "r2": float(r2)
+    }
 
-    if tipo == "media":
-        return {"resultado": np.mean(datos)}
+# ======================
+# Regresión No Lineal (Polinómica grado 2)
+# ======================
+def regresion_no_lineal(x, y, grado=2):
+    X = np.array(x).reshape(-1, 1)
+    Y = np.array(y)
 
-    elif tipo == "mediana":
-        return {"resultado": np.median(datos)}
+    poly = PolynomialFeatures(degree=grado)
+    X_poly = poly.fit_transform(X)
 
-    elif tipo == "moda":
-        try:
-            return {"resultado": stats.mode(datos)}
-        except:
-            return {"resultado": "No existe moda única"}
+    modelo = LinearRegression()
+    modelo.fit(X_poly, Y)
 
-    elif tipo == "varianza":
-        return {"resultado": np.var(datos, ddof=1)}
+    y_pred = modelo.predict(X_poly)
+    r2 = r2_score(Y, y_pred)
 
-    elif tipo == "desviacion":
-        return {"resultado": np.std(datos, ddof=1)}
+    return {
+        "tipo": f"regresion_polinomica_grado_{grado}",
+        "coeficientes": modelo.coef_.tolist(),
+        "intercepto": float(modelo.intercept_),
+        "r2": float(r2)
+    }
 
-    elif tipo == "frecuencias":
-        valores, frec_abs = np.unique(datos, return_counts=True)
-        n = len(datos)
-        frec_rel = frec_abs / n
-        frec_abs_acum = np.cumsum(frec_abs)
-        frec_rel_acum = np.cumsum(frec_rel)
+# ======================
+# Regresión Multivariante
+# ======================
+def regresion_multivariante(x, y):
+    """
+    x debe ser una lista de listas con varias variables independientes.
+    Ejemplo: x = [[1, 2], [2, 3], [3, 4]]
+    """
+    X = np.array(x)
+    Y = np.array(y)
 
-        tabla = []
-        for i in range(len(valores)):
-            tabla.append({
-                "valor": float(valores[i]),
-                "f": int(frec_abs[i]),
-                "fr": round(float(frec_rel[i]), 3),
-                "F": int(frec_abs_acum[i]),
-                "Fr": round(float(frec_rel_acum[i]), 3)
-            })
-        return {"resultado": tabla}
+    modelo = LinearRegression()
+    modelo.fit(X, Y)
 
-    return {"error": "Tipo de cálculo no válido"}
- """
+    r2 = modelo.score(X, Y)
+
+    return {
+        "tipo": "regresion_multivariante",
+        "coeficientes": modelo.coef_.tolist(),
+        "intercepto": float(modelo.intercept_),
+        "r2": float(r2)
+    }
