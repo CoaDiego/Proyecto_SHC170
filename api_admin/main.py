@@ -8,12 +8,13 @@ from MAT151 import tema3  # importar funciones de Tema 3
 from MAT151 import tema4
 from MAT151 import tema5
 from MAT151 import tema6
-
+from MAT151 import tema7  # importar funciones de tema7
 
 from pydantic import BaseModel
 import os
 import shutil
 from typing import Optional, List
+from typing import List, Optional
 
 app = FastAPI()
 
@@ -79,7 +80,6 @@ async def view_excel(filename: str):
         return JSONResponse(content=df.to_dict(orient="records"))
     return {"error": "Archivo no encontrado"}
 
-
 # =======================
 # MODELOS DE DATOS
 # =======================
@@ -99,7 +99,16 @@ class DataMultivariante(BaseModel):
     y: List[float]        # Variable dependiente
     tipo: str             # Solo "regresion_multivariante"
 
-
+# ======================
+# Modelos de datos para Tema7
+# ======================
+class DataTema7(BaseModel):
+    datos: List[float]
+    tipo: str
+    ventana: Optional[int] = 3
+    pesos: Optional[List[float]] = None
+    alpha: Optional[float] = 0.5
+    lag: Optional[int] = 1
 
 # =======================
 # ENDPOINTS DE CÁLCULOS
@@ -214,6 +223,33 @@ async def calcular_multivariante(data: DataMultivariante):
 
         return {"intercepto": intercept, "coeficientes": coef}
 
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ======================
+# Endpoint Tema7
+# ======================
+@app.post("/calcular_tema7")
+async def calcular_tema7(data: DataTema7):
+    tipo = data.tipo.lower()
+    try:
+        if tipo == "promedio_movil_simple":
+            return tema7.promedio_movil_simple(data.datos, data.ventana)
+        elif tipo == "promedio_movil_ponderado":
+            if not data.pesos:
+                return {"error": "Se requieren los pesos"}
+            return tema7.promedio_movil_ponderado(data.datos, data.pesos)
+        elif tipo == "suavizamiento_exponencial":
+            return tema7.suavizamiento_exponencial(data.datos, data.alpha)
+        elif tipo == "indices_estacionales":
+            return tema7.indices_estacionales(data.datos)
+        elif tipo == "autocorrelacion":
+            return tema7.autocorrelacion(data.datos, data.lag)
+        elif tipo == "pronostico_basico":
+            return tema7.pronostico_basico(data.datos)
+        else:
+            return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
     except Exception as e:
         return {"error": str(e)}
 

@@ -41,11 +41,11 @@ def regresion_no_lineal(x, y, grado=2):
     r2 = r2_score(Y, y_pred)
 
     return {
-        "tipo": f"regresion_polinomica_grado_{grado}",
-        "coeficientes": modelo.coef_.tolist(),
-        "intercepto": float(modelo.intercept_),
-        "r2": float(r2)
-    }
+    "tipo": f"regresion_polinomica_grado_{grado}",
+    "coeficientes": [round(c, 2) for c in modelo.coef_.tolist()],
+    "intercepto": round(float(modelo.intercept_), 2),
+    "r2": round(float(r2), 3)
+}
 
 # ======================
 # Regresión Multivariante
@@ -63,9 +63,12 @@ def regresion_multivariante(x, y):
 
     r2 = modelo.score(X, Y)
 
+    coeficientes = [round(c, 2) for c in modelo.coef_]
+    intercepto = round(float(modelo.intercept_), 2)
+
     return {
         "tipo": "regresion_multivariante",
-        "coeficientes": modelo.coef_.tolist(),
-        "intercepto": float(modelo.intercept_),
-        "r2": float(r2)
+        "coeficientes": coeficientes,
+        "intercepto": intercepto,
+        "r2": round(float(r2), 3)   # también puedes limitar el R²
     }

@@ -16,10 +16,6 @@ export default function Calculator() {
   // ✅ Para Tema5 (bivariado)
   const [inputX, setInputX] = useState(""); 
   const [inputY, setInputY] = useState(""); 
-  
-  // Para Tema7 (Series de Tiempo)
-  const [ventana, setVentana] = useState(3);   // tamaño de la ventana
-  const [lag, setLag] = useState(1);           // desfase para autocorrelación
 
 
   // ✅ Para Tema6 - Regresión Multivariante
@@ -39,7 +35,7 @@ export default function Calculator() {
     let bodyData = { tipo, tema };
     let url = "http://127.0.0.1:8000/calcular"; // por defecto
 
-/*    if (tema === "Tema5" || tema === "Tema6") {
+   if (tema === "Tema5" || tema === "Tema6") {
    if (tema === "Tema6" && tipo === "regresion_multivariante") {
     // ✅ Multivariante → endpoint especial
     bodyData = { X: inputsX, y: inputYMulti, tipo };
@@ -52,23 +48,41 @@ export default function Calculator() {
     url = "http://127.0.0.1:8000/calcular_bivariada";
   }
 
-   if (tema === "Tema7") {
+/* if (tema === "Tema7") {
+  url = "http://127.0.0.1:8000/calcular_tema7";
+  const datos = input.split(",").map(Number).filter((x) => !isNaN(x));
+  bodyData = { tipo, datos };
+
+  if (tipo === "promedio_movil_simple") {
+    bodyData.ventana = parseInt(ventana);
+  }
+  if (tipo === "promedio_movil_ponderado") {
+    const pesosList = pesos.split(",").map(Number).filter((x) => !isNaN(x));
+    bodyData.pesos = pesosList;
+  }
+  if (tipo === "suavizamiento_exponencial") {
+    bodyData.alpha = parseFloat(alpha);
+  }
+  if (tipo === "autocorrelacion") {
+    bodyData.lag = parseInt(lag);
+  }
+} */
+if (tema === "Tema7") {
   url = "http://127.0.0.1:8000/calcular_tema7";
 
   const datosArray = input.split(",").map(Number).filter(x => !isNaN(x));
 
   bodyData = {
-    tipo: tipo,
+    tipo: tipo.toLowerCase(), // 🔹 importante
     datos: datosArray,
-    ventana: ventana,
-    alpha: alpha,
-    lag: lag,
+    ventana: ventana,         // para promedio móvil
+    alpha: alpha,             // para suavizamiento exponencial
+    lag: lag,                 // para autocorrelación
     pesos: pesos
       ? pesos.split(",").map(Number).filter(x => !isNaN(x))
       : undefined
   };
 }
-
 
 
 }
@@ -85,44 +99,7 @@ export default function Calculator() {
       }
     }
 
- */
-if (tema === "Tema5" || tema === "Tema6") {
-  if (tema === "Tema6" && tipo === "regresion_multivariante") {
-    bodyData = { X: inputsX, y: inputYMulti, tipo };
-    url = "http://127.0.0.1:8000/calcular_multivariante";
-  } else {
-    const datosX = inputX.split(",").map(Number).filter((x) => !isNaN(x));
-    const datosY = inputY.split(",").map(Number).filter((x) => !isNaN(x));
-    bodyData = { x: datosX, y: datosY, tipo };
-    url = "http://127.0.0.1:8000/calcular_bivariada";
-  }
-} 
-else if (tema === "Tema7") {   // 👈 ahora sí está al mismo nivel
-  url = "http://127.0.0.1:8000/calcular_tema7";
 
-  const datosArray = input.split(",").map(Number).filter(x => !isNaN(x));
-
-  bodyData = {
-    tipo: tipo,   // 👈 ya no se pasa en minúscula
-    datos: datosArray,
-    ventana: ventana,
-    alpha: alpha,
-    lag: lag,
-    pesos: pesos
-      ? pesos.split(",").map(Number).filter(x => !isNaN(x))
-      : undefined
-  };
-}
-else {
-  // resto de temas (Tema2, Tema3, Tema4)
-  const datos = input.split(",").map(Number).filter((x) => !isNaN(x));
-  bodyData.datos = datos;
-
-  if (tipo === "media_ponderada") {
-    const pesosList = pesos.split(",").map(Number).filter((x) => !isNaN(x));
-    bodyData.pesos = pesosList;
-  }
-}
 
 
     try {
@@ -340,21 +317,7 @@ else {
       onChange={(e) => setInput(e.target.value)}
     />
     <br />
-
-    {/* Ventana para promedios móviles */}
-    {(tipo === "promedio_movil_simple" || tipo === "promedio_movil_ponderado") && (
-      <>
-        <label>Ventana:</label>
-        <input
-          type="number"
-          min="1"
-          value={ventana}
-          onChange={(e) => setVentana(parseInt(e.target.value))}
-        />
-        <br />
-      </>
-    )}
-
+    
     {/* Pesos solo para promedio móvil ponderado */}
     {tipo === "promedio_movil_ponderado" && (
       <>
@@ -362,7 +325,7 @@ else {
         <textarea
           rows="2"
           cols="40"
-          placeholder="Ej: 1,2,3"
+          placeholder="Ej: 1,2,3,4"
           value={pesos}
           onChange={(e) => setPesos(e.target.value)}
         />
@@ -370,7 +333,7 @@ else {
       </>
     )}
 
-    {/* Alpha para suavizamiento exponencial */}
+    {/* Alpha solo para suavizamiento exponencial */}
     {tipo === "suavizamiento_exponencial" && (
       <>
         <label>Alpha (0 a 1):</label>
@@ -385,23 +348,8 @@ else {
         <br />
       </>
     )}
-
-    {/* Lag para autocorrelación */}
-    {tipo === "autocorrelacion" && (
-      <>
-        <label>Lag:</label>
-        <input
-          type="number"
-          min="1"
-          value={lag}
-          onChange={(e) => setLag(parseInt(e.target.value))}
-        />
-        <br />
-      </>
-    )}
   </>
 )}
-
 
 
 
