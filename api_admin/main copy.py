@@ -2,13 +2,19 @@ import pandas as pd
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-
-from MAT151 import tema2, tema3, tema4, tema5, tema6
+from MAT151 import tema2   # importamos las funciones del Tema 2
 from MAT151.tema2 import tabla_por_clases
+from MAT151 import tema3  # importar funciones de Tema 3
+from MAT151 import tema4
+from MAT151 import tema5
+from MAT151 import tema6
+from MAT151 import tema7  # importar funciones de tema7
 
 from pydantic import BaseModel
+import os
+import shutil
 from typing import Optional, List
-import os, shutil
+from typing import List, Optional
 
 app = FastAPI()
 
@@ -17,13 +23,13 @@ app = FastAPI()
 # =======================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # ⚠️ En producción restringir
+    allow_origins=["*"],   # ⚠️ en producción restringe esto
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # =======================
-# Carpeta para Excel
+# Carpeta donde se guardan los Excel
 # =======================
 EXCEL_FOLDER = "excels"
 os.makedirs(EXCEL_FOLDER, exist_ok=True)
@@ -43,7 +49,8 @@ async def upload_file(file: UploadFile = File(...)):
 # =======================
 @app.get("/files")
 async def list_files():
-    return {"files": os.listdir(EXCEL_FOLDER)}
+    files = os.listdir(EXCEL_FOLDER)
+    return {"files": files}
 
 # =======================
 # Descargar archivo Excel
@@ -54,6 +61,13 @@ async def get_file(filename: str):
     if os.path.exists(file_path):
         return FileResponse(file_path)
     return {"error": "Archivo no encontrado"}
+
+# =======================
+# Ruta raíz de prueba
+# =======================
+@app.get("/")
+async def root():
+    return {"message": "API funcionando correctamente"}
 
 # =======================
 # Ver archivo Excel en JSON
@@ -81,88 +95,98 @@ class DataBivariada(BaseModel):
     tipo: str  # covarianza, correlacion, regresion
 
 class DataMultivariante(BaseModel):
-    X: List[List[float]]  # Cada sublista es una variable independiente
+    X: List[List[float]]  # Lista de listas: cada sublista es una variable independiente
     y: List[float]        # Variable dependiente
     tipo: str             # Solo "regresion_multivariante"
 
-# =======================
-# Diccionarios de funciones por tema
-# =======================
-tema2_funciones = {
-    "frecuencia_absoluta": tema2.calcular_frecuencia_absoluta,
-    "frecuencia_relativa": tema2.calcular_frecuencia_relativa,
-    "frecuencia_acumulada": tema2.calcular_frecuencia_acumulada,
-    "frecuencia_acumulada_relativa": tema2.calcular_frecuencia_acumulada_relativa,
-    "numero_clases": lambda datos: {"resultado": tema2.calcular_numero_clases(datos)},
-    "tabla_clases": lambda datos: {"resultado": tabla_por_clases(datos)},
-}
-
-tema3_funciones = {
-    "media": tema3.calcular_media,
-    "media_geometrica": tema3.calcular_media_geometrica,
-    "media_ponderada": tema3.calcular_media_ponderada,
-    "mediana": tema3.calcular_mediana,
-    "moda": tema3.calcular_moda,
-}
-
-tema4_funciones = {
-    "varianza": tema4.calcular_varianza,
-    "desviacion": tema4.calcular_desviacion,
-    "rango": tema4.calcular_rango,
-    "coef_variacion": tema4.calcular_coef_variacion,
-}
-
-# Diccionario general por tema
-temas_dict = {
-    "tema2": tema2_funciones,
-    "tema3": tema3_funciones,
-    "tema4": tema4_funciones,
-}
+# ======================
+# Modelos de datos para Tema7
+# ======================
+class DataTema7(BaseModel):
+    datos: List[float]
+    tipo: str
+    ventana: Optional[int] = 3
+    pesos: Optional[List[float]] = None
+    alpha: Optional[float] = 0.5
+    lag: Optional[int] = 1
 
 # =======================
-# ENDPOINT DE CÁLCULOS GENERALES (Temas 2-4)
+# ENDPOINTS DE CÁLCULOS
 # =======================
 @app.post("/calcular")
 async def calcular(data: DataInput):
     datos = data.datos
-    tema = data.tema.lower()
     tipo = data.tipo.lower()
+    tema = data.tema.lower()
 
-    if not datos:
+    if len(datos) == 0:
         return {"error": "No se enviaron datos"}
 
-    funciones = temas_dict.get(tema)
-    if not funciones:
-        return {"error": f"Tema '{tema}' no soportado"}
-
-    funcion = funciones.get(tipo)
-    if not funcion:
-        return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
-
     try:
-        # Para media ponderada necesitamos pasar pesos
-        if tema == "tema3" and tipo == "media_ponderada":
-            if not data.pesos:
-                return {"error": "Se requieren los pesos para calcular la media ponderada"}
-            return funcion(datos, data.pesos)
-        else:
-            return funcion(datos)
+        # ----------------- TEMA 2 -----------------
+        if tipo == "frecuencia_absoluta":
+            return tema2.calcular_frecuencia_absoluta(datos)
+        elif tipo == "frecuencia_relativa":
+            return tema2.calcular_frecuencia_relativa(datos)
+        elif tipo == "frecuencia_acumulada":
+            return tema2.calcular_frecuencia_acumulada(datos)
+        elif tipo == "frecuencia_acumulada_relativa":
+            return tema2.calcular_frecuencia_acumulada_relativa(datos)
+        elif tipo == "numero_clases":
+            return {"resultado": tema2.calcular_numero_clases(datos)}
+        elif tipo == "tabla_clases":
+            resultado = tabla_por_clases(datos)
+            return {"resultado": resultado}
+
+        # ----------------- TEMA 3 -----------------
+        elif tema == "tema3":
+            if tipo == "media":
+                return tema3.calcular_media(datos)
+            elif tipo == "media_geometrica":
+                return tema3.calcular_media_geometrica(datos)
+            elif tipo == "media_ponderada":
+                if not data.pesos:
+                    return {"error": "Se requieren los pesos para calcular la media ponderada"}
+                return tema3.calcular_media_ponderada(datos, data.pesos)
+            elif tipo == "mediana":
+                return tema3.calcular_mediana(datos)
+            elif tipo == "moda":
+                return tema3.calcular_moda(datos)
+
+        # ----------------- TEMA 4 -----------------
+        elif tema == "tema4":
+            if tipo == "varianza":
+                return tema4.calcular_varianza(datos)
+            elif tipo == "desviacion":
+                return tema4.calcular_desviacion(datos)
+            elif tipo == "rango":
+                return tema4.calcular_rango(datos)
+            elif tipo == "coef_variacion":
+                return tema4.calcular_coef_variacion(datos)
+
+        return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
     except Exception as e:
         return {"error": str(e)}
 
+
 # =======================
-# ENDPOINT PARA TEMA5 (Bivariado)
+# ENDPOINT PARA TEMA 5
 # =======================
 @app.post("/calcular_bivariada")
 async def calcular_bivariada(data: DataBivariada):
-    x, y, tipo = data.x, data.y, data.tipo.lower()
+    x = data.x
+    y = data.y
+    tipo = data.tipo.lower()
+
     try:
         if tipo == "covarianza":
             return tema5.calcular_covarianza(x, y)
         elif tipo == "correlacion":
             return tema5.calcular_correlacion(x, y)
+        # Regresion lineal de Tema5
         elif tipo in ("regresion", "recta_regresion"):
             return tema5.calcular_regresion_lineal(x, y)
+        # Regresion de Tema6
         elif tipo == "regresion_lineal":
             return tema6.regresion_lineal(x, y)
         elif tipo == "regresion_no_lineal":
@@ -174,12 +198,12 @@ async def calcular_bivariada(data: DataBivariada):
     except Exception as e:
         return {"error": str(e)}
 
-# =======================
-# ENDPOINT PARA TEMA6 (Multivariante)
-# =======================
+    
 @app.post("/calcular_multivariante")
 async def calcular_multivariante(data: DataMultivariante):
-    X, y, tipo = data.X, data.y, data.tipo.lower()
+    X = data.X
+    y = data.y
+    tipo = data.tipo.lower()
 
     if tipo != "regresion_multivariante":
         return {"error": f"Tipo de cálculo '{tipo}' no soportado en este endpoint"}
@@ -198,5 +222,34 @@ async def calcular_multivariante(data: DataMultivariante):
         intercept = modelo.intercept_.item() if hasattr(modelo.intercept_, 'item') else modelo.intercept_
 
         return {"intercepto": intercept, "coeficientes": coef}
+
     except Exception as e:
         return {"error": str(e)}
+
+
+# ======================
+# Endpoint Tema7
+# ======================
+@app.post("/calcular_tema7")
+async def calcular_tema7(data: DataTema7):
+    tipo = data.tipo.lower()
+    try:
+        if tipo == "promedio_movil_simple":
+            return tema7.promedio_movil_simple(data.datos, data.ventana)
+        elif tipo == "promedio_movil_ponderado":
+            if not data.pesos:
+                return {"error": "Se requieren los pesos"}
+            return tema7.promedio_movil_ponderado(data.datos, data.pesos)
+        elif tipo == "suavizamiento_exponencial":
+            return tema7.suavizamiento_exponencial(data.datos, data.alpha)
+        elif tipo == "indices_estacionales":
+            return tema7.indices_estacionales(data.datos)
+        elif tipo == "autocorrelacion":
+            return tema7.autocorrelacion(data.datos, data.lag)
+        elif tipo == "pronostico_basico":
+            return tema7.pronostico_basico(data.datos)
+        else:
+            return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
+    except Exception as e:
+        return {"error": str(e)}
+
