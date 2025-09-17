@@ -23,6 +23,21 @@ app.add_middleware(
 )
 
 # =======================
+# RUTA PRINCIPAL (para evitar 404 en "/")
+# =======================
+@app.get("/")
+async def root():
+    return {"message": "API de Estadística funcionando. Visita /docs para probar los endpoints."}
+
+# =======================
+# FAVICON (para evitar 404 en "/favicon.ico")
+# =======================
+@app.get("/favicon.ico")
+async def favicon():
+    return {}
+
+
+# =======================
 # Carpeta para Excel
 # =======================
 EXCEL_FOLDER = "excels"
@@ -95,6 +110,13 @@ tema2_funciones = {
     "frecuencia_acumulada_relativa": tema2.calcular_frecuencia_acumulada_relativa,
     "numero_clases": lambda datos: {"resultado": tema2.calcular_numero_clases(datos)},
     "tabla_clases": lambda datos: {"resultado": tabla_por_clases(datos)},
+
+    "minimo": tema2.calcular_minimo,
+    "maximo": tema2.calcular_maximo,
+    "cuartiles": tema2.calcular_cuartiles,
+    "percentil": lambda datos, p=25: {"resultado": tema2.calcular_percentil(datos, p)},
+    "rango_intercuartilico": tema2.calcular_rango_intercuartilico
+    
 }
 
 tema3_funciones = {
@@ -127,6 +149,7 @@ async def calcular(data: DataInput):
     datos = data.datos
     tema = data.tema.lower()
     tipo = data.tipo.lower()
+    
 
     if not datos:
         return {"error": "No se enviaron datos"}
@@ -140,6 +163,10 @@ async def calcular(data: DataInput):
         return {"error": f"Tipo de cálculo '{tipo}' no reconocido"}
 
     try:
+        if tema == "tema2" and tipo == "percentil":
+         p = getattr(data, "p", 25)  # Si viene en el body, lo usamos; si no, 25
+         return funcion(datos, p)
+
         # Para media ponderada necesitamos pasar pesos
         if tema == "tema3" and tipo == "media_ponderada":
             if not data.pesos:

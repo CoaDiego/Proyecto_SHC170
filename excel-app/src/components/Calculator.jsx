@@ -128,6 +128,15 @@ export default function Calculator() {
             <option value="frecuencia_acumulada">Frecuencia acumulada</option>
             <option value="frecuencia_acumulada_relativa">Frecuencia acumulada relativa</option>
             <option value="tabla_clases">Tabla por intervalos</option>
+            <option value="frecuencia_absoluta">Frecuencia absoluta</option>
+            <option value="frecuencia_relativa">Frecuencia relativa</option>
+            <option value="frecuencia_acumulada">Frecuencia acumulada</option>
+            <option value="frecuencia_acumulada_relativa">Frecuencia acumulada relativa</option>
+            <option value="tabla_clases">Tabla por intervalos</option>
+            <option value="minimo">Mínimo</option>
+            <option value="maximo">Máximo</option>
+            <option value="cuartiles">Cuartiles</option>
+            <option value="rango_intercuartilico">Rango Intercuartílico (IQR)</option>
           </>
         )}
         {tema === "Tema3" && (

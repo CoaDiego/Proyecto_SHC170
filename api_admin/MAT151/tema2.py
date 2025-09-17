@@ -1,6 +1,6 @@
 import statistics
 import math
-
+import numpy as np  # Para percentiles
 
 # ================================
 # Funciones Tema 2 (Distribución de Frecuencias)
@@ -113,3 +113,50 @@ def tabla_por_clases(datos):
         })
 
     return tabla
+
+
+# ========================
+# Cálculos nuevos para Tema2
+# ========================
+
+# Mínimo
+def calcular_minimo(datos):
+    if len(datos) == 0:
+        return {"error": "No se enviaron datos"}
+    return {"resultado": min(datos)}
+
+# Máximo
+def calcular_maximo(datos):
+    if len(datos) == 0:
+        return {"error": "No se enviaron datos"}
+    return {"resultado": max(datos)}
+
+# Cuartiles (Q1, Q2, Q3)
+def calcular_cuartiles(datos):
+    if len(datos) == 0:
+        return {"error": "No se enviaron datos"}
+    Q1 = np.percentile(datos, 25)
+    Q2 = np.percentile(datos, 50)  # Mediana
+    Q3 = np.percentile(datos, 75)
+    return {"Q1": Q1, "Q2": Q2, "Q3": Q3}
+
+# Percentil general
+def calcular_percentil(datos, p):
+    """
+    p: porcentaje entre 0 y 100
+    """
+    if len(datos) == 0:
+        return {"error": "No se enviaron datos"}
+    if not (0 <= p <= 100):
+        return {"error": "Percentil debe estar entre 0 y 100"}
+    valor = np.percentile(datos, p)
+    return {"percentil": p, "valor": valor}
+
+# Rango intercuartílico (IQR = Q3 - Q1)
+def calcular_rango_intercuartilico(datos):
+    if len(datos) == 0:
+        return {"error": "No se enviaron datos"}
+    Q1 = np.percentile(datos, 25)
+    Q3 = np.percentile(datos, 75)
+    IQR = Q3 - Q1
+    return {"IQR": IQR, "Q1": Q1, "Q3": Q3}

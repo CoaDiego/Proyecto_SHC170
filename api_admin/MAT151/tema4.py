@@ -1,6 +1,6 @@
 
 import statistics
-import math
+
 
 def calcular_varianza(datos):
     if len(datos) < 2:
