@@ -67,6 +67,7 @@ export default function Calculator() {
         bodyData.pesos = pesosList;
       }
     }
+    
 
     // ==========================
     // ENVÍO DE DATOS A LA API
@@ -137,6 +138,11 @@ export default function Calculator() {
             <option value="media_ponderada">Media Ponderada</option>
             <option value="mediana">Mediana</option>
             <option value="moda">Moda</option>
+
+            {/* Nuevos cálculos agrupados */}
+            <option value="media_agrupada">Media Agrupada</option>
+            <option value="mediana_agrupada">Mediana Agrupada</option>
+            <option value="moda_agrupada">Moda Agrupada</option>
           </>
         )}
         {tema === "Tema4" && (

@@ -125,6 +125,10 @@ tema3_funciones = {
     "media_ponderada": tema3.calcular_media_ponderada,
     "mediana": tema3.calcular_mediana,
     "moda": tema3.calcular_moda,
+     # Nuevas funciones
+    "media_agrupada": tema3.media_agrupada,
+    "mediana_agrupada": tema3.mediana_agrupada,
+    "moda_agrupada": tema3.moda_agrupada
 }
 
 tema4_funciones = {
@@ -172,8 +176,13 @@ async def calcular(data: DataInput):
             if not data.pesos:
                 return {"error": "Se requieren los pesos para calcular la media ponderada"}
             return funcion(datos, data.pesos)
-        else:
-            return funcion(datos)
+        # Para cálculos agrupados del Tema3
+        if tema == "tema3" and tipo in ["media_agrupada", "mediana_agrupada", "moda_agrupada"]:
+            return funcion(datos)  # enviamos datos crudos, Tema3.py se encargará de crear la tabla
+        
+        # Resto de cálculos
+        return funcion(datos)
+
     except Exception as e:
         return {"error": str(e)}
 

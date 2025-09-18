@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+
 export default function Calculator() {
   // ==========================
   // ESTADOS DEL COMPONENTE
@@ -56,18 +57,41 @@ export default function Calculator() {
       }
     } else {
       // ==========================
-      // Resto de temas (Tema2, Tema3, Tema4)
-      // ==========================
-      const datos = input.split(",").map(Number).filter((x) => !isNaN(x));
-      bodyData.datos = datos;
+      // Resto de temas (Tema2, Tema3, Tema4)           
+      // =========================
+      // Convertimos input a números
+let datosArray = input
+  .split(",")
+  .map(x => Number(x.trim()))
+  .filter(x => !isNaN(x));
 
-      // Para media ponderada enviamos pesos
-      if (tipo === "media_ponderada") {
-        const pesosList = pesos.split(",").map(Number).filter((x) => !isNaN(x));
-        bodyData.pesos = pesosList;
-      }
+// Media ponderada → enviamos pesos
+if (tipo === "media_ponderada") {
+  const pesosList = pesos
+    .split(",")
+    .map(x => Number(x.trim()))
+    .filter(x => !isNaN(x));
+  bodyData.pesos = pesosList;
+}
+
+// Para cálculos agrupados del Tema3
+
+// Para cálculos agrupados del Tema3
+
+if (tema === "Tema3" && ["media_agrupada", "mediana_agrupada", "moda_agrupada"].includes(tipo)) {
+  bodyData.datos = datosArray; // enviamos datos crudos, Tema3.py se encargará de crear la tabla de clases
+} else {
+  bodyData.datos = datosArray; // lista simple para los otros cálculos
+}
+
+
+
+// DEBUG: Ver qué datos se enviarán
+console.log("bodyData a enviar:", bodyData);
+
+
     }
-
+    
     // ==========================
     // ENVÍO DE DATOS A LA API
     // ==========================
@@ -146,6 +170,11 @@ export default function Calculator() {
             <option value="media_ponderada">Media Ponderada</option>
             <option value="mediana">Mediana</option>
             <option value="moda">Moda</option>
+
+             {/* Nuevos cálculos agrupados */}
+            <option value="media_agrupada">Media Agrupada</option>
+            <option value="mediana_agrupada">Mediana Agrupada</option>
+            <option value="moda_agrupada">Moda Agrupada</option>
           </>
         )}
         {tema === "Tema4" && (
@@ -264,15 +293,65 @@ export default function Calculator() {
       ========================== */}
       <button onClick={handleCalculate}>Calcular</button>
 
+
       {/* ==========================
-          MOSTRAR RESULTADO
+           MOSTRAR RESULTADO
       ========================== */}
-      {resultado && (
+      {resultado && (   // Solo renderiza esta sección si 'resultado' tiene algún valor
         <div>
           <h3>Resultado:</h3>
-
-          {/* Caso 1: array de objetos → tabla */}
-          {Array.isArray(resultado.resultado) ? (
+      
+          {/* ==========================
+              CASO 1: cálculos agrupados (Tema3)
+              - 'resultado' contiene un objeto con tabla de clases + medias/mediana/moda agrupadas
+          ========================== */}
+          {resultado.tabla ? (
+            <>
+              {/* Mostrar resultados individuales si existen */}
+              {resultado.media_agrupada !== undefined && (
+                <p>
+                  <b>Media Agrupada:</b> {resultado.media_agrupada.toFixed(5)}
+                </p>
+              )}
+              {resultado.mediana_agrupada !== undefined && (
+                <p>
+                  <b>Mediana Agrupada:</b> {resultado.mediana_agrupada.toFixed(5)}
+                </p>
+              )}
+              {resultado.moda_agrupada !== undefined && (
+                <p>
+                  <b>Moda Agrupada:</b> {resultado.moda_agrupada.toFixed(5)}
+                </p>
+              )}
+      
+              {/* Tabla de clases: mostramos LI, LS, Marca, Frecuencia */}
+              <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+                <thead>
+                  <tr>
+                    <th>LI</th>       {/* Límite inferior */}
+                    <th>LS</th>       {/* Límite superior */}
+                    <th>Marca</th>    {/* Marca de clase */}
+                    <th>Fi</th>       {/* Frecuencia absoluta */}
+                  </tr>
+                </thead>
+                <tbody>
+                  {resultado.tabla.map((row, idx) => (
+                    <tr key={idx}>
+                      <td>{row.li}</td>
+                      <td>{row.ls}</td>
+                      <td>{typeof row.marca === "number" ? row.marca.toFixed(2) : row.marca}</td>
+                      <td>{row.fi}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          ) 
+          // ==========================
+          // CASO 2: array de objetos → tabla
+          // - útil para Tema2, Tema4, etc.
+          // ==========================
+          : Array.isArray(resultado.resultado) ? (
             <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
               <thead>
                 <tr>
@@ -285,36 +364,51 @@ export default function Calculator() {
                 {resultado.resultado.map((row, idx) => (
                   <tr key={idx}>
                     {Object.values(row).map((val, i) => (
-                      <td key={i}>{val}</td>
+                      <td key={i}>
+                        {typeof val === "number" ? val.toFixed(5) : JSON.stringify(val)}
+                      </td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
-          ) : resultado.resultado !== undefined ? (
-            // Caso 2: valor simple
-            <p>{resultado.resultado}</p>
-          ) : (
-            // Caso 3: objeto con varios campos (ej. regresión lineal)
+          ) 
+          // ==========================
+          // CASO 3: valor simple → párrafo
+          // - útil para media, mediana, moda simples
+          // ==========================
+          : resultado.resultado !== undefined ? (
+            <p>
+              {typeof resultado.resultado === "number" 
+                ? resultado.resultado.toFixed(5)  // Formato decimal si es número
+                : resultado.resultado}            // Si no, mostrar tal cual
+            </p>
+          ) 
+          // ==========================
+          // CASO 4: objeto con varios campos → tabla
+          // - útil para regresión lineal/multivariante
+          // ==========================
+          : (
             <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
               <tbody>
                 {Object.entries(resultado).map(([key, value]) => (
                   <tr key={key}>
                     <td><b>{key}</b></td>
                     <td>
-                      {typeof value === "number"
-                        ? value.toFixed(5)
-                        : Array.isArray(value)
-                          ? value.map(v => v.toFixed(5)).join(", ")
-                          : value}
+                      {typeof value === "number" ? value.toFixed(5) :    // Número → 5 decimales
+                       Array.isArray(value) ?                              // Array → mostrar cada número formateado
+                        value.map(v => (typeof v === "number" ? v.toFixed(5) : JSON.stringify(v))).join(", ")
+                        : JSON.stringify(value)}                            // Otros tipos → stringify
                     </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+              </table>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      }
+      
+      
