@@ -11,7 +11,7 @@ export default function Menu() {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/excels" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/archivos" className={({ isActive }) => (isActive ? "active" : "")}>
             Excels
           </NavLink>
         </li>

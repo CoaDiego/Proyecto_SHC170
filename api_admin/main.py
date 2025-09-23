@@ -73,13 +73,75 @@ async def get_file(filename: str):
 # =======================
 # Ver archivo Excel en JSON
 # =======================
-@app.get("/view/{filename}")
+""" @app.get("/view/{filename}")
 async def view_excel(filename: str):
     file_path = os.path.join(EXCEL_FOLDER, filename)
     if os.path.exists(file_path):
         df = pd.read_excel(file_path)
         return JSONResponse(content=df.to_dict(orient="records"))
+    return {"error": "Archivo no encontrado"} """
+
+@app.get("/view/{filename}")
+async def view_excel(filename: str, hoja: int = 0):
+
+    file_path = os.path.join("excels", filename)
+    if not os.path.exists(file_path):
+        return {"error": "Archivo no encontrado"}
+
+    try:
+        # Abrir Excel dentro de un contexto para liberar handle
+        with pd.ExcelFile(file_path) as xls:
+            df = pd.read_excel(xls, sheet_name=hoja, header=None)
+            df = df.dropna(how="all")
+            if df.empty:
+                return {"error": "Archivo sin datos detectables"}
+            df.columns = [f"Col {i+1}" for i in range(len(df.columns))]
+            json_data = df.to_dict(orient="records")  # convertir dentro del contexto
+
+        return JSONResponse(content=json_data)
+
+    except Exception as e:
+        return {"error": f"Error al leer el Excel: {e}"}
+
+
+
+# ========= Listar hojas del archivo ==============
+@app.get("/view/{filename}")
+async def view_excel(filename: str, hoja: int = 0):
+    import pandas as pd
+    import os
+    from fastapi.responses import JSONResponse
+
+    file_path = os.path.join("excels", filename)
+    if not os.path.exists(file_path):
+        return {"error": "Archivo no encontrado"}
+
+    try:
+        # Abrir Excel dentro de un contexto
+        with pd.ExcelFile(file_path) as xls:
+            df = pd.read_excel(xls, sheet_name=hoja, header=None)
+            df = df.dropna(how="all")
+            if df.empty:
+                return {"error": "Archivo sin datos detectables"}
+            df.columns = [f"Col {i+1}" for i in range(len(df.columns))]
+            # Convertir a JSON dentro del contexto
+            json_data = df.to_dict(orient="records")
+
+        return JSONResponse(content=json_data)
+
+    except Exception as e:
+        return {"error": f"Error al leer el Excel: {e}"}
+
+
+# ======== Eliminar archivo ===============
+@app.delete("/files/{filename}")
+async def delete_file(filename: str):
+    file_path = os.path.join(EXCEL_FOLDER, filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return {"message": f"Archivo {filename} eliminado correctamente"}
     return {"error": "Archivo no encontrado"}
+
 
 # =======================
 # MODELOS DE DATOS

@@ -16,8 +16,8 @@ export default function Inicio() {
 
   return (
     <div>
-      <h1>Subir Archivos Excel</h1>
-      <ExcelUploader setRefreshFiles={setRefreshFiles} />
+      <h1>Pagina en proceso...</h1>
+      
     </div>
   );
 }
