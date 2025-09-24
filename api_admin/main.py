@@ -56,9 +56,17 @@ async def upload_file(file: UploadFile = File(...)):
 # =======================
 # Listar archivos Excel
 # =======================
-@app.get("/files")
+""" @app.get("/files")
 async def list_files():
     return {"files": os.listdir(EXCEL_FOLDER)}
+ """
+
+@app.get("/files")
+async def list_files():
+    import os
+    folder = "excels"
+    files = os.listdir(folder)
+    return {"files": files}
 
 # =======================
 # Descargar archivo Excel
@@ -73,15 +81,8 @@ async def get_file(filename: str):
 # =======================
 # Ver archivo Excel en JSON
 # =======================
-""" @app.get("/view/{filename}")
-async def view_excel(filename: str):
-    file_path = os.path.join(EXCEL_FOLDER, filename)
-    if os.path.exists(file_path):
-        df = pd.read_excel(file_path)
-        return JSONResponse(content=df.to_dict(orient="records"))
-    return {"error": "Archivo no encontrado"} """
 
-@app.get("/view/{filename}")
+""" @app.get("/view/{filename}")
 async def view_excel(filename: str, hoja: int = 0):
 
     file_path = os.path.join("excels", filename)
@@ -131,8 +132,45 @@ async def view_excel(filename: str, hoja: int = 0):
 
     except Exception as e:
         return {"error": f"Error al leer el Excel: {e}"}
+ """
 
 
+# ========= Ver contenido de una hoja específica ==========
+@app.get("/view/{filename}")
+async def view_excel(filename: str, hoja: int = 0):
+    file_path = os.path.join("excels", filename)
+    if not os.path.exists(file_path):
+        return {"error": "Archivo no encontrado"}
+
+    try:
+        with pd.ExcelFile(file_path) as xls:
+            df = pd.read_excel(xls, sheet_name=hoja, header=None)
+            df = df.dropna(how="all")
+            if df.empty:
+                return {"error": "Archivo sin datos detectables"}
+            df.columns = [f"Col {i+1}" for i in range(len(df.columns))]
+            json_data = df.to_dict(orient="records")
+
+        return JSONResponse(content=json_data)
+
+    except Exception as e:
+        return {"error": f"Error al leer el Excel: {e}"}
+
+
+# ========= Listar hojas de un archivo ==========
+@app.get("/sheets/{filename}")
+async def list_sheets(filename: str):
+    file_path = os.path.join("excels", filename)
+    if not os.path.exists(file_path):
+        return {"error": "Archivo no encontrado"}
+
+    try:
+        with pd.ExcelFile(file_path) as xls:
+            return {"sheets": xls.sheet_names}
+    except Exception as e:
+        return {"error": f"No se pudieron obtener las hojas: {e}"}
+    
+    
 # ======== Eliminar archivo ===============
 @app.delete("/files/{filename}")
 async def delete_file(filename: str):
