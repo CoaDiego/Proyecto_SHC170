@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Calculator from "../components/Calculator";
 import ExcelContent from "../components/ExcelContent";
+import Calculadora_Excel from "../components/Calculadora_Excel";
 
 export default function Calculadora() {
   const [files, setFiles] = useState([]);
@@ -30,7 +31,7 @@ export default function Calculadora() {
       .then((data) => {
         if (data.sheets) {
           setSheets(data.sheets);
-          setSelectedSheet(data.sheets[0]); // primera hoja por defecto
+          setSelectedSheet(0); // primera hoja por defecto
         } else {
           setSheets([]);
           setSelectedSheet("");
@@ -57,27 +58,6 @@ export default function Calculadora() {
         ))}
       </select>
 
-  
-
-        {/* Selector de hoja */}
-      {sheets.length > 0 && (
-        <>
-        <br />
-          <label className="block mb-2 font-semibold">Selecciona una hoja:</label>
-          <select
-            value={selectedSheet}
-            onChange={(e) => setSelectedSheet(e.target.value)}
-            className="border p-2 rounded mb-4"
-          >
-            {sheets.map((sheet, index) => (
-              <option key={index} value={index}>
-                {sheet}
-              </option>
-            ))}
-          </select>
-        </>
-      )}
-
        {/* Vista previa del archivo seleccionado */}
             {selectedFile && (
               <div style={{ marginTop: "20px" }}>
@@ -90,8 +70,40 @@ export default function Calculadora() {
         Archivo en uso: <b>{selectedFile}</b>
       </p>
 
+
+        {/* Selector de hoja */}
+      {sheets.length > 0 && (
+        <>
+        <br />
+          <label className="block mb-2 font-semibold">Selecciona una hoja:</label>
+          <select
+            value={selectedSheet}
+            /* onChange={(e) => setSelectedSheet(e.target.value)} */
+            onChange={(e) => setSelectedSheet(Number(e.target.value))}
+            className="border p-2 rounded mb-4"
+          >
+            {sheets.map((sheet, index) => (
+              <option key={index} value={index}>
+                {sheet}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
+      
+      {selectedFile && selectedSheet !== "" && (
+        <Calculadora_Excel 
+  filename={selectedFile} 
+  sheet={selectedSheet} 
+  usarTodaHoja={false} 
+/>
+
+
+
+)}
   
       <Calculator /> {/*Calculadora*/}
+
 
     </div>
   );
