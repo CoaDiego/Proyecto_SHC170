@@ -42,7 +42,7 @@ export default function Calculadora() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Archivos Subidos</h2>
+      <h2 className="text-2xl font-bold mb-6"> - Archivos Subidos - </h2>
 
       {/* Selector de archivo */}
       <label className="block mb-2 font-semibold">Selecciona un archivo:</label>
@@ -74,7 +74,6 @@ export default function Calculadora() {
         {/* Selector de hoja */}
       {sheets.length > 0 && (
         <>
-        <br />
           <label className="block mb-2 font-semibold">Selecciona una hoja:</label>
           <select
             value={selectedSheet}
@@ -98,13 +97,9 @@ export default function Calculadora() {
   usarTodaHoja={false} 
 />
 
-
-
 )}
   
       <Calculator /> {/*Calculadora*/}
-
-
     </div>
   );
 }

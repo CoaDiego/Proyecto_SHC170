@@ -31,7 +31,7 @@ export default function ExcelUploader({ setRefreshFiles }) {
 
   return (
     <div>
-      <h2>Subir archivo Excel</h2>
+      <h2>- Subir archivo Excel -</h2>
       <input type="file" onChange={handleFileChange} />
       <button onClick={handleUpload}>Subir</button>
       {message && <p>{message}</p>}

@@ -22,7 +22,7 @@ export default function ExcelReader() {
 
   return (
     <div>
-      <h2>Ver contenido del Excel</h2>
+      <h2> - Ver contenido del Excel - </h2>
       <input type="file" onChange={handleFile} />
       <table border="1">
         <tbody>

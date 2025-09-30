@@ -152,11 +152,6 @@ console.log("bodyData a enviar:", bodyData);
             <option value="frecuencia_acumulada">Frecuencia acumulada</option>
             <option value="frecuencia_acumulada_relativa">Frecuencia acumulada relativa</option>
             <option value="tabla_clases">Tabla por intervalos</option>
-            <option value="frecuencia_absoluta">Frecuencia absoluta</option>
-            <option value="frecuencia_relativa">Frecuencia relativa</option>
-            <option value="frecuencia_acumulada">Frecuencia acumulada</option>
-            <option value="frecuencia_acumulada_relativa">Frecuencia acumulada relativa</option>
-            <option value="tabla_clases">Tabla por intervalos</option>
             <option value="minimo">Mínimo</option>
             <option value="maximo">Máximo</option>
             <option value="cuartiles">Cuartiles</option>
@@ -381,8 +376,8 @@ console.log("bodyData a enviar:", bodyData);
             <p>
               {typeof resultado.resultado === "number" 
                 ? resultado.resultado.toFixed(5)  // Formato decimal si es número
-                : resultado.resultado}            // Si no, mostrar tal cual
-            </p>
+                : resultado.resultado}            
+            </p>// Si no, mostrar tal cual
           ) 
           // ==========================
           // CASO 4: objeto con varios campos → tabla
@@ -398,9 +393,9 @@ console.log("bodyData a enviar:", bodyData);
                       {typeof value === "number" ? value.toFixed(5) :    // Número → 5 decimales
                        Array.isArray(value) ?                              // Array → mostrar cada número formateado
                         value.map(v => (typeof v === "number" ? v.toFixed(5) : JSON.stringify(v))).join(", ")
-                        : JSON.stringify(value)}                            // Otros tipos → stringify
+                        : JSON.stringify(value)}                            
                     </td>
-                  </tr>
+                  </tr> // Otros tipos → stringify
                 ))}
               </tbody>
               </table>

@@ -16,16 +16,20 @@ export default function Calculadora_Excel({ filename, sheet }) {
     fetch(`http://127.0.0.1:8000/view/${filename}?hoja=${hojaIndex}`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setExcelData(data);
-          const cols = Object.keys(data[0]);
-          setColumns(cols);
-          setSelectedColumn(cols[0]);
-        } else {
-          setExcelData([]);
-          setColumns([]);
-          setSelectedColumn("");
-        }
+       if (Array.isArray(data) && data.length > 0) {
+  // Usamos la primera fila para los nombres de columna
+  const headerRow = Object.values(data[0]); // extraemos los valores de la primera fila
+  setColumns(headerRow);                    // guardamos los nombres reales
+
+  // Los datos reales empiezan desde la segunda fila
+  const realData = data.slice(1).map(row =>
+    Object.fromEntries(Object.keys(row).map((key, idx) => [headerRow[idx], row[key]]))
+  );
+  
+  setExcelData(realData);
+  setSelectedColumn(headerRow[0]);
+}
+
       })
       .catch((err) => console.error("Error al cargar datos Excel:", err));
   }, [filename, sheet]);
@@ -69,7 +73,7 @@ export default function Calculadora_Excel({ filename, sheet }) {
 
   return (
     <div className="p-4 border rounded mt-6">
-      <h3 className="text-xl font-bold mb-2">📊 Calculadora desde Excel</h3>
+      <h2 className="text-xl font-bold mb-2"> - Calculadora -</h2>
 
       {/* Selector de columna */}
       {columns.length > 0 && (
@@ -86,8 +90,16 @@ export default function Calculadora_Excel({ filename, sheet }) {
               </option>
             ))}
           </select>
+          {/* Mostrar datos de la columna seleccionada */}
+{datos.length > 0 && (
+  <p className="mb-2">
+    <strong>Datos extraídos:</strong> {datos.join(", ")}
+  </p>
+)}
+
         </>
       )}
+
 <br />
       <label className="block mb-1">Selecciona un cálculo:</label>
       <select
