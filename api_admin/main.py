@@ -1,5 +1,5 @@
 import pandas as pd
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -9,6 +9,7 @@ from MAT151.tema2 import tabla_por_clases
 from pydantic import BaseModel
 from typing import Optional, List
 import os, shutil
+import json
 
 app = FastAPI()
 
@@ -47,11 +48,18 @@ os.makedirs(EXCEL_FOLDER, exist_ok=True)
 # Subir archivo Excel
 # =======================
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...), autor: str = Form(...)):
     file_path = os.path.join(EXCEL_FOLDER, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    return {"message": f"Archivo {file.filename} subido correctamente!"}
+
+    # Guardar metadata
+    meta_path = os.path.join(EXCEL_FOLDER, f"{file.filename}.meta")
+    meta_data = {"filename": file.filename, "author": autor}
+    with open(meta_path, "w") as f:
+        json.dump(meta_data, f)
+
+    return {"message": f"Archivo {file.filename} subido correctamente!", "author": autor}
 
 # =======================
 # Listar archivos Excel
@@ -62,11 +70,21 @@ async def list_files():
  """
 
 @app.get("/files")
-async def list_files():
-    import os
-    folder = "excels"
-    files = os.listdir(folder)
-    return {"files": files}
+def list_files():
+    files_list = []
+    for fname in os.listdir(EXCEL_FOLDER):
+        if fname.endswith(".xlsx"):
+            meta_file = f"{fname}.meta"
+            author = "Desconocido"
+            meta_path = os.path.join(EXCEL_FOLDER, meta_file)
+            if os.path.exists(meta_path):
+                with open(meta_path, "r") as f:
+                    meta_data = json.load(f)
+                    author = meta_data.get("author", "Desconocido")
+            files_list.append({"filename": fname, "author": author})
+    return {"files": files_list}
+
+
 
 # =======================
 # Descargar archivo Excel
@@ -77,62 +95,6 @@ async def get_file(filename: str):
     if os.path.exists(file_path):
         return FileResponse(file_path)
     return {"error": "Archivo no encontrado"}
-
-# =======================
-# Ver archivo Excel en JSON
-# =======================
-
-""" @app.get("/view/{filename}")
-async def view_excel(filename: str, hoja: int = 0):
-
-    file_path = os.path.join("excels", filename)
-    if not os.path.exists(file_path):
-        return {"error": "Archivo no encontrado"}
-
-    try:
-        # Abrir Excel dentro de un contexto para liberar handle
-        with pd.ExcelFile(file_path) as xls:
-            df = pd.read_excel(xls, sheet_name=hoja, header=None)
-            df = df.dropna(how="all")
-            if df.empty:
-                return {"error": "Archivo sin datos detectables"}
-            df.columns = [f"Col {i+1}" for i in range(len(df.columns))]
-            json_data = df.to_dict(orient="records")  # convertir dentro del contexto
-
-        return JSONResponse(content=json_data)
-
-    except Exception as e:
-        return {"error": f"Error al leer el Excel: {e}"}
-
-
-
-# ========= Listar hojas del archivo ==============
-@app.get("/view/{filename}")
-async def view_excel(filename: str, hoja: int = 0):
-    import pandas as pd
-    import os
-    from fastapi.responses import JSONResponse
-
-    file_path = os.path.join("excels", filename)
-    if not os.path.exists(file_path):
-        return {"error": "Archivo no encontrado"}
-
-    try:
-        # Abrir Excel dentro de un contexto
-        with pd.ExcelFile(file_path) as xls:
-            df = pd.read_excel(xls, sheet_name=hoja, header=None)
-            df = df.dropna(how="all")
-            if df.empty:
-                return {"error": "Archivo sin datos detectables"}
-            df.columns = [f"Col {i+1}" for i in range(len(df.columns))]
-            # Convertir a JSON dentro del contexto
-            json_data = df.to_dict(orient="records")
-
-        return JSONResponse(content=json_data)
-
-    except Exception as e:
-        return {"error": f"Error al leer el Excel: {e}"}
- """
 
 
 # ========= Ver contenido de una hoja específica ==========

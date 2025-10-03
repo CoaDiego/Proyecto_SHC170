@@ -4,35 +4,29 @@ import ExcelContent from "../components/ExcelContent";
 import Calculadora_Excel from "../components/Calculadora_Excel";
 
 export default function Calculadora() {
-  const [files, setFiles] = useState([]);               // cada file = { filename, author }
-  const [selectedFile, setSelectedFile] = useState(""); // solo el nombre del archivo
+  const [files, setFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState("");
   const [sheets, setSheets] = useState([]);
   const [selectedSheet, setSelectedSheet] = useState("");
 
-  // =======================
-  // Cargar lista de archivos
-  // =======================
+
+  // Cargar lista de archivos al montar el componente
   useEffect(() => {
     fetch("http://127.0.0.1:8000/files")
       .then((res) => res.json())
       .then((data) => {
-        if (data.files) {
-          setFiles(data.files);
-          if (data.files.length > 0) {
-            setSelectedFile(data.files[0].filename); // ⚡ solo filename
-          }
+        setFiles(data.files);
+        if (data.files.length > 0) {
+          setSelectedFile(data.files[0]); // seleccionar el primero por defecto
         }
       })
       .catch((err) => console.error("Error al cargar archivos:", err));
   }, []);
-
-  // =======================
-  // Cargar hojas del archivo seleccionado
-  // =======================
+  
+   // Cargar hojas cuando se cambia el archivo seleccionado
   useEffect(() => {
     if (!selectedFile) return;
-
-    fetch(`http://127.0.0.1:8000/sheets/${encodeURIComponent(selectedFile)}`)
+    fetch(`http://127.0.0.1:8000/sheets/${selectedFile}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.sheets) {
@@ -58,29 +52,32 @@ export default function Calculadora() {
         className="border p-2 rounded"
       >
         {files.map((file) => (
-          <option key={file.filename} value={file.filename}>
-            {file.filename} ({file.author || "Desconocido"})
+          <option key={file} value={file}>
+            {file}
           </option>
         ))}
       </select>
 
-      {/* Vista previa del archivo */}
-      {selectedFile && (
-        <div style={{ marginTop: "20px" }}>
-          <ExcelContent filename={selectedFile} />
-        </div>
-      )}
+       {/* Vista previa del archivo seleccionado */}
+            {selectedFile && (
+              <div style={{ marginTop: "20px" }}>
+                <ExcelContent filename={selectedFile} />
+              </div>
+            )}
+      
 
       <p className="mt-4">
         Archivo en uso: <b>{selectedFile}</b>
       </p>
 
-      {/* Selector de hoja */}
+
+        {/* Selector de hoja */}
       {sheets.length > 0 && (
         <>
           <label className="block mb-2 font-semibold">Selecciona una hoja:</label>
           <select
             value={selectedSheet}
+            /* onChange={(e) => setSelectedSheet(e.target.value)} */
             onChange={(e) => setSelectedSheet(Number(e.target.value))}
             className="border p-2 rounded mb-4"
           >
@@ -92,18 +89,17 @@ export default function Calculadora() {
           </select>
         </>
       )}
-
-      {/* Calculadora Excel */}
+      
       {selectedFile && selectedSheet !== "" && (
-        <Calculadora_Excel
-          filename={selectedFile}
-          sheet={selectedSheet}
-          usarTodaHoja={false}
-        />
-      )}
+        <Calculadora_Excel 
+  filename={selectedFile} 
+  sheet={selectedSheet} 
+  usarTodaHoja={false} 
+/>
 
-      {/* Calculadora general */}
-      <Calculator />
+)}
+  
+      <Calculator /> {/*Calculadora*/}
     </div>
   );
 }
