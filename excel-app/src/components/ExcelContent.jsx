@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 
-export default function ExcelContent({ filename, onDelete }) {
+export default function ExcelContent({ filename, onSheetChange }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sheets, setSheets] = useState([]);
   const [selectedSheet, setSelectedSheet] = useState(0);
 
-  // Obtener lista de hojas
   useEffect(() => {
     if (!filename) return;
 
@@ -16,11 +15,11 @@ export default function ExcelContent({ filename, onDelete }) {
         if (json.sheets) {
           setSheets(json.sheets);
           setSelectedSheet(0);
+          onSheetChange?.(0); // ⚡ avisar al padre
         }
       });
   }, [filename]);
 
-  // Obtener datos de la hoja seleccionada
   useEffect(() => {
     if (!filename) return;
 
@@ -31,20 +30,13 @@ export default function ExcelContent({ filename, onDelete }) {
         if (!json.error) setData(json);
         else setData([]);
         setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setData([]);
-        setLoading(false);
       });
   }, [filename, selectedSheet]);
 
-  const handleDelete = () => {
-    fetch(`http://127.0.0.1:8000/files/${filename}`, { method: "DELETE" })
-      .then(res => res.json())
-      .then(data => {
-        if (data.message) onDelete();
-      });
+  const handleSheetChange = (e) => {
+    const newIndex = Number(e.target.value);
+    setSelectedSheet(newIndex);
+    onSheetChange?.(newIndex); // ⚡ avisar al padre
   };
 
   if (loading) return <p>Cargando datos...</p>;
@@ -57,7 +49,7 @@ export default function ExcelContent({ filename, onDelete }) {
       {sheets.length > 1 && (
         <div>
           <label>Seleccionar hoja: </label>
-          <select value={selectedSheet} onChange={e => setSelectedSheet(e.target.value)}>
+          <select value={selectedSheet} onChange={handleSheetChange}>
             {sheets.map((sheet, i) => (
               <option key={i} value={i}>{sheet}</option>
             ))}

@@ -64,34 +64,21 @@ export default function Calculadora() {
         ))}
       </select>
 
-      {/* Vista previa del archivo */}
+      {/* Vista previa del archivo + su propio selector */}
       {selectedFile && (
         <div style={{ marginTop: "20px" }}>
-          <ExcelContent filename={selectedFile} />
+        
+          <ExcelContent
+  filename={selectedFile}
+  onSheetChange={(index) => setSelectedSheet(index)} // 
+/>
+
         </div>
       )}
 
       <p className="mt-4">
         Archivo en uso: <b>{selectedFile}</b>
       </p>
-
-      {/* Selector de hoja */}
-      {sheets.length > 0 && (
-        <>
-          <label className="block mb-2 font-semibold">Selecciona una hoja:</label>
-          <select
-            value={selectedSheet}
-            onChange={(e) => setSelectedSheet(Number(e.target.value))}
-            className="border p-2 rounded mb-4"
-          >
-            {sheets.map((sheet, index) => (
-              <option key={index} value={index}>
-                {sheet}
-              </option>
-            ))}
-          </select>
-        </>
-      )}
 
       {/* Calculadora Excel */}
       {selectedFile && selectedSheet !== "" && (
