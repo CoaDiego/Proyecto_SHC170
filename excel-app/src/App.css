@@ -1,3 +1,6 @@
+/* ============================= */
+/* 🌐 LAYOUT PRINCIPAL */
+/* ============================= */
 .App {
   display: flex;
   flex-direction: column;
@@ -5,12 +8,11 @@
 }
 
 .content {
-  padding: 20px;        /* agrega margen interno a la derecha e izquierda */
-  max-width: 3000px;    /* opcional: limita el ancho máximo */
-  margin: 0 auto;       /* centra el contenido en pantallas grandes */
+  padding: 20px;
+  max-width: 3000px;
+  margin: 0 auto;
   box-sizing: border-box;
 }
-
 
 #root {
   max-width: 11280px;
@@ -19,32 +21,22 @@
   text-align: center;
 }
 
+/* ============================= */
+/* 🎨 LOGO Y ELEMENTOS DECORATIVOS */
+/* ============================= */
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
 }
 
 .card {
@@ -55,26 +47,19 @@
   color: #888;
 }
 
-
-
-/* ===================== */
-/* 🎨 MODO CLARO (default) */
-/* ===================== */
+/* ============================= */
+/* 💡 MODO CLARO Y OSCURO */
+/* ============================= */
 body {
   background-color: #ffffff;
   color: #000000;
 }
 
-/* ===================== */
-/* 🌙 MODO OSCURO         */
-/* (se activa con html.dark) */
-/* ===================== */
 html.dark body {
-  background-color: #222222; /* Fondo oscuro */
-  color: #f5f5f5;            /* Texto claro */
+  background-color: #222222;
+  color: #f5f5f5;
 }
 
-/* Ejemplo para el contenedor principal */
 html.dark .content {
   background-color: #1e1e1e;
   color: #f5f5f5;
@@ -82,15 +67,79 @@ html.dark .content {
   padding: 20px;
 }
 
-/* Ejemplo para las tarjetas */
 html.dark .card {
-  background-color: #FFFFFF;
+  background-color: #2e2e2e;
   color: #ffffff;
   border: 1px solid #444;
 }
 
-/* Ejemplo para links */
 html.dark a {
   color: #9ecbff;
 }
 
+/* ============================= */
+/* 📊 PÁGINA CALCULADORA */
+/* ============================= */
+
+.calculadora-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Datos (izq) / Frecuencias y Gráficos (der) */
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Columna izquierda (Datos) */
+.calculadora-datos {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  text-align: left;
+}
+
+/* Columna derecha (Frecuencias y Gráficos) */
+.calculadora-resultados {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #fcfcfc;
+}
+
+/* Bloque de frecuencias */
+.frecuencias {
+  border: 1px dashed #aaa;
+  padding: 15px;
+  min-height: 200px;
+}
+
+/* Bloque de gráficos */
+.graficos {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Cada gráfico (barras / circular) */
+.grafico {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  height: 250px;
+  background-color: #f5f5f5;
+}
+
+/* 💡 Modo oscuro para Calculadora */
+html.dark .calculadora-datos,
+html.dark .calculadora-resultados,
+html.dark .grafico {
+  background-color: #2a2a2a;
+  border-color: #555;
+}
+
+html.dark .frecuencias {
+  border-color: #666;
+}
