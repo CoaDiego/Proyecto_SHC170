@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Calculator from "../components/Calculator";
 import ExcelContent from "../components/ExcelContent";
 import Calculadora_Excel from "../components/Calculadora_Excel";
+import GraficoEstadistico from "../components/GraficoEstadistico";
+
 
 export default function Calculadora() {
   const [files, setFiles] = useState([]);
@@ -127,16 +129,34 @@ export default function Calculadora() {
           ) : (
             <p>No hay resultados aún.</p>
           )}
+
+            {/* <div className="grafico">
+    <h4>Gráfico de Barras</h4>
+    <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
+  </div>
+  <br />
+   <br />
+    <br />
+     <br />
+      <br />
+  <div className="grafico">
+    <h4>Gráfico Circular</h4>
+    <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
+  </div> */}
         </div>
 
         <div className="graficos">
-          <div className="grafico">
-            <h4>Gráfico de Barras</h4>
-          </div>
-          <div className="grafico">
-            <h4>Gráfico Circular</h4>
-          </div>
-        </div>
+  <div className="grafico">
+    <h4>Gráfico de Barras</h4>
+    <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
+  </div>
+
+  <div className="grafico">
+    <h4>Gráfico Circular</h4>
+    <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
+  </div>
+</div>
+
       </div>
     </div>
   );
