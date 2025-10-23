@@ -32,12 +32,12 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
       .catch(console.error);
   }, [filename, sheet]);
 
-  // 🟧 Extraer datos numéricos de la columna seleccionada
+  // Extraer datos numéricos de la columna seleccionada
   const datos = excelData
     .map((row) => row[selectedColumn])
     .filter((v) => typeof v === "number" && !isNaN(v));
 
-  // 🧮 Calcular tabla de frecuencias completa
+  // Calcular tabla de frecuencias completa
   const calcularFrecuencias = (datos) => {
     const N = datos.length;
     const conteo = {};
@@ -78,7 +78,7 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
     return tabla;
   };
 
-  // ⚙️ Ejecutar el cálculo según la opción seleccionada
+  // Ejecutar el cálculo según la opción seleccionada
   const handleCalcular = () => {
     if (!selectedColumn || datos.length === 0) return;
 
@@ -113,10 +113,10 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
     if (onResultadoChange) onResultadoChange(res, calculo);
   };
 
-  // 🧱 Render
+  // Render
   return (
     <div className="p-4 border rounded mt-6 bg-gray-50">
-      <h2 className="text-xl font-bold mb-3 text-blue-700">📘 Calculadora de Excel</h2>
+      <h2 className="text-xl font-bold mb-3 text-blue-700"> Calculadora de Excel</h2>
 
       {columns.length > 0 && (
         <>

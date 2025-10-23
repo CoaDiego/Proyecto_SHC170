@@ -4,13 +4,14 @@ import ExcelContent from "../components/ExcelContent";
 import Calculadora_Excel from "../components/Calculadora_Excel";
 import GraficoEstadistico from "../components/GraficoEstadistico";
 
-
 export default function Calculadora() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState("");
   const [sheets, setSheets] = useState([]);
   const [selectedSheet, setSelectedSheet] = useState("");
-  const [resultadoExcel, setResultadoExcel] = useState(null); // ⬅️ Nuevo estado para mostrar el resultado
+  const [resultadoExcel, setResultadoExcel] = useState(null);
+  const [mostrarTabla, setMostrarTabla] = useState(true); // 🟦 Controla visibilidad tabla Excel
+  const [mostrarCalculadora, setMostrarCalculadora] = useState(false); // 🟧 Controla visibilidad Calculadora
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/files")
@@ -62,7 +63,18 @@ export default function Calculadora() {
           ))}
         </select>
 
-        {selectedFile && (
+        {/* 🟢 Botón para mostrar u ocultar tabla Excel */}
+        <button
+          onClick={() => setMostrarTabla(!mostrarTabla)}
+          className={`px-3 py-2 mt-3 rounded text-white ${
+            mostrarTabla ? "bg-blue-600" : "bg-gray-500"
+          }`}
+        >
+          {mostrarTabla ? "Ocultar tabla" : "Mostrar tabla"}
+        </button>
+
+        {/* 🟩 Contenido del Excel */}
+        {mostrarTabla && selectedFile && (
           <div className="vista-previa">
             <ExcelContent
               filename={selectedFile}
@@ -75,16 +87,32 @@ export default function Calculadora() {
           Archivo en uso: <b>{selectedFile}</b>
         </p>
 
-        {selectedFile && selectedSheet !== "" && (
+        {selectedFile && selectedSheet !== "" && mostrarTabla && (
           <Calculadora_Excel
             filename={selectedFile}
             sheet={selectedSheet}
             usarTodaHoja={false}
-            onResultadoChange={setResultadoExcel} // ⬅️ Pasamos la función al hijo
+            onResultadoChange={setResultadoExcel}
           />
         )}
 
-        <Calculator />
+        <br />
+        <br />
+
+        {/* 🟣 Botón para mostrar u ocultar la Calculadora Estadística */}
+        <button
+          onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
+          className={`px-3 py-2 mt-4 rounded text-white ${
+            mostrarCalculadora ? "bg-blue-600" : "bg-gray-500"
+          }`}
+        >
+          {mostrarCalculadora
+            ? "Ocultar Calculadora Estadística"
+            : "Mostrar Calculadora Estadística"}
+        </button>
+
+        {/* 🧮 Calculadora Estadística */}
+        {mostrarCalculadora && <Calculator />}
       </div>
 
       {/* 🟧 Sección de Resultados */}
@@ -92,25 +120,25 @@ export default function Calculadora() {
         <div className="frecuencias">
           <h3>Frecuencias</h3>
 
-          {/* ⬇️ Aquí se mostrará el resultado del cálculo */}
           {resultadoExcel ? (
             Array.isArray(resultadoExcel) ? (
-              <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+              <table
+                border="1"
+                cellPadding="5"
+                style={{ borderCollapse: "collapse", marginTop: "10px" }}
+              >
                 <thead>
                   <tr>
-                     <th>x_i</th>
-                     <th> Frecuencia absoluta (f_i) </th>
-                     <th> Frecuencia acumulada (F_i) </th>
-                     <th> Frecuencia acumulada inversa (F_i_inv) </th>
-                     <th> Frecuencia relativa porcentual p_i (%)</th>
-                     <th> Frecuencia relativa acumulada porcentual P_i (%)</th>
-                     <th> Frecuencia relativa acumulada inversa porcentual P_i_inv (%)</th>{/* 
-                      f_i → cuántas veces ocurre.
-                      F_i → cuántas veces ha ocurrido hasta ahí.
-                      F_i_inv → cuántas veces ocurrirá de ahí en adelante.
-                      p_i (%) → qué porcentaje representa.
-                      P_i (%) → porcentaje acumulado hacia abajo.
-                      P_i_inv (%) → porcentaje acumulado hacia arriba. */}
+                    <th>x_i</th>
+                    <th>Frecuencia absoluta (f_i)</th>
+                    <th>Frecuencia acumulada (F_i)</th>
+                    <th>Frecuencia acumulada inversa (F_i_inv)</th>
+                    <th>Frecuencia relativa porcentual p_i (%)</th>
+                    <th>Frecuencia relativa acumulada porcentual P_i (%)</th>
+                    <th>
+                      Frecuencia relativa acumulada inversa porcentual P_i_inv
+                      (%)
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -129,34 +157,19 @@ export default function Calculadora() {
           ) : (
             <p>No hay resultados aún.</p>
           )}
-
-            {/* <div className="grafico">
-    <h4>Gráfico de Barras</h4>
-    <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
-  </div>
-  <br />
-   <br />
-    <br />
-     <br />
-      <br />
-  <div className="grafico">
-    <h4>Gráfico Circular</h4>
-    <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
-  </div> */}
         </div>
 
         <div className="graficos">
-  <div className="grafico">
-    <h4>Gráfico de Barras</h4>
-    <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
-  </div>
+          <div className="grafico">
+            <h4>Gráfico de Barras</h4>
+            <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
+          </div>
 
-  <div className="grafico">
-    <h4>Gráfico Circular</h4>
-    <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
-  </div>
-</div>
-
+          <div className="grafico">
+            <h4>Gráfico Circular</h4>
+            <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
+          </div>
+        </div>
       </div>
     </div>
   );
