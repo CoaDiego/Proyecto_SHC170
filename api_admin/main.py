@@ -1,5 +1,5 @@
 import pandas as pd
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -142,6 +142,75 @@ async def delete_file(filename: str):
         return {"message": f"Archivo {filename} eliminado correctamente"}
     return {"error": "Archivo no encontrado"}
 
+# =======================
+# CREAR TABLA DE CÁLCULO NUEVA
+# =======================
+
+@app.post("/create_table")
+async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_filas: int = 1):
+    import pandas as pd
+    import os
+
+    if not nombre:
+        # Buscar el siguiente nombre disponible
+        existing_files = [f for f in os.listdir(EXCEL_FOLDER) if f.endswith(".xlsx")]
+        nombre = f"Ejemplo {len(existing_files)+1}"
+
+    # Crear dataframe vacío con las columnas indicadas
+    cols = [f"Col {i+1}" for i in range(num_columnas)]
+    df = pd.DataFrame([[0]*num_columnas for _ in range(num_filas)], columns=cols)
+
+    filename = f"{nombre}.xlsx"
+    file_path = os.path.join(EXCEL_FOLDER, filename)
+    df.to_excel(file_path, index=False)
+
+    return {"message": "Tabla creada correctamente", "filename": filename}
+
+
+
+@app.post("/save_table")
+async def save_table(body: dict = Body(...)):
+    """
+    Recibe JSON:
+    {
+        "nombre": "Ejemplo 1",
+        "tabla": [
+            ["1", "2"],
+            ["3", "4"]
+        ]
+    }
+    """
+    try:
+        nombre = body.get("nombre", "Ejemplo")
+        tabla = body.get("tabla", [])
+
+        if not tabla:
+            return {"error": "No se recibieron datos para la tabla"}
+
+        # Convertir a DataFrame
+        df = pd.DataFrame(tabla)
+        # Generar nombre de archivo
+        contador = 1
+        base_filename = f"{nombre}.xlsx"
+        filepath = os.path.join(EXCEL_FOLDER, base_filename)
+        while os.path.exists(filepath):
+            contador += 1
+            filepath = os.path.join(EXCEL_FOLDER, f"{nombre}_{contador}.xlsx")
+
+        # Guardar Excel
+        df.to_excel(filepath, index=False, header=[f"Col {i+1}" for i in range(df.shape[1])])
+
+        # Guardar metadata
+        meta_path = filepath + ".meta"
+        meta_data = {"filename": os.path.basename(filepath), "author": "Usuario"}
+        with open(meta_path, "w") as f:
+            import json
+            json.dump(meta_data, f)
+
+        return {"filename": os.path.basename(filepath)}
+
+    except Exception as e:
+        return {"error": str(e)}
 
 # =======================
 # MODELOS DE DATOS
@@ -153,6 +222,8 @@ class DataInput(BaseModel):
     pesos: Optional[List[float]] = None  # para media ponderada
 
 class DataBivariada(BaseModel):
+
+
     x: List[float]
     y: List[float]
     tipo: str  # covarianza, correlacion, regresion

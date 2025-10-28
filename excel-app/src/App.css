@@ -133,3 +133,70 @@ html.dark a {
   background-color: #f5f5f5;
   padding: 10px;
 }
+
+
+/* ============================= */
+/* 🌙 MODO OSCURO - CALCULADORA */
+/* ============================= */
+
+/* Layout general */
+html.dark .calculadora-layout {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+}
+
+/* Columna izquierda (datos) */
+html.dark .calculadora-datos {
+  background-color: #2a2a2a;
+  border-color: #555;
+  color: #f5f5f5;
+}
+
+/* Columna derecha (resultados) */
+html.dark .calculadora-resultados {
+  background-color: #242424;
+  border-color: #555;
+  color: #f5f5f5;
+}
+
+/* Tabla de frecuencias */
+html.dark .frecuencias {
+  background-color: #2c2c2c;
+  border-color: #666;
+  color: #ffffff;
+}
+
+/* Celdas de tabla */
+html.dark table,
+html.dark th,
+html.dark td {
+  border-color: #555;
+  color: #f5f5f5;
+  background-color: #2c2c2c;
+}
+
+/* Contenedor de gráficos */
+html.dark .graficos {
+  color: #e0e0e0;
+}
+
+/* Cada gráfico */
+html.dark .grafico {
+  background-color: #2d2d2d;
+  border-color: #555;
+}
+
+/* Selects e inputs */
+html.dark select,
+html.dark input,
+html.dark button {
+  background-color: #333;
+  color: #f5f5f5;
+  border: 1px solid #666;
+}
+
+/* Hover y focus */
+html.dark select:hover,
+html.dark button:hover {
+  background-color: #444;
+}

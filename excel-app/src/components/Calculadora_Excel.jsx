@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import GraficoEstadistico from "./GraficoEstadistico";
 
-export default function Calculadora_Excel({ filename, sheet, onResultadoChange }) {
+export default function Calculadora_Excel({
+  filename,
+  sheet,
+  onResultadoChange,
+  mostrarTablaDatos = true, // controla solo la tabla editable
+}) {
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [selectedColumn, setSelectedColumn] = useState("");
   const [calculo, setCalculo] = useState("frecuencia_absoluta");
-  const [resultadoExcel, setResultadoExcel] = useState(null); // ✅ nuevo estado local
+  const [resultadoExcel, setResultadoExcel] = useState(null);
 
-  // 🟦 Cargar datos de la hoja seleccionada
+  // Cargar datos de la hoja seleccionada
   useEffect(() => {
     if (!filename || sheet === "") return;
     const hojaIndex = Number(sheet);
@@ -20,9 +25,10 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
           const headerRow = Object.values(data[0]);
           setColumns(headerRow);
 
-          // 🔸 Convertir las filas a objetos con claves de encabezado
           const realData = data.slice(1).map((row) =>
-            Object.fromEntries(Object.keys(row).map((key, idx) => [headerRow[idx], row[key]]))
+            Object.fromEntries(
+              Object.keys(row).map((key, idx) => [headerRow[idx], row[key]])
+            )
           );
 
           setExcelData(realData);
@@ -32,16 +38,22 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
       .catch(console.error);
   }, [filename, sheet]);
 
+  // Manejar cambio de valor en la columna editable
+  const handleChangeDato = (index, value) => {
+    const newData = [...excelData];
+    newData[index][selectedColumn] = Number(value);
+    setExcelData(newData);
+  };
+
   // Extraer datos numéricos de la columna seleccionada
   const datos = excelData
     .map((row) => row[selectedColumn])
     .filter((v) => typeof v === "number" && !isNaN(v));
 
-  // Calcular tabla de frecuencias completa
+  // Función para calcular tabla de frecuencias completas
   const calcularFrecuencias = (datos) => {
     const N = datos.length;
     const conteo = {};
-
     datos.forEach((x) => (conteo[x] = (conteo[x] || 0) + 1));
     const valoresOrdenados = Object.keys(conteo).map(Number).sort((a, b) => a - b);
 
@@ -64,7 +76,7 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
     for (let i = 0; i < tabla.length; i++) {
       const p_i = (tabla[i].f_i / N) * 100;
       P_i += p_i;
-      tabla[i].p_i = +(p_i.toFixed(2));  // 🔹 número
+      tabla[i].p_i = +(p_i.toFixed(2));
       tabla[i].P_i = +(P_i.toFixed(2));
     }
 
@@ -78,7 +90,7 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
     return tabla;
   };
 
-  // Ejecutar el cálculo según la opción seleccionada
+  // Ejecutar cálculo
   const handleCalcular = () => {
     if (!selectedColumn || datos.length === 0) return;
 
@@ -106,10 +118,7 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
         res = "Cálculo no implementado";
     }
 
-    // 🔹 Guardar localmente para mostrar en pantalla
     setResultadoExcel(res);
-
-    // 🔹 Enviar hacia el padre (si es necesario)
     if (onResultadoChange) onResultadoChange(res, calculo);
   };
 
@@ -118,6 +127,7 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
     <div className="p-4 border rounded mt-6 bg-gray-50">
       <h2 className="text-xl font-bold mb-3 text-blue-700"> Calculadora de Excel</h2>
 
+      {/* Selector de columna */}
       {columns.length > 0 && (
         <>
           <label className="block mb-1 font-semibold">Selecciona una columna:</label>
@@ -127,20 +137,45 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
             className="border p-1 rounded mb-3 w-full"
           >
             {columns.map((col) => (
-              <option key={col} value={col}>
-                {col}
-              </option>
+              <option key={col} value={col}>{col}</option>
             ))}
           </select>
 
-          {datos.length > 0 && (
-            <p className="mb-2 text-sm text-gray-700">
-              <strong>Datos extraídos:</strong> {datos.join(", ")}
-            </p>
-          )}
+          {/* Tabla editable de la columna, controlada por mostrarTablaDatos */}
+{datos.length > 0 && mostrarTablaDatos && (
+  <div className="mb-3">
+    <strong>Datos de la columna "{selectedColumn}":</strong>
+    <div className="mt-2 max-h-64 overflow-y-auto border rounded-lg p-2 bg-white">
+      <div
+        className="grid gap-2 text-xs"
+        style={{
+          gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))"
+        }}
+      >
+        {excelData.map((row, i) => (
+          <div key={i} className="flex flex-col items-center border p-1 rounded">
+            <span className="text-gray-500 text-[10px]">#{i + 1}</span>
+            <input
+              type="number"
+              value={row[selectedColumn]}
+              onChange={(e) => handleChangeDato(i, e.target.value)}
+              className="border rounded w-full text-center text-xs p-0.5"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+
         </>
       )}
 
+      {/* Selector de cálculo */}
       <label className="block mb-1 font-semibold">Selecciona un cálculo:</label>
       <select
         value={calculo}
@@ -160,8 +195,6 @@ export default function Calculadora_Excel({ filename, sheet, onResultadoChange }
       >
         Calcular
       </button>
-
-      
     </div>
   );
 }
