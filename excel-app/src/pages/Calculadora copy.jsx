@@ -3,6 +3,8 @@ import Calculator from "../components/Calculator";
 import ExcelContent from "../components/ExcelContent";
 import Calculadora_Excel from "../components/Calculadora_Excel";
 import GraficoEstadistico from "../components/GraficoEstadistico";
+import TablaDinamica from "../components/TablaDinamica";
+
 
 export default function Calculadora() {
   const [files, setFiles] = useState([]);
@@ -10,23 +12,23 @@ export default function Calculadora() {
   const [sheets, setSheets] = useState([]);
   const [selectedSheet, setSelectedSheet] = useState("");
   const [resultadoExcel, setResultadoExcel] = useState(null);
-  const [mostrarTabla, setMostrarTabla] = useState(true); // 🟦 Controla visibilidad tabla Excel
-  const [mostrarCalculadora, setMostrarCalculadora] = useState(false); // 🟧 Controla visibilidad Calculadora
+  const [mostrarTabla, setMostrarTabla] = useState(true); // Solo controla la tabla
+  const [mostrarCalculadora, setMostrarCalculadora] = useState(false); 
 
+  // Cargar archivos al inicio
   useEffect(() => {
     fetch("http://127.0.0.1:8000/files")
       .then((res) => res.json())
       .then((data) => {
         if (data.files) {
           setFiles(data.files);
-          if (data.files.length > 0) {
-            setSelectedFile(data.files[0].filename);
-          }
+          if (data.files.length > 0) setSelectedFile(data.files[0].filename);
         }
       })
-      .catch((err) => console.error("Error al cargar archivos:", err));
+      .catch(console.error);
   }, []);
 
+  // Cargar hojas del archivo seleccionado
   useEffect(() => {
     if (!selectedFile) return;
 
@@ -41,12 +43,12 @@ export default function Calculadora() {
           setSelectedSheet("");
         }
       })
-      .catch((err) => console.error("Error al cargar hojas:", err));
+      .catch(console.error);
   }, [selectedFile]);
 
   return (
     <div className="calculadora-layout">
-      {/* 🟦 Sección de Datos */}
+      {/* ---------------- Sección de Datos ---------------- */}
       <div className="calculadora-datos">
         <h2>- Archivos Subidos -</h2>
 
@@ -63,7 +65,7 @@ export default function Calculadora() {
           ))}
         </select>
 
-        {/* 🟢 Botón para mostrar u ocultar tabla Excel */}
+        {/* Botón para mostrar u ocultar tabla de datos */}
         <button
           onClick={() => setMostrarTabla(!mostrarTabla)}
           className={`px-3 py-2 mt-3 rounded text-white ${
@@ -73,13 +75,15 @@ export default function Calculadora() {
           {mostrarTabla ? "Ocultar tabla" : "Mostrar tabla"}
         </button>
 
-        {/* 🟩 Contenido del Excel */}
-        {mostrarTabla && selectedFile && (
+        {/* Vista previa de la tabla editable */}
+        {selectedFile && selectedSheet !== "" && mostrarTabla && (
           <div className="vista-previa">
             <ExcelContent
               filename={selectedFile}
               onSheetChange={(index) => setSelectedSheet(index)}
             />
+
+            
           </div>
         )}
 
@@ -87,19 +91,15 @@ export default function Calculadora() {
           Archivo en uso: <b>{selectedFile}</b>
         </p>
 
-        {selectedFile && selectedSheet !== "" && mostrarTabla && (
-          <Calculadora_Excel
-            filename={selectedFile}
-            sheet={selectedSheet}
-            usarTodaHoja={false}
-            onResultadoChange={setResultadoExcel}
-          />
-        )}
+<Calculadora_Excel
+              filename={selectedFile}
+              sheet={selectedSheet}
+              usarTodaHoja={false}
+              mostrarDatos={mostrarTabla} // Prop que solo muestra inputs
+              onResultadoChange={setResultadoExcel}
+            />
 
-        <br />
-        <br />
-
-        {/* 🟣 Botón para mostrar u ocultar la Calculadora Estadística */}
+        {/* Botón para mostrar u ocultar la Calculadora estadística */}
         <button
           onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
           className={`px-3 py-2 mt-4 rounded text-white ${
@@ -111,15 +111,24 @@ export default function Calculadora() {
             : "Mostrar Calculadora Estadística"}
         </button>
 
-        {/* 🧮 Calculadora Estadística */}
+        <TablaDinamica onTablaCreada={() => {
+  // ⚡ Recargar lista de archivos tras crear tabla
+  fetch("http://127.0.0.1:8000/files")
+    .then(res => res.json())
+    .then(data => {
+      if (data.files) setFiles(data.files);
+    });
+}} />
+
+
+        {/* Calculadora independiente */}
         {mostrarCalculadora && <Calculator />}
       </div>
 
-      {/* 🟧 Sección de Resultados */}
+      {/* ---------------- Sección de Resultados y Gráficos ---------------- */}
       <div className="calculadora-resultados">
         <div className="frecuencias">
           <h3>Frecuencias</h3>
-
           {resultadoExcel ? (
             Array.isArray(resultadoExcel) ? (
               <table

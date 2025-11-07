@@ -129,43 +129,57 @@ export default function Calculadora() {
       <div className="calculadora-resultados">
         <div className="frecuencias">
           <h3>Frecuencias</h3>
-          {resultadoExcel ? (
-            Array.isArray(resultadoExcel) ? (
-              <table
-                border="1"
-                cellPadding="5"
-                style={{ borderCollapse: "collapse", marginTop: "10px" }}
-              >
-                <thead>
-                  <tr>
-                    <th>x_i</th>
-                    <th>Frecuencia absoluta (f_i)</th>
-                    <th>Frecuencia acumulada (F_i)</th>
-                    <th>Frecuencia acumulada inversa (F_i_inv)</th>
-                    <th>Frecuencia relativa porcentual p_i (%)</th>
-                    <th>Frecuencia relativa acumulada porcentual P_i (%)</th>
-                    <th>
-                      Frecuencia relativa acumulada inversa porcentual P_i_inv
-                      (%)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resultadoExcel.map((row, i) => (
-                    <tr key={i}>
-                      {Object.values(row).map((val, j) => (
-                        <td key={j}>{val}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <pre>{JSON.stringify(resultadoExcel, null, 2)}</pre>
-            )
-          ) : (
-            <p>No hay resultados aún.</p>
-          )}
+    {resultadoExcel ? (
+  Array.isArray(resultadoExcel) ? (
+    <table
+      border="1"
+      cellPadding="5"
+      style={{ borderCollapse: "collapse", marginTop: "10px" }}
+    >
+      <thead>
+        {resultadoExcel[0].intervalo ? (
+          // 🔹 Tabla de distribución por intervalos
+          <tr>
+            <th>Haber básico</th>
+            <th>fi</th>
+            <th>pi</th>
+            <th>Fi</th>
+            <th>Pi</th>
+            <th>F'i</th>
+            <th>P'i</th>
+          </tr>
+        ) : (
+          // 🔹 Tabla normal de frecuencias
+          <tr>
+            <th>x_i</th>
+            <th>Frecuencia absoluta (f_i)</th>
+            <th>Frecuencia acumulada (F_i)</th>
+            <th>Frecuencia acumulada inversa (F_i_inv)</th>
+            <th>Frecuencia relativa porcentual p_i (%)</th>
+            <th>Frecuencia relativa acumulada porcentual P_i (%)</th>
+            <th>
+              Frecuencia relativa acumulada inversa porcentual P_i_inv (%)
+            </th>
+          </tr>
+        )}
+      </thead>
+      <tbody>
+        {resultadoExcel.map((row, i) => (
+          <tr key={i}>
+            {Object.values(row).map((val, j) => (
+              <td key={j}>{val}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ) : (
+    <pre>{JSON.stringify(resultadoExcel, null, 2)}</pre>
+  )
+) : (
+  <p>No hay resultados aún.</p>
+)}
+
         </div>
 
         <div className="graficos">

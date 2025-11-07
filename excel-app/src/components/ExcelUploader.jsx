@@ -35,8 +35,8 @@ export default function ExcelUploader({ setRefreshFiles }) {
   return (
     <div>
       <h2>- Subir archivo Excel -</h2>
-      <input type="text" placeholder="Nombre del autor" value={autor} onChange={e => setAutor(e.target.value)} />
-      <input type="file" onChange={e => setFile(e.target.files[0])} />
+      <input type="text" placeholder="Nombre del autor" value={autor} onChange={e => setAutor(e.target.value)} /> <br />
+      <input type="file"  onChange={e => setFile(e.target.files[0])} />
       <button onClick={handleUpload}>Subir</button>
       {message && <p>{message}</p>}
     </div>

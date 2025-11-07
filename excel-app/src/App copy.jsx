@@ -4,15 +4,17 @@ import Inicio from "./pages/Inicio";
 import Archivos from "./pages/Archivos";
 import Calculadora from "./pages/Calculadora";
 import About from "./pages/About";
+import OscuroClaro from "./components/oscuro_claro"; // 👈 importado
 import "./App.css";
 
 function App() {
   return (
     <Router>
       <div className="App">
-        {/* Menú de navegación con el botón incluido */}
+        {/* Menú de navegación visible en todas las páginas */}
         <header className="flex justify-between items-center p-4 shadow-md">
-          <Menu /> {/* 👈 Ahora el botón está dentro del Menu */}
+          <Menu />
+          <OscuroClaro /> {/* 👈 botón de cambio de tema */}
         </header>
 
         {/* Contenido que cambia según la ruta */}
