@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function ExcelContent({ filename, onSheetChange, mostrarTabla = true }) {
+export default function ExcelContent({ filename, onSheetChange }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sheets, setSheets] = useState([]);
@@ -21,7 +21,7 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
   }, [filename]);
 
   useEffect(() => {
-    if (!filename || !mostrarTabla) return; // 👈 si no queremos la tabla, no pedimos datos
+    if (!filename) return;
 
     setLoading(true);
     fetch(`http://127.0.0.1:8000/view/${filename}?hoja=${selectedSheet}`)
@@ -31,21 +31,21 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
         else setData([]);
         setLoading(false);
       });
-  }, [filename, selectedSheet, mostrarTabla]);
+  }, [filename, selectedSheet]);
 
   const handleSheetChange = (e) => {
     const newIndex = Number(e.target.value);
     setSelectedSheet(newIndex);
-    onSheetChange?.(newIndex);
+    onSheetChange?.(newIndex); // ⚡ avisar al padre
   };
 
-  if (loading && mostrarTabla) return <p>Cargando datos...</p>;
+  if (loading) return <p>Cargando datos...</p>;
+  if (!data.length) return <p>No hay datos en esta hoja.</p>;
 
   return (
     <div>
-      <h3>Contenido de: <br />{filename}</h3>
+      <h3>Contenido de: {filename}</h3>
 
-      {/* 👇 Selector de hojas (si hay más de una) */}
       {sheets.length > 1 && (
         <div>
           <label>Seleccionar hoja: </label>
@@ -57,27 +57,20 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
         </div>
       )}
 
-      {/* 👇 Mostrar tabla solo si mostrarTabla = true */}
-      {mostrarTabla && data.length > 0 && (
-        <table border="1" style={{ marginTop: "10px" }}>
-          <thead>
-            <tr>
-              {Object.keys(data[0]).map((col, i) => (
-                <th key={i}>{col}</th>
-              ))}
+      <table border="1" style={{ marginTop: "10px" }}>
+        <thead>
+          <tr>
+            {Object.keys(data[0]).map((col, i) => <th key={i}>{col}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, i) => (
+            <tr key={i}>
+              {Object.values(row).map((val, j) => <td key={j}>{val}</td>)}
             </tr>
-          </thead>
-          <tbody>
-            {data.map((row, i) => (
-              <tr key={i}>
-                {Object.values(row).map((val, j) => (
-                  <td key={j}>{val}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

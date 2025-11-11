@@ -10,6 +10,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
   ResponsiveContainer,
 } from "recharts";
 
@@ -20,10 +22,11 @@ export default function GraficoEstadistico({ datos = [], tipo = "barras" }) {
 
   const COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#14b8a6"];
 
+  // === GRAFICO DE BARRAS ===
   if (tipo === "barras") {
     return (
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={datos} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+        <BarChart data={datos}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="x_i" />
           <YAxis />
@@ -35,6 +38,7 @@ export default function GraficoEstadistico({ datos = [], tipo = "barras" }) {
     );
   }
 
+  // === GRAFICO DE PASTEL ===
   if (tipo === "pastel") {
     return (
       <ResponsiveContainer width="100%" height={300}>
@@ -56,6 +60,70 @@ export default function GraficoEstadistico({ datos = [], tipo = "barras" }) {
           <Tooltip />
           <Legend />
         </PieChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  // === HISTOGRAMA SIMPLE ===
+  if (tipo === "histograma") {
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={datos}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="intervalo" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="f_i" fill="#2563eb" name="Frecuencia absoluta" />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  // === POLÍGONO DE FRECUENCIAS ===
+  if (tipo === "poligono") {
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={datos}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="x_i" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="f_i" stroke="#2563eb" name="Frecuencia absoluta" />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  // === OJIVA CRECIENTE ===
+  if (tipo === "ojiva_creciente") {
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={datos}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="x_i" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="F_i" stroke="#10b981" name="Frecuencia acumulada creciente" />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  // === OJIVA DECRECIENTE ===
+  if (tipo === "ojiva_decreciente") {
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={datos}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="x_i" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="F_i_desc" stroke="#ef4444" name="Frecuencia acumulada decreciente" />
+        </LineChart>
       </ResponsiveContainer>
     );
   }

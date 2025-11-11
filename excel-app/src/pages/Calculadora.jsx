@@ -3,8 +3,9 @@ import Calculator from "../components/Calculator";
 import ExcelContent from "../components/ExcelContent";
 import Calculadora_Excel from "../components/Calculadora_Excel";
 import GraficoEstadistico from "../components/GraficoEstadistico";
+// 🔹 Import del nuevo componente de gráficos de intervalos
+import GraficoIntervalos from "../components/graficos/GraficoIntervalos";
 import TablaDinamica from "../components/TablaDinamica";
-
 
 export default function Calculadora() {
   const [files, setFiles] = useState([]);
@@ -65,39 +66,35 @@ export default function Calculadora() {
           ))}
         </select>
 
-        {/* Botón para mostrar u ocultar tabla de datos */}
-        <button
-          onClick={() => setMostrarTabla(!mostrarTabla)}
-          className={`px-3 py-2 mt-3 rounded text-white ${
-            mostrarTabla ? "bg-blue-600" : "bg-gray-500"
-          }`}
-        >
-          {mostrarTabla ? "Ocultar tabla" : "Mostrar tabla"}
-        </button>
-
         {/* Vista previa de la tabla editable */}
-        {selectedFile && selectedSheet !== "" && mostrarTabla && (
-          <div className="vista-previa">
-            <ExcelContent
-              filename={selectedFile}
-              onSheetChange={(index) => setSelectedSheet(index)}
-            />
+        <ExcelContent
+          onSheetChange={(index) => setSelectedSheet(index)}
+          filename={selectedFile}
+          mostrarTabla={false}
+        />
 
-            
-          </div>
-        )}
+        {/* Calculadora de Excel */}
+        <Calculadora_Excel
+          filename={selectedFile}
+          sheet={selectedSheet}
+          usarTodaHoja={false}
+          mostrarDatos={mostrarTabla} // Prop que solo muestra inputs
+          onResultadoChange={setResultadoExcel}
+        />
 
-        <p className="archivo-en-uso">
-          Archivo en uso: <b>{selectedFile}</b>
-        </p>
+        {/* Tabla dinámica */}
+        <TablaDinamica
+          onTablaCreada={() => {
+            // ⚡ Recargar lista de archivos tras crear tabla
+            fetch("http://127.0.0.1:8000/files")
+              .then(res => res.json())
+              .then(data => {
+                if (data.files) setFiles(data.files);
+              });
+          }}
+        />
 
-<Calculadora_Excel
-              filename={selectedFile}
-              sheet={selectedSheet}
-              usarTodaHoja={false}
-              mostrarDatos={mostrarTabla} // Prop que solo muestra inputs
-              onResultadoChange={setResultadoExcel}
-            />
+        <br />
 
         {/* Botón para mostrar u ocultar la Calculadora estadística */}
         <button
@@ -111,87 +108,89 @@ export default function Calculadora() {
             : "Mostrar Calculadora Estadística"}
         </button>
 
-        <TablaDinamica onTablaCreada={() => {
-  // ⚡ Recargar lista de archivos tras crear tabla
-  fetch("http://127.0.0.1:8000/files")
-    .then(res => res.json())
-    .then(data => {
-      if (data.files) setFiles(data.files);
-    });
-}} />
-
-
         {/* Calculadora independiente */}
         {mostrarCalculadora && <Calculator />}
       </div>
 
       {/* ---------------- Sección de Resultados y Gráficos ---------------- */}
       <div className="calculadora-resultados">
+        {/* ---------------- Tabla de resultados ---------------- */}
         <div className="frecuencias">
           <h3>Frecuencias</h3>
-    {resultadoExcel ? (
-  Array.isArray(resultadoExcel) ? (
-    <table
-      border="1"
-      cellPadding="5"
-      style={{ borderCollapse: "collapse", marginTop: "10px" }}
-    >
-      <thead>
-        {resultadoExcel[0].intervalo ? (
-          // 🔹 Tabla de distribución por intervalos
-          <tr>
-            <th>Haber básico</th>
-            <th>fi</th>
-            <th>pi</th>
-            <th>Fi</th>
-            <th>Pi</th>
-            <th>F'i</th>
-            <th>P'i</th>
-          </tr>
-        ) : (
-          // 🔹 Tabla normal de frecuencias
-          <tr>
-            <th>x_i</th>
-            <th>Frecuencia absoluta (f_i)</th>
-            <th>Frecuencia acumulada (F_i)</th>
-            <th>Frecuencia acumulada inversa (F_i_inv)</th>
-            <th>Frecuencia relativa porcentual p_i (%)</th>
-            <th>Frecuencia relativa acumulada porcentual P_i (%)</th>
-            <th>
-              Frecuencia relativa acumulada inversa porcentual P_i_inv (%)
-            </th>
-          </tr>
-        )}
-      </thead>
-      <tbody>
-        {resultadoExcel.map((row, i) => (
-          <tr key={i}>
-            {Object.values(row).map((val, j) => (
-              <td key={j}>{val}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  ) : (
-    <pre>{JSON.stringify(resultadoExcel, null, 2)}</pre>
-  )
-) : (
-  <p>No hay resultados aún.</p>
-)}
-
+          {resultadoExcel ? (
+            Array.isArray(resultadoExcel) ? (
+              <table
+                border="1"
+                cellPadding="5"
+                style={{ borderCollapse: "collapse", marginTop: "10px" }}
+              >
+                <thead>
+                  {resultadoExcel[0]["Haber básico"] ? (
+                    // 🔹 Tabla de distribución por intervalos
+                    <tr>
+                      <th>Haber básico</th>
+                      <th>fi</th>
+                      <th>pi</th>
+                      <th>Fi</th>
+                      <th>Pi</th>
+                      <th>F'i</th>
+                      <th>P'i</th>
+                    </tr>
+                  ) : (
+                    // 🔹 Tabla normal de frecuencias
+                    <tr>
+                      <th>x_i</th>
+                      <th>Frecuencia absoluta (f_i)</th>
+                      <th>Frecuencia acumulada (F_i)</th>
+                      <th>Frecuencia acumulada inversa (F_i_inv)</th>
+                      <th>Frecuencia relativa porcentual p_i (%)</th>
+                      <th>Frecuencia relativa acumulada porcentual P_i (%)</th>
+                      <th>
+                        Frecuencia relativa acumulada inversa porcentual P_i_inv (%)
+                      </th>
+                    </tr>
+                  )}
+                </thead>
+                <tbody>
+                  {resultadoExcel.map((row, i) => (
+                    <tr key={i}>
+                      {Object.values(row).map((val, j) => (
+                        <td key={j}>{val}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <pre>{JSON.stringify(resultadoExcel, null, 2)}</pre>
+            )
+          ) : (
+            <p>No hay resultados aún.</p>
+          )}
         </div>
 
+        {/* ---------------- Gráficos ---------------- */}
         <div className="graficos">
-          <div className="grafico">
-            <h4>Gráfico de Barras</h4>
-            <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
-          </div>
+          {resultadoExcel ? (
+            Array.isArray(resultadoExcel) && resultadoExcel[0]["Haber básico"] ? (
+              // 🔹 Solo para distribución por intervalos
+              <GraficoIntervalos datos={resultadoExcel} />
+            ) : (
+              <>
+                <div className="grafico">
+                  <h4>Gráfico de Barras</h4>
+                  <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
+                </div>
 
-          <div className="grafico">
-            <h4>Gráfico Circular</h4>
-            <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
-          </div>
+                <div className="grafico">
+                  <h4>Gráfico Circular</h4>
+                  <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
+                </div>
+              </>
+            )
+          ) : (
+            <p>No hay resultados aún.</p>
+          )}
         </div>
       </div>
     </div>

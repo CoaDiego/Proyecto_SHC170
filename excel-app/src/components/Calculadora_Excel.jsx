@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import GraficoEstadistico from "./GraficoEstadistico";
+import GraficoIntervalos from "./graficos/GraficoIntervalos"; // nuevo componente
 
 export default function Calculadora_Excel({
   filename,
@@ -16,7 +17,7 @@ export default function Calculadora_Excel({
   const [metodoK, setMetodoK] = useState("sturges");
   const [kPersonalizado, setKPersonalizado] = useState("");
 
-  // Cargar datos desde la API
+  // === Cargar datos desde el backend ===
   useEffect(() => {
     if (!filename || sheet === "") return;
     const hojaIndex = Number(sheet);
@@ -39,26 +40,24 @@ export default function Calculadora_Excel({
       .catch(console.error);
   }, [filename, sheet]);
 
-  // Cambiar valores en tabla editable
+  // === Cambiar valor en tabla editable ===
   const handleChangeDato = (index, value) => {
     const newData = [...excelData];
     newData[index][selectedColumn] = Number(value);
     setExcelData(newData);
   };
 
-  // Extraer datos numéricos de la columna seleccionada
+  // === Extraer datos numéricos de la columna seleccionada ===
   const datos = excelData
     .map((row) => row[selectedColumn])
     .filter((v) => typeof v === "number" && !isNaN(v));
 
-  // === FUNCIONES EXISTENTES ===
+  // === Funciones de cálculo ===
   const calcularFrecuencias = (datos) => {
     const N = datos.length;
     const conteo = {};
     datos.forEach((x) => (conteo[x] = (conteo[x] || 0) + 1));
-    const valoresOrdenados = Object.keys(conteo)
-      .map(Number)
-      .sort((a, b) => a - b);
+    const valoresOrdenados = Object.keys(conteo).map(Number).sort((a, b) => a - b);
 
     let F_i = 0;
     const tabla = valoresOrdenados.map((x) => {
@@ -67,14 +66,12 @@ export default function Calculadora_Excel({
       return { x_i: x, f_i, F_i };
     });
 
-    // Frecuencia acumulada inversa
     let F_i_inv = 0;
     for (let i = tabla.length - 1; i >= 0; i--) {
       F_i_inv += tabla[i].f_i;
       tabla[i].F_i_inv = F_i_inv;
     }
 
-    // Porcentajes
     let P_i = 0;
     for (let i = 0; i < tabla.length; i++) {
       const p_i = (tabla[i].f_i / N) * 100;
@@ -83,7 +80,6 @@ export default function Calculadora_Excel({
       tabla[i].P_i = +P_i.toFixed(2);
     }
 
-    // Porcentaje acumulado inverso
     let P_i_inv = 0;
     for (let i = tabla.length - 1; i >= 0; i--) {
       P_i_inv += tabla[i].p_i;
@@ -93,7 +89,6 @@ export default function Calculadora_Excel({
     return tabla;
   };
 
-  // === NUEVO: CÁLCULO DE DISTRIBUCIÓN POR INTERVALOS ===
   const calcularDistribucionIntervalos = (datos) => {
     if (datos.length === 0) return [];
     const n = datos.length;
@@ -127,7 +122,6 @@ export default function Calculadora_Excel({
       inicio = fin;
     }
 
-    // Contar frecuencias por intervalo
     const frecuencias = intervalos.map(({ desde, hasta }) => {
       let f = 0;
       datos.forEach((v) => {
@@ -141,7 +135,6 @@ export default function Calculadora_Excel({
     const total = frecuencias.reduce((a, b) => a + b, 0);
     const pi = frecuencias.map((f) => +(f / total * 100).toFixed(2));
 
-    // Acumuladas directas
     const Fi = frecuencias.map((_, i) =>
       frecuencias.slice(0, i + 1).reduce((a, b) => a + b, 0)
     );
@@ -149,7 +142,6 @@ export default function Calculadora_Excel({
       +pi.slice(0, i + 1).reduce((a, b) => a + b, 0).toFixed(2)
     );
 
-    // Acumuladas inversas
     const Fi_inv = frecuencias.map((_, i) =>
       frecuencias.slice(i).reduce((a, b) => a + b, 0)
     );
@@ -157,21 +149,19 @@ export default function Calculadora_Excel({
       +pi.slice(i).reduce((a, b) => a + b, 0).toFixed(2)
     );
 
-    // Construir tabla final
     const tabla = intervalos.map((intv, i) => ({
-      "Haber básico": `${intv.desde} - ${intv.hasta}`,
-      fi: frecuencias[i],
+      Intervalo: `${intv.desde} - ${intv.hasta}`,
+      f_i: frecuencias[i],
       pi: pi[i],
-      Fi: Fi[i],
-      Pi: Pi[i],
-      "F'i": Fi_inv[i],
-      "P'i": Pi_inv[i],
+      F_i: Fi[i],
+      P_i: Pi[i],
+      P_i_inv: Pi_inv[i],
     }));
 
     return tabla;
   };
 
-  // === BOTÓN CALCULAR ===
+  // === Botón Calcular ===
   const handleCalcular = () => {
     if (!selectedColumn || datos.length === 0) return;
     let res;
@@ -184,9 +174,7 @@ export default function Calculadora_Excel({
       case "frecuencia_relativa":
         res = {};
         const total = datos.length;
-        datos.forEach(
-          (val) => (res[val] = ((res[val] || 0) + 1) / total)
-        );
+        datos.forEach((val) => (res[val] = ((res[val] || 0) + 1) / total));
         break;
       case "minimo":
         res = Math.min(...datos);
@@ -208,7 +196,6 @@ export default function Calculadora_Excel({
     if (onResultadoChange) onResultadoChange(res, calculo);
   };
 
-  // === RENDER ===
   return (
     <div className="p-4 border rounded mt-6 bg-gray-50">
       <h2 className="text-xl font-bold mb-3 text-blue-700">
@@ -218,18 +205,14 @@ export default function Calculadora_Excel({
       {/* Selector de columna */}
       {columns.length > 0 && (
         <>
-          <label className="block mb-1 font-semibold">
-            Selecciona una columna:
-          </label>
+          <label className="block mb-1 font-semibold">Selecciona una columna:</label>
           <select
             value={selectedColumn}
             onChange={(e) => setSelectedColumn(e.target.value)}
             className="border p-1 rounded mb-3 w-full"
           >
             {columns.map((col) => (
-              <option key={col} value={col}>
-                {col}
-              </option>
+              <option key={col} value={col}>{col}</option>
             ))}
           </select>
 
@@ -240,15 +223,10 @@ export default function Calculadora_Excel({
               <div className="mt-2 max-h-64 overflow-y-auto border rounded-lg p-2 bg-white">
                 <div
                   className="grid gap-2 text-xs"
-                  style={{
-                    gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))",
-                  }}
+                  style={{ gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))" }}
                 >
                   {excelData.map((row, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-col items-center border p-1 rounded"
-                    >
+                    <div key={i} className="flex flex-col items-center border p-1 rounded">
                       <span className="text-gray-500 text-[10px]">#{i + 1}</span>
                       <input
                         type="number"
@@ -266,9 +244,7 @@ export default function Calculadora_Excel({
       )}
 
       {/* Selector de cálculo */}
-      <label className="block mb-1 font-semibold">
-        Selecciona un cálculo:
-      </label>
+      <label className="block mb-1 font-semibold">Selecciona un cálculo:</label>
       <select
         value={calculo}
         onChange={(e) => setCalculo(e.target.value)}
@@ -279,12 +255,10 @@ export default function Calculadora_Excel({
         <option value="minimo">Mínimo</option>
         <option value="maximo">Máximo</option>
         <option value="frecuencias_completas">Tabla de frecuencias</option>
-        <option value="distribucion_intervalos">
-          Distribución por intervalos
-        </option>
+        <option value="distribucion_intervalos">Distribución por intervalos</option>
       </select>
 
-      {/* Solo mostrar controles extra cuando se elige distribución por intervalos */}
+      {/* Controles extra para distribución por intervalos */}
       {calculo === "distribucion_intervalos" && (
         <>
           <div className="mb-2">
@@ -332,6 +306,24 @@ export default function Calculadora_Excel({
       >
         Calcular
       </button>
+
+      {/* ==== SECCION DE GRAFICOS ==== */}
+      <div className="mt-6">
+        {calculo === "distribucion_intervalos" ? (
+          <GraficoIntervalos datos={resultadoExcel} />
+        ) : (
+          <>
+            <div className="grafico mb-4">
+              <h4>Gráfico de Barras</h4>
+              <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
+            </div>
+            <div className="grafico">
+              <h4>Gráfico Circular</h4>
+              <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
