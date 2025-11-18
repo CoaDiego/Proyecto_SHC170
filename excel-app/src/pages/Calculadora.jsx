@@ -167,6 +167,16 @@ export default function Calculadora() {
           ) : (
             <p>No hay resultados aún.</p>
           )}
+
+               {/* ----------- Graficos Extras (Intervalos) ----------- */}
+{Array.isArray(resultadoExcel) &&
+ resultadoExcel.length > 0 &&
+ resultadoExcel[0].Intervalo && (
+  <div className="graficos-extra" style={{ marginTop: "30px" }}>
+    <h3>Gráficos adicionales (Intervalos)</h3>
+    <GraficoIntervalos datos={resultadoExcel} />
+  </div>
+)}
         </div>
 
         {/* ---------------- Gráficos ---------------- */}
@@ -193,6 +203,7 @@ export default function Calculadora() {
           )}
         </div>
       </div>
+
     </div>
   );
 }

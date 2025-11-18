@@ -307,23 +307,7 @@ export default function Calculadora_Excel({
         Calcular
       </button>
 
-      {/* ==== SECCION DE GRAFICOS ==== */}
-      <div className="mt-6">
-        {calculo === "distribucion_intervalos" ? (
-          <GraficoIntervalos datos={resultadoExcel} />
-        ) : (
-          <>
-            <div className="grafico mb-4">
-              <h4>Gráfico de Barras</h4>
-              <GraficoEstadistico datos={resultadoExcel} tipo="barras" />
-            </div>
-            <div className="grafico">
-              <h4>Gráfico Circular</h4>
-              <GraficoEstadistico datos={resultadoExcel} tipo="pastel" />
-            </div>
-          </>
-        )}
-      </div>
+      
     </div>
   );
 }
