@@ -100,23 +100,35 @@ async def get_file(filename: str):
 # ========= Ver contenido de una hoja específica ==========
 @app.get("/view/{filename}")
 async def view_excel(filename: str, hoja: int = 0):
-    file_path = os.path.join("excels", filename)
+    file_path = os.path.join(EXCEL_FOLDER, filename)
     if not os.path.exists(file_path):
         return {"error": "Archivo no encontrado"}
 
     try:
         with pd.ExcelFile(file_path) as xls:
+            # Leer hoja sin asumir encabezados (header=None) para ver datos crudos
             df = pd.read_excel(xls, sheet_name=hoja, header=None)
+            
+            # Eliminar filas totalmente vacías
             df = df.dropna(how="all")
+            
+            # 🛠️ CORRECCIÓN CRÍTICA: Reemplazar NaN (vacíos) con None (null en JSON)
+            # Esto arregla el problema de las columnas con diferente cantidad de datos
+            df = df.where(pd.notnull(df), None)
+
             if df.empty:
                 return {"error": "Archivo sin datos detectables"}
+            
+            # Renombrar columnas genéricamente para evitar problemas de llaves duplicadas
             df.columns = [f"Col {i+1}" for i in range(len(df.columns))]
+            
             json_data = df.to_dict(orient="records")
 
         return JSONResponse(content=json_data)
 
     except Exception as e:
-        return {"error": f"Error al leer el Excel: {e}"}
+        print(f"Error leyendo Excel: {e}") # Log para debug
+        return {"error": f"Error al leer el Excel: {str(e)}"}
 
 
 # ========= Listar hojas de un archivo ==========
