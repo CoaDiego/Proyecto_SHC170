@@ -9,17 +9,6 @@ export default function GraficoIntervalos({ datos }) {
 
   if (!datos || datos.length === 0) return <p className="text-gray-500 text-sm">No hay datos para graficar.</p>;
 
-  // --- ADAPTADOR DE DATOS (EL ARREGLO) ---
-  // Esto normaliza los nombres de las columnas para que tu diseño funcione siempre
-  const datosProcesados = datos.map(item => ({
-    // El gráfico espera "Intervalo", pero la lógica puede mandar "Haber básico"
-    Intervalo: item["Haber básico"] || item["Intervalos"] || item["Intervalo"] || "",
-    // Aseguramos que sean números
-    f_i: Number(item["f_i"] || item["fi"] || 0),
-    F_i: Number(item["F_i"] || item["Fi"] || 0),
-    "F'i": Number(item["F'i"] || item["F_i_inv"] || 0)
-  }));
-
   // Estilos de tarjeta normal
   const chartContainerStyle = {
     backgroundColor: "#f5f5f5",
@@ -30,7 +19,7 @@ export default function GraficoIntervalos({ datos }) {
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
-    position: "relative"
+    position: "relative" // Necesario para posicionar el botón absoluto
   };
 
   // Estilos para el modo EXPANDIDO (Modal)
@@ -67,6 +56,8 @@ export default function GraficoIntervalos({ datos }) {
     color: "#333",
     fontSize: "1rem",
   };
+
+  const axisStyle = { fontSize: 11, fill: '#666' };
 
   // Función para renderizar el botón de maximizar/cerrar
   const renderMaximizeButton = (chartId) => (
@@ -112,22 +103,21 @@ export default function GraficoIntervalos({ datos }) {
     
     const currentAxisStyle = { fontSize, fill: '#666' };
 
-    // NOTA: Aquí cambié 'datos' por 'datosProcesados' en todos los data={}
     switch (type) {
       case 'histograma':
         return (
-          <BarChart data={datosProcesados} margin={margin} barCategoryGap={0}> {/* Gap 0 para histograma real */}
+          <BarChart data={datos} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40}/>
             <YAxis tick={currentAxisStyle} />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem' }}/>
-            <Bar dataKey="f_i" fill="#2563eb" name="Frecuencia Absoluta" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="f_i" fill="#2563eb" name="Frecuencia Absoluta" radius={[4, 4, 0, 0]} />
           </BarChart>
         );
       case 'poligono':
         return (
-          <LineChart data={datosProcesados} margin={margin}>
+          <LineChart data={datos} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40}/>
             <YAxis tick={currentAxisStyle} />
@@ -138,7 +128,7 @@ export default function GraficoIntervalos({ datos }) {
         );
       case 'ojiva_creciente':
         return (
-          <AreaChart data={datosProcesados} margin={margin}>
+          <AreaChart data={datos} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} />
             <YAxis tick={currentAxisStyle} />
@@ -149,7 +139,7 @@ export default function GraficoIntervalos({ datos }) {
         );
       case 'ojiva_decreciente':
         return (
-          <AreaChart data={datosProcesados} margin={margin}>
+          <AreaChart data={datos} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} />
             <YAxis tick={currentAxisStyle} />
@@ -160,13 +150,13 @@ export default function GraficoIntervalos({ datos }) {
         );
       case 'mixto':
         return (
-          <ComposedChart data={datosProcesados} margin={margin}>
+          <ComposedChart data={datos} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} />
             <YAxis tick={currentAxisStyle} />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem' }}/>
-            <Bar dataKey="f_i" fill="#93c5fd" name="Histograma" barSize={40} />
+            <Bar dataKey="f_i" fill="#93c5fd" name="Histograma" radius={[4, 4, 0, 0]} />
             <Line type="monotone" dataKey="f_i" stroke="#1e40af" strokeWidth={3} dot={{r:4}} name="Polígono" />
           </ComposedChart>
         );
