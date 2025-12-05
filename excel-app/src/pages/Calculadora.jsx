@@ -7,8 +7,8 @@ import Calculator from "../components/Calculator";
 import ExcelContent from "../components/ExcelContent";
 import GraficoEstadistico from "../components/GraficoEstadistico";
 import GraficoIntervalos from "../components/graficos/GraficoIntervalos";
-import TablaDinamica from "../components/TablaDinamica"; // 👈 Tu componente creador
-import Latex from "../components/Latex";
+import TablaDinamica from "../components/TablaDinamica"; 
+import Latex from "../components/Latex"; // 👈 Asegúrate de tener este componente
 import GraficoBivariado from "../components/graficos/GraficoBivariado";
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 
@@ -108,7 +108,7 @@ export default function Calculadora() {
 
         <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '5px' }}> Datos </h3>
 
-        <label className="etiqueta">Selecciona un archivo:</label>
+        <label className="etiqueta">Selecciona un archivo:</label> 
         <select 
             value={selectedFile} 
             onChange={(e) => {
@@ -235,9 +235,9 @@ export default function Calculadora() {
                   <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
                   {resultado ? (
                     !Array.isArray(resultado) && resultado.tipo === "bivariada" ? (
+                        // TABLA BIVARIADA (Ya tenía algo de Latex, se mantiene)
                         <div style={{ overflowX: 'auto' }}>
                             <table className="tabla-academica">
-                                {/* TABLA BIVARIADA */}
                                 <thead>
                                     <tr>
                                         <th style={{ background: 'transparent', border: 'none' }}></th>
@@ -284,28 +284,93 @@ export default function Calculadora() {
                             </table>
                         </div>
                     ) : Array.isArray(resultado) ? (
+                        // ===============================================
+                        // AQUI ESTA EL CAMBIO: LÓGICA DE TABLAS CON KATEX
+                        // ===============================================
                         <div style={{ overflowX: 'auto' }}>
-                            <table className="tabla-academica">
-                                <thead>
-                                <tr>
-                                    {Object.keys(resultado[0]).map((key) => (
-                                        <th key={key}>
-                                            {key === "f_i" ? <Latex formula="f_i" /> : 
-                                            key === "p_i" ? <Latex formula="p_i \%" /> : key}
-                                        </th>
-                                    ))}
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {resultado.map((row, i) => (
-                                    <tr key={i}>
-                                        {Object.values(row).map((val, j) => (
-                                            <td key={j}>{formatearCelda(val)}</td>
+                            {calculo === "distribucion_intervalos" ? (
+                                /* --- 1. TABLA INTERVALOS --- */
+                                <table className="tabla-academica">
+                                    <thead>
+                                        <tr>
+                                            <th>Intervalos</th>
+                                            <th><Latex formula="f_i" /></th>
+                                            <th><Latex formula="p_i \%" /></th>
+                                            <th><Latex formula="F_i" /></th>
+                                            <th><Latex formula="P_i \%" /></th>
+                                            <th><Latex formula="F'_i" /></th>
+                                            <th><Latex formula="P'_i \%" /></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {resultado.map((row, i) => (
+                                            <tr key={i}>
+                                                <td>{row["Haber básico"] || row["Intervalos"]}</td>
+                                                <td>{formatearCelda(row["f_i"])}</td>
+                                                <td>{formatearCelda(row["p_i"])}</td>
+                                                <td>{formatearCelda(row["F_i"])}</td>
+                                                <td>{formatearCelda(row["P_i"])}</td>
+                                                <td>{formatearCelda(row["F'i"] || row["F_i_inv"])}</td>
+                                                <td>{formatearCelda(row["P'i"] || row["P_i_inv"])}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : calculo === "frecuencias_completas" ? (
+                                /* --- 2. TABLA FRECUENCIAS COMPLETAS --- */
+                                <table className="tabla-academica">
+                                    <thead>
+                                        <tr>
+                                            <th><Latex formula="x_i" /></th>
+                                            <th><Latex formula="f_i" /></th>
+                                            <th><Latex formula="F_i" /></th>
+                                            <th><Latex formula="F^{\uparrow}_i" /></th>
+                                            <th><Latex formula="p_i \%" /></th>
+                                            <th><Latex formula="P_i \%" /></th>
+                                            <th><Latex formula="P^{\uparrow}_i \%" /></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {resultado.map((row, i) => (
+                                            <tr key={i}>
+                                                <td className="celda-x">{row["x_i"] || row["Valor"]}</td>
+                                                <td>{formatearCelda(row["f_i"] || row["fi"])}</td>
+                                                <td>{formatearCelda(row["F_i"])}</td>
+                                                <td>{formatearCelda(row["F_i_inv"] || row["F'i"])}</td>
+                                                <td>{formatearCelda(row["p_i"])}</td>
+                                                <td>{formatearCelda(row["P_i"])}</td>
+                                                <td>{formatearCelda(row["P_i_inv"] || row["P'i%"])}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                /* --- 3. TABLA GENÉRICA (ABSOLUTA/RELATIVA) --- */
+                                <table className="tabla-academica">
+                                    <thead>
+                                    <tr>
+                                        {Object.keys(resultado[0]).map((key) => (
+                                            <th key={key}>
+                                                {/* Intentamos poner Latex si coincide la key común */}
+                                                {key === "f_i" ? <Latex formula="f_i" /> : 
+                                                 key === "p_i" ? <Latex formula="p_i \%" /> : 
+                                                 key === "Relativa" ? <Latex formula="h_i" /> : 
+                                                 key === "Frecuencia" ? <Latex formula="f_i" /> : key}
+                                            </th>
                                         ))}
                                     </tr>
-                                ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                    {resultado.map((row, i) => (
+                                        <tr key={i}>
+                                            {Object.values(row).map((val, j) => (
+                                                <td key={j}>{formatearCelda(val)}</td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     ) : <pre>{JSON.stringify(resultado, null, 2)}</pre>
                   ) : <p style={{ color: 'var(--text-muted)' }}>No hay resultados aún.</p>}

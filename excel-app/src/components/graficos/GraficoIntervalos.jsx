@@ -7,165 +7,121 @@ import {
 export default function GraficoIntervalos({ datos }) {
   const [expandedChart, setExpandedChart] = useState(null);
 
-  if (!datos || datos.length === 0) return <p className="text-gray-500 text-sm">No hay datos para graficar.</p>;
+  if (!datos || datos.length === 0) return <p style={{ color: "var(--text-muted)" }}>No hay datos para graficar.</p>;
 
-  // --- ADAPTADOR DE DATOS (EL ARREGLO) ---
-  // Esto normaliza los nombres de las columnas para que tu diseño funcione siempre
+  // --- ADAPTADOR DE DATOS ---
   const datosProcesados = datos.map(item => ({
-    // El gráfico espera "Intervalo", pero la lógica puede mandar "Haber básico"
     Intervalo: item["Haber básico"] || item["Intervalos"] || item["Intervalo"] || "",
-    // Aseguramos que sean números
     f_i: Number(item["f_i"] || item["fi"] || 0),
     F_i: Number(item["F_i"] || item["Fi"] || 0),
     "F'i": Number(item["F'i"] || item["F_i_inv"] || 0)
   }));
 
-  // Estilos de tarjeta normal
+  // Estilos de tarjeta normal (CAMBIADO A VARIABLES)
   const chartContainerStyle = {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "var(--bg-card)", // Antes #f5f5f5
     padding: "15px",
     borderRadius: "10px",
-    border: "1px solid #ccc", 
+    border: "1px solid var(--border-color)", 
     height: "300px", 
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
-    position: "relative"
+    position: "relative",
+    color: "var(--text-main)"
   };
 
   // Estilos para el modo EXPANDIDO (Modal)
   const expandedOverlayStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    backgroundColor: "rgba(0,0,0,0.8)",
-    zIndex: 9999,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "20px"
+    position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+    backgroundColor: "rgba(0,0,0,0.8)", zIndex: 9999,
+    display: "flex", justifyContent: "center", alignItems: "center", padding: "20px"
   };
 
   const expandedCardStyle = {
-    backgroundColor: "white",
-    width: "90%",
-    height: "85%",
-    borderRadius: "12px",
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
-    position: "relative"
+    backgroundColor: "var(--bg-card)", // Antes white
+    width: "90%", height: "85%", borderRadius: "12px", padding: "20px",
+    display: "flex", flexDirection: "column",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.5)", position: "relative",
+    color: "var(--text-main)"
   };
 
   const titleStyle = {
-    textAlign: "center",
-    marginBottom: "10px",
-    fontWeight: "bold",
-    color: "#333",
+    textAlign: "center", marginBottom: "10px", fontWeight: "bold",
+    color: "var(--text-main)", // Antes #333
     fontSize: "1rem",
   };
 
-  // Función para renderizar el botón de maximizar/cerrar
+  // Botón Maximizar (CAMBIADO A VARIABLES)
   const renderMaximizeButton = (chartId) => (
     <button 
       onClick={() => setExpandedChart(expandedChart === chartId ? null : chartId)}
       title={expandedChart === chartId ? "Cerrar" : "Maximizar"}
       style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        background: "rgba(255,255,255,0.8)",
-        border: "1px solid #ccc",
-        borderRadius: "4px",
-        cursor: "pointer",
-        padding: "4px",
-        zIndex: 10,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
+        position: "absolute", top: "10px", right: "10px",
+        background: "var(--bg-input)", // Antes rgba(255,255,255,0.8)
+        border: "1px solid var(--border-color)",
+        borderRadius: "4px", cursor: "pointer", padding: "4px",
+        zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center"
       }}
     >
-      {expandedChart === chartId ? (
-        // Icono Cerrar (X)
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      ) : (
-        // Icono Maximizar (Cuadrado con flechas)
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-        </svg>
-      )}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {expandedChart === chartId 
+            ? <><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></> 
+            : <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />}
+      </svg>
     </button>
   );
 
-  // Función auxiliar para renderizar el contenido del gráfico
   const renderChartContent = (type, isExpanded = false) => {
     const fontSize = isExpanded ? 14 : 11;
     const margin = isExpanded 
       ? { top: 20, right: 30, bottom: 20, left: 10 } 
       : { top: 10, right: 10, bottom: 0, left: -10 };
     
-    const currentAxisStyle = { fontSize, fill: '#666' };
+    // Ejes usando variables
+    const currentAxisStyle = { fontSize, fill: 'var(--text-main)' };
 
-    // NOTA: Aquí cambié 'datos' por 'datosProcesados' en todos los data={}
+    const commonProps = { margin };
+    const commonGrid = <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />;
+    const commonX = <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} stroke="var(--text-main)" />;
+    const commonY = <YAxis tick={currentAxisStyle} stroke="var(--text-main)" />;
+    const commonTooltip = <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} />;
+    const commonLegend = <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem', color: 'var(--text-main)' }} />;
+
     switch (type) {
       case 'histograma':
         return (
-          <BarChart data={datosProcesados} margin={margin} barCategoryGap={0}> {/* Gap 0 para histograma real */}
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40}/>
-            <YAxis tick={currentAxisStyle} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem' }}/>
+          <BarChart data={datosProcesados} {...commonProps} barCategoryGap={0}>
+            {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
             <Bar dataKey="f_i" fill="#2563eb" name="Frecuencia Absoluta" radius={[2, 2, 0, 0]} />
           </BarChart>
         );
       case 'poligono':
         return (
-          <LineChart data={datosProcesados} margin={margin}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40}/>
-            <YAxis tick={currentAxisStyle} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem' }}/>
+          <LineChart data={datosProcesados} {...commonProps}>
+            {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
             <Line type="monotone" dataKey="f_i" stroke="#2563eb" strokeWidth={3} dot={{r:4}} name="Frecuencia Absoluta" />
           </LineChart>
         );
       case 'ojiva_creciente':
         return (
-          <AreaChart data={datosProcesados} margin={margin}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} />
-            <YAxis tick={currentAxisStyle} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem' }}/>
+          <AreaChart data={datosProcesados} {...commonProps}>
+            {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
             <Area type="monotone" dataKey="F_i" stroke="#10b981" fill="#d1fae5" strokeWidth={3} name="Frecuencia Acumulada" />
           </AreaChart>
         );
       case 'ojiva_decreciente':
         return (
-          <AreaChart data={datosProcesados} margin={margin}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} />
-            <YAxis tick={currentAxisStyle} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem' }}/>
+          <AreaChart data={datosProcesados} {...commonProps}>
+            {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
             <Area type="monotone" dataKey="F'i" stroke="#ef4444" fill="#fee2e2" strokeWidth={3} name="Frec. Acumulada Inv." />
           </AreaChart>
         );
       case 'mixto':
         return (
-          <ComposedChart data={datosProcesados} margin={margin}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} />
-            <YAxis tick={currentAxisStyle} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem' }}/>
+          <ComposedChart data={datosProcesados} {...commonProps}>
+            {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
             <Bar dataKey="f_i" fill="#93c5fd" name="Histograma" barSize={40} />
             <Line type="monotone" dataKey="f_i" stroke="#1e40af" strokeWidth={3} dot={{r:4}} name="Polígono" />
           </ComposedChart>
@@ -174,7 +130,6 @@ export default function GraficoIntervalos({ datos }) {
     }
   };
 
-  // Componente interno para envolver cada tarjeta (Normal)
   const ChartCard = ({ id, title, type }) => (
     <div style={chartContainerStyle}>
       <h4 style={titleStyle}>{title}</h4>
@@ -189,14 +144,7 @@ export default function GraficoIntervalos({ datos }) {
 
   return (
     <>
-      {/* GRID NORMAL */}
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", 
-        gap: "20px", 
-        width: "100%",
-        marginTop: "10px"
-      }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "20px", width: "100%", marginTop: "10px" }}>
         <ChartCard id="hist" title="Histograma (fi)" type="histograma" />
         <ChartCard id="poli" title="Polígono de Frecuencias" type="poligono" />
         <ChartCard id="ojiva1" title="Ojiva Creciente (Fi)" type="ojiva_creciente" />
@@ -204,18 +152,11 @@ export default function GraficoIntervalos({ datos }) {
         <ChartCard id="mixto" title="Histograma + Polígono" type="mixto" />
       </div>
 
-      {/* MODAL DE EXPANSIÓN (Solo si hay uno seleccionado) */}
       {expandedChart && (
         <div style={expandedOverlayStyle} onClick={() => setExpandedChart(null)}>
           <div style={expandedCardStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-               <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#333' }}>
-                 {expandedChart === 'hist' && "Histograma Detallado"}
-                 {expandedChart === 'poli' && "Polígono de Frecuencias Detallado"}
-                 {expandedChart === 'ojiva1' && "Ojiva Creciente Detallada"}
-                 {expandedChart === 'ojiva2' && "Ojiva Decreciente Detallada"}
-                 {expandedChart === 'mixto' && "Gráfico Mixto Detallado"}
-               </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+               <h2 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-main)' }}>Detalle del Gráfico</h2>
                {renderMaximizeButton(expandedChart)}
             </div>
             <div style={{ flex: 1, width: "100%", minHeight: 0 }}>
