@@ -1,60 +1,108 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { DataGrid } from "react-data-grid";
+import "react-data-grid/lib/styles.css";
 
-export default function TablaDinamica({ onTablaActualizada }) {
+// Editor manual (Mismo que usamos en Calculadora)
+function textEditor({ row, column, onRowChange, onClose }) {
+  return (
+    <input
+      style={{ width: '100%', border: 'none', padding: '0 5px', outline: 'none', background: 'transparent', color: 'inherit' }}
+      autoFocus
+      value={row[column.key]}
+      onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
+      onBlur={() => onClose(true)}
+    />
+  );
+}
+
+export default function TablaDinamica({ onTablaActualizada, onTablaCreada }) {
+  // Configuración inicial
   const [nombre, setNombre] = useState("");
-  const [numColumnas, setNumColumnas] = useState(1);
-  const [numFilas, setNumFilas] = useState(1);
-  const [tabla, setTabla] = useState([]);
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Crear tabla inicial
-  const crearTabla = () => {
-    const columnas = Array.from({ length: numColumnas }, (_, i) => `Col ${i+1}`);
-    const filas = Array.from({ length: numFilas }, () => columnas.map(() => ""));
-    setTabla(filas);
-    setMensaje(`Tabla '${nombre || "Ejemplo"}' creada`);
-  };
+  // Estados para React Data Grid
+  const [columns, setColumns] = useState([
+    { key: "0", name: "Col 1", renderEditCell: textEditor, editable: true, resizable: true },
+    { key: "1", name: "Col 2", renderEditCell: textEditor, editable: true, resizable: true }
+  ]);
+  
+  const [rows, setRows] = useState([
+    { "0": "", "1": "" },
+    { "0": "", "1": "" },
+    { "0": "", "1": "" }
+  ]);
 
-  // Manejar cambios en celdas
-  const handleChange = (filaIdx, colIdx, value) => {
-    const nuevaTabla = [...tabla];
-    nuevaTabla[filaIdx][colIdx] = value;
-    setTabla(nuevaTabla);
-    onTablaActualizada?.(nuevaTabla);
-  };
-
-  // Agregar fila
-  const agregarFila = () => {
-    if (tabla.length === 0) return;
-    const nuevaFila = tabla[0].map(() => "");
-    setTabla([...tabla, nuevaFila]);
-  };
-
-  // Agregar columna
+  // --- LOGICA DE GRILLA ---
+  
   const agregarColumna = () => {
-    if (tabla.length === 0) return;
-    setTabla(tabla.map(fila => [...fila, ""]));
+    const newIndex = columns.length.toString();
+    const newCol = {
+        key: newIndex,
+        name: `Col ${columns.length + 1}`,
+        renderEditCell: textEditor,
+        editable: true,
+        resizable: true
+    };
+    setColumns([...columns, newCol]);
+    
+    // Actualizar filas existentes para tener la nueva propiedad vacía
+    setRows(rows.map(row => ({ ...row, [newIndex]: "" })));
   };
 
-  // Guardar tabla al backend
+  const agregarFila = () => {
+    const newRow = {};
+    columns.forEach(col => {
+        newRow[col.key] = "";
+    });
+    setRows([...rows, newRow]);
+  };
+
+  const eliminarUltimaFila = () => {
+      if (rows.length === 0) return;
+      setRows(rows.slice(0, -1));
+  };
+
+  // --- GUARDADO ---
+
   const guardarTabla = async () => {
-    if (tabla.length === 0) return;
+    if (rows.length === 0) return;
+    if (!nombre.trim()) {
+        setMensaje("⚠️ Escribe un nombre para la tabla.");
+        return;
+    }
+    
     setLoading(true);
     setMensaje("");
 
+    // Convertir formato RDG (Objetos) a Matriz simple para el Backend
+    // El backend espera: [ ["A", "B"], ["1", "2"] ]
+    const matriz = rows.map(row => {
+        return columns.map(col => row[col.key] || "");
+    });
+    
+    // Agregar cabeceras como primera fila (opcional, depende de tu backend)
+    // Si tu backend espera solo datos, comenta la siguiente linea:
+    const matrizConCabeceras = [columns.map(c => c.name), ...matriz];
+
     try {
-      const res = await fetch("http://127.0.0.1:8000/save_table", {
+      const res = await fetch("http://127.0.0.1:8000/save_table", { // Asegúrate que este endpoint exista en tu main.py
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nombre || "Ejemplo", tabla }),
+        body: JSON.stringify({ 
+            nombre: nombre, 
+            tabla: matrizConCabeceras // Enviamos datos
+        }),
       });
 
       const data = await res.json();
-      if (data.filename) {
-        setMensaje(`Tabla '${data.filename}' guardada con éxito`);
+      
+      if (res.ok) {
+        setMensaje(`✅ Tabla '${nombre}.xlsx' guardada.`);
+        // Avisar al padre (Calculadora) que recargue la lista
+        if (onTablaCreada) onTablaCreada();
       } else {
-        setMensaje("Error al guardar la tabla");
+        setMensaje(`Error: ${data.detail || "No se pudo guardar"}`);
       }
     } catch (err) {
       console.error(err);
@@ -65,66 +113,58 @@ export default function TablaDinamica({ onTablaActualizada }) {
   };
 
   return (
-    <div className="p-4 border rounded mt-4 bg-gray-50">
-      <h3 className="font-bold mb-2 text-blue-700">Tabla Dinámica</h3>
+    <div style={{ padding: "20px", border: "1px solid var(--border-color)", borderRadius: "8px", background: "var(--bg-card)" }}>
+      <h3 style={{ marginTop: 0, color: "var(--primary-color)" }}>Tablas Manuales</h3>
 
-      {/* Inputs iniciales */}
-      <div className="mb-2">
-        <label>Nombre de la tabla:</label>
-        <input value={nombre} onChange={e => setNombre(e.target.value)} className="border p-1 rounded w-full"/>
-      </div>
-
-      <div className="mb-2 flex gap-2">
-        <div>
-          <label>Número de columnas:</label> <br />
-          <input type="number" min="1" value={numColumnas} onChange={e => setNumColumnas(Number(e.target.value))} className="border p-1 rounded"/>
-        </div>
-        <div>
-          <label>Número de filas:</label> <br />
-          <input type="number" min="1" value={numFilas} onChange={e => setNumFilas(Number(e.target.value))} className="border p-1 rounded"/>
+      {/* Inputs Nombre */}
+      <div style={{ marginBottom: "15px" }}>
+        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Nombre del Archivo:</label>
+        <div style={{ display: "flex", gap: "10px" }}>
+            <input 
+                value={nombre} 
+                onChange={e => setNombre(e.target.value)} 
+                placeholder="Ej: Datos_Encuesta"
+                style={{ flex: 1 }}
+            />
+            <span style={{ alignSelf: "center", color: "var(--text-muted)" }}>.xlsx</span>
         </div>
       </div>
 
-      <button onClick={crearTabla} className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded mt-2">Crear Tabla</button>
+      {/* Barra de Herramientas */}
+      <div style={{ marginBottom: "15px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <button onClick={agregarFila} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
+            Agregar Fila
+        </button>
+        <button onClick={eliminarUltimaFila} style={{ backgroundColor: "var(--bg-input)", color: "red", border: "1px solid var(--border-color)" }}>
+            Eliminar Fila
+        </button>
+        <button onClick={agregarColumna} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
+            Agregar Columna
+        </button>
+        
+        <div style={{ flex: 1 }}></div> {/* Espaciador */}
+        
+        <button onClick={guardarTabla} disabled={loading} style={{ backgroundColor: "var(--accent-color)" }}>
+            {loading ? "Guardando..." : "Guardar Tabla"}
+        </button>
+      </div>
 
-      {mensaje && <p className="mt-2 text-sm text-gray-700">{mensaje}</p>}
+      {mensaje && <p style={{ marginBottom: "15px", fontWeight: "bold", color: mensaje.startsWith("✅") ? "green" : "red" }}>{mensaje}</p>}
 
-      {/* Tabla editable */}
-      {tabla.length > 0 && (
-        <div className="mt-4 overflow-auto">
-          <table className="border-collapse border border-gray-400">
-            <thead>
-              <tr>
-                {tabla[0].map((_, i) => <th key={i} className="border p-1">Col {i+1}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {tabla.map((fila, i) => (
-                <tr key={i}>
-                  {fila.map((celda, j) => (
-                    <td key={j} className="border p-1">
-                      <input
-                        type="text"
-                        value={celda}
-                        onChange={e => handleChange(i, j, e.target.value)}
-                        className="border p-1 w-16"
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="mt-2 flex gap-2">
-            <button onClick={agregarFila} className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded">Agregar fila</button>
-            <button onClick={agregarColumna} className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded">Agregar columna</button>
-            <button onClick={guardarTabla} disabled={loading} className="bg-purple-600 hover:bg-purple-700 text-white py-1 px-3 rounded">
-              {loading ? "Guardando..." : "Guardar tabla"}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* GRILLA EDITABLE */}
+      <div style={{ height: "400px", border: "1px solid var(--border-color)" }}>
+          <DataGrid 
+            columns={columns} 
+            rows={rows} 
+            onRowsChange={setRows} // Actualización automática del estado
+            className="rdg-light"
+            style={{ blockSize: "100%" }}
+          />
+      </div>
+      
+      <p style={{ marginTop: "10px", fontSize: "0.8em", color: "var(--text-muted)" }}>
+          * Doble clic en una celda para editar. Usa Tab para moverte.
+      </p>
     </div>
   );
 }

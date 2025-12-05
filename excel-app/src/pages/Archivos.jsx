@@ -30,7 +30,7 @@ export default function Archivos() {
     if (!fileObj) return;
     const formData = new FormData();
     formData.append("file", fileObj);
-    formData.append("autor", "Usuario Predeterminado"); 
+    formData.append("autor", "Usuario"); 
 
     try {
       const res = await fetch("http://127.0.0.1:8000/upload", { method: "POST", body: formData });

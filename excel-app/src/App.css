@@ -1,3 +1,5 @@
+@import 'react-data-grid/lib/styles.css';
+
 /* ========================================= */
 /* 1. VARIABLES GLOBALES (THEMING)           */
 /* ========================================= */
@@ -268,4 +270,35 @@ header {
   #root {
     padding: 1rem;      /* Menos margen en pantallas pequeñas */
   }
+}
+
+/* ========================================= */
+/* 7. REACT DATA GRID - TEMA OSCURO/CLARO    */
+/* ========================================= */
+
+.rdg {
+  /* Hacemos que la grilla use TUS variables de color */
+  --rdg-color: var(--text-main);
+  --rdg-background-color: var(--bg-card);
+  --rdg-header-background-color: var(--header-bg);
+  --rdg-border-color: var(--border-color);
+  --rdg-row-hover-background-color: var(--bg-input);
+  --rdg-selection-color: var(--primary-color);
+  
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9em;
+  height: 100%; 
+}
+
+/* Ajustes específicos para Modo Oscuro */
+html.dark .rdg {
+  --rdg-background-color: #1e1e1e;
+  --rdg-header-background-color: #2c2c2c;
+  --rdg-row-hover-background-color: #2a2a2a;
+}
+
+.rdg-cell {
+  border-right: 1px solid var(--border-color);
 }
