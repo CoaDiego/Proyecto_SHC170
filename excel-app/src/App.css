@@ -4,25 +4,34 @@
 /* 1. VARIABLES GLOBALES (THEMING)           */
 /* ========================================= */
 :root {
-  /* MODO CLARO (Por defecto) */
+  /* MODO CLARO */
   --bg-body: #ffffff;
-  --bg-card: #f9f9f9;       /* Fondo de paneles */
-  --bg-nav: #222222;        /* Fondo del menú (siempre oscuro o dinámico) */
+  --bg-card: #f9f9f9;
+  
+  /* --- CAMBIO AQUÍ: Fondo Naranja para la barra --- */
+  --bg-nav: #FF7000;  /* Un naranja claro/brillante */
+  
   --bg-input: #ffffff;
   --text-main: #213547;
   --text-muted: #666666;
-  --text-nav: #ffffff;      /* Texto del menú */
+  
+  /* --- Texto blanco para el menú (para que se lea sobre naranja) --- */
+  --text-nav: #ffffff; 
+  
   --border-color: #e5e7eb;
-  --primary-color: #2563eb; /* Azul botón */
-  --header-bg: #f3f4f6;     /* Cabecera de tablas */
-  --accent-color: #d97706;  /* Naranja */
+  --primary-color: #2563eb;
+  --header-bg: #f3f4f6;
+  --accent-color: #d97706;
 }
 
 html.dark {
-  /* MODO OSCURO */
+  /* MODO OSCURO (Se mantiene igual) */
   --bg-body: #242424;
-  --bg-card: #1e1e1e;       /* Un poco más claro que el body */
-  --bg-nav: #000000;        /* Menú más oscuro */
+  --bg-card: #1e1e1e;
+  
+  /* --- En oscuro la barra sigue siendo NEGRA/OSCURA --- */
+  --bg-nav: #000000; 
+  
   --bg-input: #2a2a2a;
   --text-main: #f5f5f5;
   --text-muted: #a0a0a0;
@@ -32,7 +41,6 @@ html.dark {
   --header-bg: #333333;
   --accent-color: #f59e0b;
 }
-
 /* ========================================= */
 /* 2. RESET Y ESTILOS BASE (Del antiguo index.css) */
 /* ========================================= */
@@ -301,4 +309,15 @@ html.dark .rdg {
 
 .rdg-cell {
   border-right: 1px solid var(--border-color);
+}
+
+/* ========================================= */
+/* 8. ESTILOS DEL ESCUDO (LOGO)              */
+/* ========================================= */
+
+.nav-logo {
+  height: 60px; /* Tamaño del escudo */
+  width: auto;
+  vertical-align: middle;
+  transition: filter 0.3s ease;
 }
