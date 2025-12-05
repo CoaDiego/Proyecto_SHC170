@@ -7,7 +7,7 @@ export default function ExcelReader() {
   const handleFile = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+a
     const reader = new FileReader();
     reader.onload = (evt) => {
       const bstr = evt.target.result;

@@ -1,3 +1,5 @@
+
+
 import { useEffect, useState } from "react";
 
 // --- IMPORTACIÓN DE COMPONENTES ---
@@ -16,17 +18,18 @@ export default function Calculadora() {
   // --- ESTADOS ---
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState("");
-  const [sheets, setSheets] = useState([]);
-  const [selectedSheet, setSelectedSheet] = useState("");
+  // Eliminamos el estado 'sheets' aquí, no lo necesitamos, ExcelContent lo maneja.
+  const [selectedSheet, setSelectedSheet] = useState(0); // Este índice se enviará al Hook
   
   const [mostrarTabla, setMostrarTabla] = useState(true);
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false); 
 
   // --- CONEXIÓN CON EL HOOK ---
+  // Ahora selectedSheet se actualizará correctamente gracias a ExcelContent
   const {
     excelData, columns, 
-    selectedColumn, setSelectedColumn,    // X
-    selectedColumnY, setSelectedColumnY,  // Y
+    selectedColumn, setSelectedColumn,    
+    selectedColumnY, setSelectedColumnY,  
     resultado, calculo,
     tipoIntervalo, metodoK, kPersonalizado,
     setCalculo, setTipoIntervalo, setMetodoK, setKPersonalizado,
@@ -45,33 +48,29 @@ export default function Calculadora() {
     return valor;
   };
 
-  // Estilos "Académicos"
   const cellStyle = {
-    padding: '8px', 
-    border: '1px solid #999',
-    textAlign: 'center',
-    fontFamily: '"Times New Roman", Times, serif',
-    fontSize: '1.1em',
-    color: '#000',
-    fontVariantNumeric: 'tabular-nums',
-    verticalAlign: 'middle'
+    padding: '8px', border: '1px solid #999', textAlign: 'center',
+    fontFamily: '"Times New Roman", Times, serif', fontSize: '1.1em',
+    color: '#000', fontVariantNumeric: 'tabular-nums', verticalAlign: 'middle'
   };
 
-  const headerStyle = {
-      ...cellStyle,
-      background: '#f0f0f0',
-      fontWeight: 'bold'
-  };
+  const headerStyle = { ...cellStyle, background: '#f0f0f0', fontWeight: 'bold' };
 
-  // Carga inicial
+  // Carga inicial de archivos
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/files").then((res) => res.json()).then((data) => { if (data.files) { setFiles(data.files); if (data.files.length > 0) setSelectedFile(data.files[0].filename); } }).catch(console.error);
+    fetch("http://127.0.0.1:8000/files")
+        .then((res) => res.json())
+        .then((data) => { 
+            if (data.files) { 
+                setFiles(data.files); 
+                if (data.files.length > 0) setSelectedFile(data.files[0].filename); 
+            } 
+        })
+        .catch(console.error);
   }, []);
 
-  useEffect(() => {
-    if (!selectedFile) return;
-    fetch(`http://127.0.0.1:8000/sheets/${encodeURIComponent(selectedFile)}`).then((res) => res.json()).then((data) => { if (data.sheets) { setSheets(data.sheets); setSelectedSheet(0); } else { setSheets([]); setSelectedSheet(""); } }).catch(console.error);
-  }, [selectedFile]);
+  // NOTA: Eliminamos el useEffect que hacía fetch a /sheets.
+  // ExcelContent se encarga de eso.
 
   const esIntervalo = calculo === "distribucion_intervalos";
 
@@ -82,15 +81,30 @@ export default function Calculadora() {
       <div className="calculadora-datos">
         <h2>- Archivos Subidos -</h2>
         <label className="etiqueta">Selecciona un archivo:</label>
-        <select value={selectedFile} onChange={(e) => setSelectedFile(e.target.value)} className="selector-archivo">
-          {files.map((file) => <option key={file.filename} value={file.filename}>{file.filename} ({file.author || "Desconocido"})</option>)}
+        <select 
+            value={selectedFile} 
+            onChange={(e) => setSelectedFile(e.target.value)} 
+            className="selector-archivo"
+            style={{ marginBottom: '15px' }}
+        >
+          {files.map((file) => (
+            <option key={file.filename} value={file.filename}>
+                {file.filename} ({file.author || "Desconocido"})
+            </option>
+          ))}
         </select>
 
-        <ExcelContent onSheetChange={(index) => setSelectedSheet(index)} filename={selectedFile} mostrarTabla={false} />
+        {/* AQUÍ ESTÁ EL CAMBIO CLAVE DE COMUNICACIÓN */}
+        <ExcelContent 
+            filename={selectedFile} 
+            mostrarTabla={false} // Ahora ExcelContent respetará esto
+            onSheetChange={(index) => setSelectedSheet(index)} // Recibimos el índice real desde el hijo
+        />
 
         <div className="panel-controles-excel" style={{ marginTop: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #ddd' }}>
             <h3 style={{ fontSize: '1.1em', color: '#333', marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>Calculadora de Excel</h3>
 
+            {/* Verificamos columns.length para saber si el Hook ya cargó la hoja seleccionada */}
             {columns.length > 0 ? (
                 <>
                     <label style={{ display: 'block', fontWeight: 'bold', fontSize: '0.9em', marginBottom: '5px' }}>
@@ -126,10 +140,11 @@ export default function Calculadora() {
                         </>
                     )}
 
-                    {/* --- MINI TABLA EDITABLE (CORREGIDA PARA TEXTO Y 2 COLUMNAS) --- */}
+                    {/* --- MINI TABLA EDITABLE --- */}
+                    {/* Al tener mostrarTabla en true localmente, ESTA es la tabla que verá el usuario para editar datos */}
                     {mostrarTabla && excelData.length > 0 && (
                         <div style={{ marginBottom: '15px' }}>
-                            <p style={{ fontSize: '0.8em', fontWeight: 'bold', marginBottom: '5px' }}>Vista Previa Datos:</p>
+                            <p style={{ fontSize: '0.8em', fontWeight: 'bold', marginBottom: '5px' }}>Vista Previa Datos (Editables):</p>
                             <div style={{ maxHeight: '150px', overflowY: 'auto', background: 'white', border: '1px solid #eee', padding: '5px', borderRadius: '4px' }}>
                                 <table style={{width: '100%', borderCollapse: 'collapse'}}>
                                     <thead>
@@ -143,7 +158,7 @@ export default function Calculadora() {
                                             <tr key={i} style={{borderBottom: '1px solid #f0f0f0'}}>
                                                 <td>
                                                     <input 
-                                                        type="text" /* <--- CAMBIO IMPORTANTE: TEXTO */
+                                                        type="text" 
                                                         value={row[selectedColumn] ?? ""} 
                                                         onChange={(e) => handleChangeDato(i, selectedColumn, e.target.value)} 
                                                         style={{ width: '100%', border: 'none', textAlign: 'center', fontSize: '0.9em' }} 
@@ -152,7 +167,7 @@ export default function Calculadora() {
                                                 {calculo === "distribucion_bivariada" && (
                                                     <td>
                                                         <input 
-                                                            type="text" /* <--- CAMBIO IMPORTANTE: TEXTO */
+                                                            type="text" 
                                                             value={row[selectedColumnY] ?? ""} 
                                                             onChange={(e) => handleChangeDato(i, selectedColumnY, e.target.value)} 
                                                             style={{ width: '100%', border: 'none', textAlign: 'center', fontSize: '0.9em', color: '#d97706' }} 
@@ -167,7 +182,7 @@ export default function Calculadora() {
                         </div>
                     )}
 
-                    {/* OPCIONES DE INTERVALOS */}
+                    {/* OPCIONES DE INTERVALOS (Igual que antes) */}
                     {calculo === "distribucion_intervalos" && (
                         <div style={{ padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '4px', marginBottom: '15px' }}>
                             <label style={{ display: 'block', fontSize: '0.85em', marginBottom: '3px' }}>Tipo Intervalo:</label>
@@ -189,9 +204,10 @@ export default function Calculadora() {
 
                     <button onClick={ejecutarCalculo} className="boton-calcular" style={{ width: '100%', padding: '10px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>CALCULAR</button>
                 </>
-            ) : <p style={{ fontSize: '0.9em', color: '#666', textAlign: 'center' }}>Carga un archivo para ver opciones.</p>}
+            ) : <p style={{ fontSize: '0.9em', color: '#666', textAlign: 'center' }}>Cargando columnas o selecciona un archivo...</p>}
         </div>
 
+        {/* RESTO DE COMPONENTES (TABLAS Y GRÁFICOS) SIN CAMBIOS MAYORES */}
         <div style={{ marginTop: '20px' }}>
              <TablaDinamica onTablaCreada={() => { fetch("http://127.0.0.1:8000/files").then(res => res.json()).then(data => { if (data.files) setFiles(data.files); }); }} />
         </div>
@@ -200,7 +216,7 @@ export default function Calculadora() {
         {mostrarCalculadora && <Calculator />}
       </div>
 
-      {/* ================= RESULTADOS ================= */}
+{/* ================= RESULTADOS ================= */}
       <div className="calculadora-resultados">
         <div className="frecuencias">
           <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
@@ -362,23 +378,8 @@ export default function Calculadora() {
             ) : <pre>{JSON.stringify(resultado, null, 2)}</pre>
           ) : <p>No hay resultados aún.</p>}
         </div>
-
-        {/* <div className="graficos" style={{ width: '100%' }}>
-          {resultado && (
-             Array.isArray(resultado) && esIntervalo ? (
-                <div className="graficos-extra" style={{ marginTop: "30px", width: "100%", display: 'block' }}>
-                    <h3>Gráficos de Intervalos</h3>
-                    <GraficoIntervalos datos={resultado} />
-                </div>
-             ) : Array.isArray(resultado) ? (
-                <>
-                    <div className="grafico"><h4>Gráfico de Barras</h4><GraficoEstadistico datos={resultado} tipo="barras" /></div>
-                    <div className="grafico"><h4>Gráfico Circular</h4><GraficoEstadistico datos={resultado} tipo="pastel" /></div>
-                </>
-             ) : null
-          )}
-        </div> */}
-        {/* ZONA DE GRÁFICOS */}
+        
+        {/* Zona de Gráficos (Copiar tal cual estaba en tu original) */}
         <div className="graficos" style={{ width: '100%', marginTop: '30px' }}>
           {resultado && (
              
@@ -416,8 +417,8 @@ export default function Calculadora() {
              ) : null
           )}
         </div>
+
       </div>
     </div>
   );
 }
-
