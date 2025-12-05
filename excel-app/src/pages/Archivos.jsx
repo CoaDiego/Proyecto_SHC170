@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import ExcelViewer from "../components/ExcelViewer";
 import ExcelUploader from "../components/ExcelUploader";
 import ExcelContent from "../components/ExcelContent";
+import ExcelReader from "../components/ExcelReader";
 
 export default function Archivos() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState("");
+  
+  const [modoSubida, setModoSubida] = useState(true);
 
   // 1. CARGAR LISTA DE ARCHIVOS
   const loadFiles = async () => {
@@ -20,53 +23,34 @@ export default function Archivos() {
     }
   };
 
-  useEffect(() => {
-    loadFiles();
-  }, []);
+  useEffect(() => { loadFiles(); }, []);
 
-  // 2. FUNCIÓN PARA SUBIR ARCHIVO (Corrección del Error 422)
+  // 2. FUNCIÓN PARA SUBIR ARCHIVO
   const handleUploadFile = async (fileObj) => {
     if (!fileObj) return;
-
     const formData = new FormData();
-    // Clave "file" para el archivo (Coincide con main.py: file: UploadFile)
     formData.append("file", fileObj);
-    
-    // --- CORRECCIÓN AQUÍ ---
-    // Tu backend EXIGE un campo "autor". Lo enviamos automático.
     formData.append("autor", "Usuario Predeterminado"); 
-    // -----------------------
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/upload", {
-        method: "POST",
-        body: formData,
-      });
-      
+      const res = await fetch("http://127.0.0.1:8000/upload", { method: "POST", body: formData });
       if (res.ok) {
-        loadFiles(); // Recargar lista
-        alert("✅ Archivo subido correctamente");
+        loadFiles();
+        alert("Archivo subido correctamente");
       } else {
-        // Si falla, mostramos el error que devuelve el backend
         const errorData = await res.json();
-        console.error("Error del servidor:", errorData);
-        alert(`❌ Error al subir: ${errorData.detail?.[0]?.msg || "Verifica la consola"}`);
+        alert(`Error al subir: ${errorData.detail?.[0]?.msg || "Error desconocido"}`);
       }
     } catch (err) {
-      console.error("Error de red:", err);
-      alert("❌ Error de conexión al intentar subir.");
+      alert("Error de conexión.");
     }
   };
 
   // 3. FUNCIÓN PARA ELIMINAR ARCHIVO
   const handleDeleteFile = async (filename) => {
     if (!window.confirm(`¿Estás seguro de eliminar "${filename}"?`)) return;
-
     try {
-      const res = await fetch(`http://127.0.0.1:8000/files/${encodeURIComponent(filename)}`, {
-        method: "DELETE"
-      });
-      
+      const res = await fetch(`http://127.0.0.1:8000/files/${encodeURIComponent(filename)}`, { method: "DELETE" });
       if (res.ok) {
         setFiles(prev => prev.filter(f => f.filename !== filename));
         if (selectedFile === filename) setSelectedFile(null);
@@ -74,26 +58,51 @@ export default function Archivos() {
         alert("No se pudo eliminar el archivo.");
       }
     } catch (err) {
-      console.error("Error eliminando:", err);
+      console.error(err);
     }
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ borderBottom: "2px solid #eee", paddingBottom: "10px" }}>Gestión de Archivos</h1>
+    <div className="page-container">
+      <h1 style={{ borderBottom: "2px solid var(--border-color)", paddingBottom: "10px" }}>Gestión de Archivos</h1>
       
-      {error && <p style={{ color: "red", fontWeight: "bold" }}>⚠️ {error}</p>}
+      {error && <p style={{ color: "red", fontWeight: "bold" }}>Error: {error}</p>}
 
-      {/* SECCIÓN SUPERIOR: SUBIDA */}
-      <div style={{ background: "#f9fafb", padding: "20px", borderRadius: "8px", marginBottom: "30px", border: "1px solid #e5e7eb" }}>
-        <ExcelUploader onUpload={handleUploadFile} />
+      {/* SECCIÓN DE HERRAMIENTAS */}
+      <div className="upload-section">
+        <div style={{ marginBottom: "15px", display: "flex", gap: "10px" }}>
+          <button 
+            onClick={() => setModoSubida(true)}
+            style={{ 
+              opacity: modoSubida ? 1 : 0.6, 
+              borderBottom: modoSubida ? "3px solid var(--accent-color)" : "none" 
+            }}
+          >
+            Subir al Servidor
+          </button>
+          <button 
+            onClick={() => setModoSubida(false)}
+            style={{ 
+              opacity: !modoSubida ? 1 : 0.6,
+              borderBottom: !modoSubida ? "3px solid var(--accent-color)" : "none" 
+            }}
+          >
+            Solo Leer (Local)
+          </button>
+        </div>
+
+        {modoSubida ? (
+           <ExcelUploader onUpload={handleUploadFile} />
+        ) : (
+           <ExcelReader />
+        )}
       </div>
 
-      <div style={{ display: "flex", gap: "30px", flexWrap: "wrap" }}>
+      <div className="files-layout">
         
         {/* COLUMNA IZQUIERDA: LISTA */}
-        <div style={{ flex: "1", minWidth: "300px", borderRight: "1px solid #eee", paddingRight: "20px" }}>
-          <h3 style={{ color: "#374151" }}> Archivos Disponibles</h3>
+        <div className="panel-section">
+          <h3>Archivos en el Servidor</h3>
           <ExcelViewer 
             files={files} 
             onSelect={setSelectedFile} 
@@ -102,19 +111,13 @@ export default function Archivos() {
         </div>
 
         {/* COLUMNA DERECHA: CONTENIDO */}
-        <div style={{ flex: "2", minWidth: "300px" }}>
-          <h3 style={{ color: "#374151" }}> Vista Previa</h3>
+        <div className="panel-section">
+          <h3>Vista Previa (Servidor)</h3>
           {selectedFile ? (
             <ExcelContent filename={selectedFile} />
           ) : (
-            <div style={{ 
-                padding: "40px", 
-                border: "2px dashed #ccc", 
-                borderRadius: "8px", 
-                color: "#999", 
-                textAlign: "center" 
-            }}>
-              Selecciona un archivo de la lista para ver su contenido
+            <div style={{ padding: "40px", border: "2px dashed var(--border-color)", color: "var(--text-muted)", textAlign: "center" }}>
+              Selecciona un archivo de la lista izquierda para ver su contenido remoto.
             </div>
           )}
         </div>
