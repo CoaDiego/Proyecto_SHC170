@@ -143,6 +143,7 @@ export default function Calculadora() {
                         <option value="frecuencias_completas">Tabla de Frecuencias</option>
                         <option value="distribucion_intervalos">Distribución por Intervalos</option>
                         <option value="distribucion_bivariada">Distribución Bivariante</option>
+                        <option value="estadistica_descriptiva">Análisis Descriptivo</option>
                         <option value="minimo">Mínimo</option>
                         <option value="maximo">Máximo</option>
                     </select>
@@ -288,7 +289,34 @@ export default function Calculadora() {
                         // AQUI ESTA EL CAMBIO: LÓGICA DE TABLAS CON KATEX
                         // ===============================================
                         <div style={{ overflowX: 'auto' }}>
-                            {calculo === "distribucion_intervalos" ? (
+{calculo === "estadistica_descriptiva" ? (
+    <table className="tabla-academica">
+        <thead>
+            <tr>
+                <th style={{textAlign: 'left'}}>Categoría</th>
+                <th style={{textAlign: 'left'}}>Estadístico</th>
+                <th style={{textAlign: 'right'}}>Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            {resultado.map((row, i) => {
+                // Truco visual: Solo mostrar la categoría en la primera fila del grupo
+                const mostrarCategoria = i === 0 || resultado[i-1].Categoria !== row.Categoria;
+                return (
+                    <tr key={i} style={{ borderTop: mostrarCategoria && i !== 0 ? '2px solid var(--border-color)' : 'none' }}>
+                        <td style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>
+                            {mostrarCategoria ? row.Categoria : ""}
+                        </td>
+                        <td>{row.Estadistico}</td>
+                        <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '1.1em' }}>
+                            {typeof row.Valor === 'number' ? row.Valor.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : row.Valor}
+                        </td>
+                    </tr>
+                );
+            })}
+        </tbody>
+    </table>
+) : calculo === "distribucion_intervalos" ? (
                                 /* --- 1. TABLA INTERVALOS --- */
                                 <table className="tabla-academica">
                                     <thead>
@@ -344,6 +372,7 @@ export default function Calculadora() {
                                         ))}
                                     </tbody>
                                 </table>
+                                
                             ) : (
                                 /* --- 3. TABLA GENÉRICA (ABSOLUTA/RELATIVA) --- */
                                 <table className="tabla-academica">

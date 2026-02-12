@@ -181,6 +181,107 @@ export function useCalculadoraExcel(filename, sheet) {
     });
   };
 
+  // ==========================================
+  // --- FÓRMULAS MATEMÁTICAS (CAPÍTULO 3) ---
+  // ==========================================
+
+  const basicMath = {
+    sum: (arr) => arr.reduce((a, b) => a + b, 0),
+    sort: (arr) => [...arr].sort((a, b) => a - b),
+    mean: (arr) => arr.reduce((a, b) => a + b, 0) / arr.length,
+  };
+
+  const calcularMediana = (datosOrdenados) => {
+    const mid = Math.floor(datosOrdenados.length / 2);
+    return datosOrdenados.length % 2 !== 0
+      ? datosOrdenados[mid]
+      : (datosOrdenados[mid - 1] + datosOrdenados[mid]) / 2;
+  };
+
+  const calcularModa = (datos) => {
+    const counts = {};
+    datos.forEach((n) => (counts[n] = (counts[n] || 0) + 1));
+    const maxFreq = Math.max(...Object.values(counts));
+    if (maxFreq === 1) return "Amodal"; // Si todos se repiten 1 vez
+    const modas = Object.keys(counts).filter((k) => counts[k] === maxFreq);
+    return modas.join(", ");
+  };
+
+  const calcularCuartiles = (datosOrdenados) => {
+    const q = (p) => {
+      const pos = (datosOrdenados.length - 1) * p;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      if (datosOrdenados[base + 1] !== undefined) {
+        return datosOrdenados[base] + rest * (datosOrdenados[base + 1] - datosOrdenados[base]);
+      } else {
+        return datosOrdenados[base];
+      }
+    };
+    return { Q1: q(0.25), Q2: q(0.5), Q3: q(0.75) };
+  };
+
+  const calcularDescriptivaTotal = (datos) => {
+    const n = datos.length;
+    if (n === 0) return null;
+    
+    const sorted = basicMath.sort(datos);
+    const media = basicMath.mean(datos);
+    const mediana = calcularMediana(sorted);
+    const moda = calcularModa(datos);
+    const min = sorted[0];
+    const max = sorted[n - 1];
+    const rango = max - min;
+
+    // 3.1 Medias Especiales
+    // Geométrica: Raíz n-ésima del producto (usamos logaritmos para evitar overflow)
+    const mediaGeo = Math.exp(datos.reduce((a, b) => a + Math.log(b > 0 ? b : 1), 0) / n);
+    // Armónica: n / suma(1/x)
+    const mediaArm = n / datos.reduce((a, b) => a + (1 / (b !== 0 ? b : 1)), 0);
+
+    // 3.6 Varianza y 3.8 Desviación
+    const sumSqDiff = datos.reduce((a, b) => a + Math.pow(b - media, 2), 0);
+    const varianzaPoblacional = sumSqDiff / n;
+    const varianzaMuestral = sumSqDiff / (n - 1);
+    const desvStdPoblacional = Math.sqrt(varianzaPoblacional);
+    const desvStdMuestral = Math.sqrt(varianzaMuestral);
+
+    // 3.9 Coeficiente de Variación (CV)
+    const cv = (desvStdMuestral / media) * 100;
+
+    // 3.5 Cuartiles
+    const { Q1, Q2, Q3 } = calcularCuartiles(sorted);
+    const rangoIntercuartil = Q3 - Q1;
+
+    // 3.12 Asimetría (Fisher) y 3.13 Curtosis
+    const m3 = datos.reduce((a, b) => a + Math.pow(b - media, 3), 0) / n;
+    const m4 = datos.reduce((a, b) => a + Math.pow(b - media, 4), 0) / n;
+    const asimetria = m3 / Math.pow(desvStdPoblacional, 3);
+    const curtosis = (m4 / Math.pow(desvStdPoblacional, 4)) - 3; // Exceso de curtosis
+
+    return [
+      { Categoria: "Tendencia Central", Estadistico: "Media Aritmética", Valor: media },
+      { Categoria: "Tendencia Central", Estadistico: "Mediana", Valor: mediana },
+      { Categoria: "Tendencia Central", Estadistico: "Moda", Valor: moda },
+      { Categoria: "Promedios", Estadistico: "Media Geométrica", Valor: mediaGeo },
+      { Categoria: "Promedios", Estadistico: "Media Armónica", Valor: mediaArm },
+      { Categoria: "Dispersión", Estadistico: "Rango", Valor: rango },
+      { Categoria: "Dispersión", Estadistico: "Varianza Poblacional", Valor: varianzaPoblacional },
+      { Categoria: "Dispersión", Estadistico: "Varianza Muestral", Valor: varianzaMuestral },
+      { Categoria: "Dispersión", Estadistico: "Desviación Estándar (Pob)", Valor: desvStdPoblacional },
+      { Categoria: "Dispersión", Estadistico: "Desviación Estándar (Mues)", Valor: desvStdMuestral },
+      { Categoria: "Dispersión relativa", Estadistico: "Coeficiente de Variación", Valor: `${cv.toFixed(2)} %` },
+      { Categoria: "Posición", Estadistico: "Cuartil 1 (Q1)", Valor: Q1 },
+      { Categoria: "Posición", Estadistico: "Cuartil 3 (Q3)", Valor: Q3 },
+      { Categoria: "Posición", Estadistico: "Rango Intercuartílico (IQR)", Valor: rangoIntercuartil },
+      { Categoria: "Forma", Estadistico: "Asimetría (Fisher)", Valor: asimetria },
+      { Categoria: "Forma", Estadistico: "Curtosis", Valor: curtosis },
+      { Categoria: "Extremos", Estadistico: "Mínimo", Valor: min },
+      { Categoria: "Extremos", Estadistico: "Máximo", Valor: max },
+    ];
+  };
+
+
   // --- Ejecutar Cálculo ---
   const ejecutarCalculo = () => {
     if (calculo === "distribucion_bivariada") {
@@ -220,6 +321,7 @@ export function useCalculadoraExcel(filename, sheet) {
       case "maximo": res = [{ Resultado: "Máximo", Valor: Math.max(...datos) }]; break;
       case "frecuencias_completas": res = calcularFrecuencias(datos); break;
       case "distribucion_intervalos": res = calcularDistribucionIntervalos(datos); break;
+      case "estadistica_descriptiva": res = calcularDescriptivaTotal(datos);break;
       default: res = [];
     }
     setResultado(res);

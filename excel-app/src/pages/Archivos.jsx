@@ -117,7 +117,7 @@ export default function Archivos() {
             <ExcelContent filename={selectedFile} />
           ) : (
             <div style={{ padding: "40px", border: "2px dashed var(--border-color)", color: "var(--text-muted)", textAlign: "center" }}>
-              Selecciona un archivo de la lista izquierda para ver su contenido remoto.
+              Selecciona un archivo de la lista izquierda para ver su contenido.
             </div>
           )}
         </div>
