@@ -25,13 +25,14 @@ export function useCalculadoraExcel(filename, sheet) {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          const headerRow = Object.values(data[0]);
+
+          const headerRow = Object.keys(data[0]);
           setColumns(headerRow);
           
-          const realData = data.slice(1).map((row) =>
-            Object.fromEntries(Object.keys(row).map((key, idx) => [headerRow[idx], row[key]]))
-          );
-          setExcelData(realData);
+          //const realData = data.slice(1).map((row) =>
+           // Object.fromEntries(Object.keys(row).map((key, idx) => [headerRow[idx], row[key]]))
+          //);
+          setExcelData(data);
           
           // --- AUTO-SELECCIÓN INTELIGENTE ---
           if (headerRow.length > 0) {

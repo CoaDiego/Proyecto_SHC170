@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
 
 // 1. IMPORTAR LA IMAGEN
-import escudo from "../assets/images/escudoUSFX.JPEG"; 
+import escudo from "../../assets/images/escudousfx.png"; 
 
 export default function Menu() {
   return (

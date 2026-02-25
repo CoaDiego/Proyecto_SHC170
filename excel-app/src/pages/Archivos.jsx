@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import ExcelViewer from "../components/ExcelViewer";
-import ExcelUploader from "../components/ExcelUploader";
-import ExcelContent from "../components/ExcelContent";
-import ExcelReader from "../components/ExcelReader";
+import ExcelViewer from "../components/exel/ExcelViewer";
+import ExcelUploader from "../components/exel/ExcelUploader";
+import ExcelContent from "../components/exel/ExcelContent";
+import ExcelReader from "../components/exel/ExcelReader";
 
 export default function Archivos() {
   const [files, setFiles] = useState([]);

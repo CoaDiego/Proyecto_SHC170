@@ -9,10 +9,10 @@
  */
 
 import { useState } from "react";
-import ExcelUploader from "../components/ExcelUploader";
+import ExcelUploader from "../components/exel/ExcelUploader";
 
 export default function Inicio() {
-  const [refreshFiles, setRefreshFiles] = useState(false);
+  const [_refreshFiles, _setRefreshFiles] = useState(false);
 
   return (
     <div>
