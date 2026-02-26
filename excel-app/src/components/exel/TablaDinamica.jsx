@@ -2,7 +2,9 @@ import { useState, _useEffect } from "react";
 import { DataGrid } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 
-import { alerta} from '../../utils/Notificaciones';
+import { alerta } from '../../utils/Notificaciones';
+
+import { api } from '../../services/api';
 
 // Editor manual (Mismo que usamos en Calculadora)
 function textEditor({ row, column, onRowChange, onClose }) {
@@ -118,7 +120,7 @@ export default function TablaDinamica({ onTablaCreada }) {
     // Si tu backend espera solo datos, comenta la siguiente linea:
     //const matrizConCabeceras = [columns.map(c => c.name), ...matriz];
 
-    try {
+    /*try {
       const res = await fetch("http://127.0.0.1:8000/save_table", { // Asegúrate que este endpoint exista en tu main.py
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,104 +128,102 @@ export default function TablaDinamica({ onTablaCreada }) {
           nombre: nombre,
           tabla: datosLimpios // Enviamos datos
         }),
-      });
+      });*/
 
-      const data = await res.json();
+    try {
+      await api.guardarTabla(nombre, datosLimpios);
 
-      if (res.ok) {
-        alerta.success(`Cambios guardados: ${nombre}.xlsx`, "Tu tabla se ha guardado correctamente.");
-        // Avisar al padre (Calculadora) que recargue la lista
-        if (onTablaCreada) onTablaCreada();
-      } else {
-        alerta.error("Algo salió mal", data.detail || "Inténtalo de nuevo más tarde.");
-      }
+      /*const data = await res.json();
+
+      if (res.ok) {*/
+      alerta.success(`Cambios guardados: ${nombre}.xlsx`, "Tu tabla se ha guardado correctamente.");
+      // Avisar al padre (Calculadora) que recargue la lista
+      if (onTablaCreada) onTablaCreada();
     } catch (err) {
-      console.error(err);
-
-      alert.error("Error de conexión", "No pudimos comunicarnos con el servidor.");
-
-    } finally {
+      console.error("Error al guardar la tabla", err);
+      alerta.error("Algo salió mal", "Inténtalo de nuevo más tarde.");
+    }finally {
       setLoading(false);
     }
-  };
+};
 
-  //cambio para que el usuario pueda editar las columnas y mover dentro de las celdas
+//cambio para que el usuario pueda editar las columnas y mover dentro de las celdas
 
-  const columnasEditables = columns.map(col => ({
-    ...col,
-    renderHeaderCell: () => (
-      <input
-        value={col.name}
-        onChange={(e) => {
-          const nuevoNombre = e.target.value;
-          setColumns(columns.map(c => c.key === col.key ? { ...c, name: nuevoNombre } : c));
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-            e.stopPropagation();
-          }
-        }}
-        style={{ width: '100%', border: 'none', background: 'transparent', color: 'inherit', fontWeight: 'bold', outline: 'none', textAlign: 'center' }}
-        placeholder="Nombre Columna"
-      />
-    )
-  }));
+const columnasEditables = columns.map(col => ({
+  ...col,
+  renderHeaderCell: () => (
+    <input
+      value={col.name}
+      onChange={(e) => {
+        const nuevoNombre = e.target.value;
+        setColumns(columns.map(c => c.key === col.key ? { ...c, name: nuevoNombre } : c));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.stopPropagation();
+        }
+      }}
+      style={{ width: '100%', border: 'none', background: 'transparent', color: 'inherit', fontWeight: 'bold', outline: 'none', textAlign: 'center' }}
+      placeholder="Nombre Columna"
+    />
+  )
+}));
 
 
-  return (
-    <div style={{ padding: "20px", border: "1px solid var(--border-color)", borderRadius: "8px", background: "var(--bg-card)" }}>
-      <h3 style={{ marginTop: 0, color: "var(--primary-color)" }}>Tablas Manuales</h3>
+return (
+  <div style={{ padding: "20px", border: "1px solid var(--border-color)", borderRadius: "8px", background: "var(--bg-card)" }}>
+    <h3 style={{ marginTop: 0, color: "var(--primary-color)" }}>Tablas Manuales</h3>
 
-      {/* Inputs Nombre */}
-      <div style={{ marginBottom: "15px" }}>
-        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Nombre del Archivo:</label>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <input
-            value={nombre}
-            onChange={e => setNombre(e.target.value)}
-            placeholder="Ej: Datos_Encuesta"
-            style={{ flex: 1 }}
-          />
-          <span style={{ alignSelf: "center", color: "var(--text-muted)" }}>.xlsx</span>
-        </div>
-      </div>
-
-      {/* Barra de Herramientas */}
-      <div style={{ marginBottom: "15px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
-        <button onClick={agregarFila} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
-          Agregar Fila
-        </button>
-        <button onClick={eliminarUltimaFila} style={{ backgroundColor: "var(--bg-input)", color: "red", border: "1px solid var(--border-color)" }}>
-          Eliminar Fila
-        </button>
-        <button onClick={agregarColumna} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
-          Agregar Columna
-        </button>
-
-        <div style={{ flex: 1 }}></div> {/* Espaciador */}
-
-        <button onClick={guardarTabla} disabled={loading} style={{ backgroundColor: "var(--accent-color)" }}>
-          {loading ? "Guardando..." : "Guardar Tabla"}
-        </button>
-      </div>
-
-      {mensaje && <p style={{ marginBottom: "15px", fontWeight: "bold", color: mensaje.startsWith("✅") ? "green" : "red" }}>{mensaje}</p>}
-
-      {/* GRILLA EDITABLE */}
-      <div style={{ height: "400px", border: "1px solid var(--border-color)" }}>
-        <DataGrid
-          key={columns.length}
-          columns={columnasEditables}
-          rows={rows}
-          onRowsChange={setRows}
-          className="rdg-light"
-          style={{ blockSize: "100%" }}
+    {/* Inputs Nombre */}
+    <div style={{ marginBottom: "15px" }}>
+      <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Nombre del Archivo:</label>
+      <div style={{ display: "flex", gap: "10px" }}>
+        <input
+          value={nombre}
+          onChange={e => setNombre(e.target.value)}
+          placeholder="Ej: Datos_Encuesta"
+          style={{ flex: 1 }}
         />
+        <span style={{ alignSelf: "center", color: "var(--text-muted)" }}>.xlsx</span>
       </div>
-
-      <p style={{ marginTop: "10px", fontSize: "0.8em", color: "var(--text-muted)" }}>
-        * Doble clic en una celda para editar. Usa Tab para moverte.
-      </p>
     </div>
-  );
+
+    {/* Barra de Herramientas */}
+    <div style={{ marginBottom: "15px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+      <button onClick={agregarFila} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
+        Agregar Fila
+      </button>
+      <button onClick={eliminarUltimaFila} style={{ backgroundColor: "var(--bg-input)", color: "red", border: "1px solid var(--border-color)" }}>
+        Eliminar Fila
+      </button>
+      <button onClick={agregarColumna} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
+        Agregar Columna
+      </button>
+
+      <div style={{ flex: 1 }}></div> {/* Espaciador */}
+
+      <button onClick={guardarTabla} disabled={loading} style={{ backgroundColor: "var(--accent-color)" }}>
+        {loading ? "Guardando..." : "Guardar Tabla"}
+      </button>
+    </div>
+
+    {mensaje && <p style={{ marginBottom: "15px", fontWeight: "bold", color: mensaje.startsWith("✅") ? "green" : "red" }}>{mensaje}</p>}
+
+    {/* GRILLA EDITABLE */}
+    <div style={{ height: "400px", border: "1px solid var(--border-color)" }}>
+      <DataGrid
+        key={columns.length}
+        columns={columnasEditables}
+        rows={rows}
+        onRowsChange={setRows}
+        className="rdg-light"
+        style={{ blockSize: "100%" }}
+      />
+    </div>
+
+    <p style={{ marginTop: "10px", fontSize: "0.8em", color: "var(--text-muted)" }}>
+      * Doble clic en una celda para editar. Usa Tab para moverte.
+    </p>
+  </div>
+);
 }

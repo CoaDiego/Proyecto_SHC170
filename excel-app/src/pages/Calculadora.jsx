@@ -12,6 +12,8 @@ import Latex from "../components/exel/Latex"; // 👈 Asegúrate de tener este c
 import GraficoBivariado from "../components/graficos/GraficoBivariado";
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 
+import { api } from "../services/api";
+
 // --- EDITOR MANUAL PARA RDG ---
 function textEditor({ row, column, onRowChange, onClose }) {
     return (
@@ -69,7 +71,7 @@ export default function Calculadora() {
     };
 
     // Carga inicial
-    const cargarArchivos = () => {
+    /*const cargarArchivos = () => {
         fetch("http://127.0.0.1:8000/files")
             .then((res) => res.json())
             .then((data) => {
@@ -79,9 +81,25 @@ export default function Calculadora() {
                 }
             })
             .catch(console.error);
+    };*/
+
+    const cargarArchivos = async () => {
+        try {
+            const data = await api.obtenerArchivos();
+            if (data && data.files) {
+                setFiles(data.files);
+                if (data.files.length > 0 && !selectedFile) {
+                    setSelectedFile(data.files[0].filename);
+                }
+            }
+        } catch (error) {
+            console.error("Error al cargar archivos:", error);
+        }
     };
 
-    useEffect(() => { cargarArchivos(); }, []);
+    useEffect(() => { 
+        cargarArchivos(); 
+    }, []);
 
     const esIntervalo = calculo === "distribucion_intervalos";
 

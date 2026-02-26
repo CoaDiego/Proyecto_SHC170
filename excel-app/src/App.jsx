@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Menu from "./components/ui/Menu";
 
 import { useState } from "react";
-import { sileo, Toaster } from "sileo"; // 👈 1. Importamos el componente Toaster
+import { sileo, Toaster } from "sileo";
 
 import Inicio from "./pages/Inicio";
 import Archivos from "./pages/Archivos";

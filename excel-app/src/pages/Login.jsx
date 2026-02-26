@@ -3,6 +3,7 @@ import logoCarrera from "../assets/images/escudoAdmin.png";
 
 import { alerta} from '../utils/Notificaciones';
 
+
 export default function Login({ onLogin }) {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
@@ -70,5 +71,6 @@ export default function Login({ onLogin }) {
         </form>
       </div>
     </div>
+    
   );
 }

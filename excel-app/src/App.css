@@ -41,6 +41,28 @@ html.dark {
   --header-bg: #333333;
   --accent-color: #f59e0b;
 }
+
+/* Esto obliga a la página entera a tener el carril siempre visible */
+html {
+  overflow-y: scroll; 
+}
+
+/* Y aquí el diseño para que se vea bonita y oscura */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f4f4f9; /* Color del fondo del carril */
+}
+::-webkit-scrollbar-thumb {
+  background: #a0a0a0; /* Color de la barra que se mueve */
+  border-radius: 10px;
+  border: 3px solid #f4f4f9; /* Da un efecto de que es más delgada */
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #787878; /* Se pone más oscura al pasar el mouse */
+}
+
 /* ========================================= */
 /* 2. RESET Y ESTILOS BASE (Del antiguo index.css) */
 /* ========================================= */

@@ -1,26 +1,27 @@
 import { useState } from "react";
 
+import { api } from "../../services/api";
 
 export default function Calculator() {
   // ==========================
   // ESTADOS DEL COMPONENTE
   // ==========================
   // Curso y tema seleccionado
-  const [curso, setCurso] = useState("MAT151"); 
-  const [tema, setTema] = useState("Tema2");   
+  const [curso, setCurso] = useState("MAT151");
+  const [tema, setTema] = useState("Tema2");
 
   // Tipo de cálculo dentro del tema
-  const [tipo, setTipo] = useState("media");   
+  const [tipo, setTipo] = useState("media");
 
   // Inputs de datos
-  const [input, setInput] = useState("");      
-  const [resultado, setResultado] = useState(null); 
-  const [pesos, setPesos] = useState("");   
+  const [input, setInput] = useState("");
+  const [resultado, setResultado] = useState(null);
+  const [pesos, setPesos] = useState("");
 
   // Para Tema5 (bivariado)
-  const [inputX, setInputX] = useState(""); 
-  const [inputY, setInputY] = useState(""); 
-  
+  const [inputX, setInputX] = useState("");
+  const [inputY, setInputY] = useState("");
+
   // Para Tema6 - Regresión Multivariante
   const [inputsX, setInputsX] = useState([[""]]); // lista de variables X
   const [inputYMulti, setInputYMulti] = useState([]); // variable dependiente
@@ -38,7 +39,9 @@ export default function Calculator() {
     setResultado(null);
 
     let bodyData = { tipo, tema };
-    let url = "http://127.0.0.1:8000/calcular"; // URL por defecto de la API
+    //let url = "http://127.0.0.1:8000/calcular"; // URL por defecto de la API
+
+    let calculoPromise;
 
     // ==========================
     // Tema5 y Tema6 (bivariado y multivariante)
@@ -47,55 +50,59 @@ export default function Calculator() {
       if (tema === "Tema6" && tipo === "regresion_multivariante") {
         // Caso multivariante → endpoint especial
         bodyData = { X: inputsX, y: inputYMulti, tipo };
-        url = "http://127.0.0.1:8000/calcular_multivariante";
+        //url = "http://127.0.0.1:8000/calcular_multivariante";
+        calculoPromise = api.calcularMultivariante(bodyData);
       } else {
         // Tema5 o regresión simple de Tema6 → endpoint bivariado
         const datosX = inputX.split(",").map(Number).filter((x) => !isNaN(x));
         const datosY = inputY.split(",").map(Number).filter((x) => !isNaN(x));
         bodyData = { x: datosX, y: datosY, tipo };
-        url = "http://127.0.0.1:8000/calcular_bivariada";
+        //url = "http://127.0.0.1:8000/calcular_bivariada";
+        calculoPromise = api.calcularBivariadaManual(bodyData);
       }
     } else {
       // ==========================
       // Resto de temas (Tema2, Tema3, Tema4)           
       // =========================
       // Convertimos input a números
-let datosArray = input
-  .split(",")
-  .map(x => Number(x.trim()))
-  .filter(x => !isNaN(x));
+      let datosArray = input
+        .split(",")
+        .map(x => Number(x.trim()))
+        .filter(x => !isNaN(x));
 
-// Media ponderada → enviamos pesos
-if (tipo === "media_ponderada") {
-  const pesosList = pesos
-    .split(",")
-    .map(x => Number(x.trim()))
-    .filter(x => !isNaN(x));
-  bodyData.pesos = pesosList;
-}
+      // Media ponderada → enviamos pesos
+      if (tipo === "media_ponderada") {
+        const pesosList = pesos
+          .split(",")
+          .map(x => Number(x.trim()))
+          .filter(x => !isNaN(x));
+        bodyData.pesos = pesosList;
+      }
 
-// Para cálculos agrupados del Tema3
+      // Para cálculos agrupados del Tema3
 
-// Para cálculos agrupados del Tema3
+      // Para cálculos agrupados del Tema3
 
-if (tema === "Tema3" && ["media_agrupada", "mediana_agrupada", "moda_agrupada"].includes(tipo)) {
-  bodyData.datos = datosArray; // enviamos datos crudos, Tema3.py se encargará de crear la tabla de clases
-} else {
-  bodyData.datos = datosArray; // lista simple para los otros cálculos
-}
+      if (tema === "Tema3" && ["media_agrupada", "mediana_agrupada", "moda_agrupada"].includes(tipo)) {
+        bodyData.datos = datosArray; // enviamos datos crudos, Tema3.py se encargará de crear la tabla de clases
+      } else {
+        bodyData.datos = datosArray; // lista simple para los otros cálculos
+      }
 
 
 
-// DEBUG: Ver qué datos se enviarán
-console.log("bodyData a enviar:", bodyData);
+      // DEBUG: Ver qué datos se enviarán
+      console.log("bodyData a enviar:", bodyData);
+
+      calculoPromise = api.calcularUnivariada(bodyData);
 
 
     }
-    
+
     // ==========================
     // ENVÍO DE DATOS A LA API
     // ==========================
-    try {
+    /*try {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,6 +111,14 @@ console.log("bodyData a enviar:", bodyData);
 
       const data = await res.json();
       setResultado(data); // Guardamos el resultado
+    } catch (err) {
+      console.error("Error:", err);
+      setResultado({ error: "No se pudo conectar con la API" });
+    }*/
+    try {
+      // Ejecutamos la promesa seleccionada
+      const data = await calculoPromise;
+      setResultado(data);
     } catch (err) {
       console.error("Error:", err);
       setResultado({ error: "No se pudo conectar con la API" });
@@ -166,7 +181,7 @@ console.log("bodyData a enviar:", bodyData);
             <option value="mediana">Mediana</option>
             <option value="moda">Moda</option>
 
-             {/* Nuevos cálculos agrupados */}
+            {/* Nuevos cálculos agrupados */}
             <option value="media_agrupada">Media Agrupada</option>
             <option value="mediana_agrupada">Mediana Agrupada</option>
             <option value="moda_agrupada">Moda Agrupada</option>
@@ -295,7 +310,7 @@ console.log("bodyData a enviar:", bodyData);
       {resultado && (   // Solo renderiza esta sección si 'resultado' tiene algún valor
         <div>
           <h3>Resultado:</h3>
-      
+
           {/* ==========================
               CASO 1: cálculos agrupados (Tema3)
               - 'resultado' contiene un objeto con tabla de clases + medias/mediana/moda agrupadas
@@ -318,7 +333,7 @@ console.log("bodyData a enviar:", bodyData);
                   <b>Moda Agrupada:</b> {resultado.moda_agrupada.toFixed(5)}
                 </p>
               )}
-      
+
               {/* Tabla de clases: mostramos LI, LS, Marca, Frecuencia */}
               <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
                 <thead>
@@ -341,69 +356,68 @@ console.log("bodyData a enviar:", bodyData);
                 </tbody>
               </table>
             </>
-          ) 
-          // ==========================
-          // CASO 2: array de objetos → tabla
-          // - útil para Tema2, Tema4, etc.
-          // ==========================
-          : Array.isArray(resultado.resultado) ? (
-            <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
-              <thead>
-                <tr>
-                  {Object.keys(resultado.resultado[0]).map((col) => (
-                    <th key={col}>{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {resultado.resultado.map((row, idx) => (
-                  <tr key={idx}>
-                    {Object.values(row).map((val, i) => (
-                      <td key={i}>
-                        {typeof val === "number" ? val.toFixed(5) : JSON.stringify(val)}
-                      </td>
+          )
+            // ==========================
+            // CASO 2: array de objetos → tabla
+            // - útil para Tema2, Tema4, etc.
+            // ==========================
+            : Array.isArray(resultado.resultado) ? (
+              <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+                <thead>
+                  <tr>
+                    {Object.keys(resultado.resultado[0]).map((col) => (
+                      <th key={col}>{col}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) 
-          // ==========================
-          // CASO 3: valor simple → párrafo
-          // - útil para media, mediana, moda simples
-          // ==========================
-          : resultado.resultado !== undefined ? (
-            <p>
-              {typeof resultado.resultado === "number" 
-                ? resultado.resultado.toFixed(5)  // Formato decimal si es número
-                : resultado.resultado}            
-            </p>// Si no, mostrar tal cual
-          ) 
-          // ==========================
-          // CASO 4: objeto con varios campos → tabla
-          // - útil para regresión lineal/multivariante
-          // ==========================
-          : (
-            <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
-              <tbody>
-                {Object.entries(resultado).map(([key, value]) => (
-                  <tr key={key}>
-                    <td><b>{key}</b></td>
-                    <td>
-                      {typeof value === "number" ? value.toFixed(5) :    // Número → 5 decimales
-                       Array.isArray(value) ?                              // Array → mostrar cada número formateado
-                        value.map(v => (typeof v === "number" ? v.toFixed(5) : JSON.stringify(v))).join(", ")
-                        : JSON.stringify(value)}                            
-                    </td>
-                  </tr> // Otros tipos → stringify
-                ))}
-              </tbody>
+                </thead>
+                <tbody>
+                  {resultado.resultado.map((row, idx) => (
+                    <tr key={idx}>
+                      {Object.values(row).map((val, i) => (
+                        <td key={i}>
+                          {typeof val === "number" ? val.toFixed(5) : JSON.stringify(val)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
               </table>
+            )
+              // ==========================
+              // CASO 3: valor simple → párrafo
+              // - útil para media, mediana, moda simples
+              // ==========================
+              : resultado.resultado !== undefined ? (
+                <p>
+                  {typeof resultado.resultado === "number"
+                    ? resultado.resultado.toFixed(5)  // Formato decimal si es número
+                    : resultado.resultado}
+                </p>// Si no, mostrar tal cual
+              )
+                // ==========================
+                // CASO 4: objeto con varios campos → tabla
+                // - útil para regresión lineal/multivariante
+                // ==========================
+                : (
+                  <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+                    <tbody>
+                      {Object.entries(resultado).map(([key, value]) => (
+                        <tr key={key}>
+                          <td><b>{key}</b></td>
+                          <td>
+                            {typeof value === "number" ? value.toFixed(5) :    // Número → 5 decimales
+                              Array.isArray(value) ?                              // Array → mostrar cada número formateado
+                                value.map(v => (typeof v === "number" ? v.toFixed(5) : JSON.stringify(v))).join(", ")
+                                : JSON.stringify(value)}
+                          </td>
+                        </tr> // Otros tipos → stringify
+                      ))}
+                    </tbody>
+                  </table>
                 )}
-              </div>
-            )}
-          </div>
-        )
-      }
-      
-      
+        </div>
+      )}
+    </div>
+  )
+}
+
