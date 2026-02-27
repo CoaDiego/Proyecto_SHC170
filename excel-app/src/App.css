@@ -20,6 +20,7 @@
   
   --border-color: #e5e7eb;
   --primary-color: #2563eb;
+  --primary-color2: #1d315c;
   --header-bg: #f3f4f6;
   --accent-color: #d97706;
 }
@@ -115,7 +116,7 @@ button:hover {
 /* ========================================= */
 /* 3. MENÚ DE NAVEGACIÓN (Del antiguo Menu.css) */
 /* ========================================= */
-nav {
+/*nav {
   background-color: var(--bg-nav);
   padding: 15px 0;
   box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
@@ -123,7 +124,7 @@ nav {
   top: 0;
   z-index: 100;
 }
-
+/*
 nav ul {
   display: flex;
   justify-content: center;
@@ -151,13 +152,194 @@ nav ul li a.active {
   color: #4dabf7;
 }
 
-/* Botón de tema en el menú */
+ Botón de tema en el menú 
 .theme-toggle-item button {
     background: transparent;
     border: 1px solid #555;
     padding: 5px 10px;
     font-size: 0.8rem;
+}*/
+
+
+
+
+
+
+
+
+/* =========================================
+   ESTILOS BASE DEL NAVBAR (PC)
+   ========================================= */
+.main-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 30px;
+  background-color: var(--bg-nav, #ffffff);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  min-height: 70px;
+  position: relative; /* Clave para el menú desplegable en celular */
 }
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  z-index: 100; /* Asegura que el logo esté siempre arriba */
+}
+
+.nav-logo {
+  max-height: 50px;
+  display: block;
+}
+
+/* Ocultar el botón hamburguesa en PC */
+.hamburger-menu {
+  display: none; 
+}
+
+/* Contenedor horizontal en PC */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  flex: 1; /* Ocupa el espacio restante */
+}
+
+/* Enlaces centrados en PC */
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 30px;
+  margin: 0 auto; /* Magia: empuja los enlaces exactamente al centro */
+  padding: 0;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text-nav, #64748b);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  padding: 5px 0;
+  position: relative;
+}
+
+.nav-links a:hover {
+  color: var(--text-main, #1e293b);
+}
+
+
+/*aqui esta el problema*/
+.nav-links a.active {
+  color: var(--primary-color2, #3b82f6);
+}
+
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--primary-color, #3b82f6);
+  border-radius: 2px;
+}
+
+.nav-theme {
+  margin-left: auto; /* Empuja el botón a la derecha extrema en PC */
+}
+
+/* =========================================
+   ESTILOS PARA CELULAR (MENÚ HAMBURGUESA)
+   ========================================= */
+@media (max-width: 768px) {
+  
+  /* 1. Mostrar las 3 líneas */
+  .hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 100; /* Siempre por encima del menú desplegado */
+    padding: 5px;
+  }
+
+  .hamburger-menu .bar {
+    width: 25px;
+    height: 3px;
+    background-color: var(--text-main, #1e293b);
+    border-radius: 3px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Animación para convertir las 3 líneas en una "X" al abrir */
+  .hamburger-menu.open .bar:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .hamburger-menu.open .bar:nth-child(2) {
+    opacity: 0;
+  }
+  .hamburger-menu.open .bar:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  /* 2. Ocultar los enlaces como un cajón arriba */
+  .nav-menu {
+    position: absolute;
+    top: 100%; /* Justo debajo del navbar */
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-nav, #ffffff);
+    flex-direction: column; /* Apilar en vertical */
+    padding: 20px 0;
+    gap: 20px;
+    border-bottom: 1px solid var(--border-color);
+    border-top: 3px solid var(--border-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 99;
+    
+    /* El truco para ocultarlo y mostrarlo con animación */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+  }
+
+  /* 3. Clase "active" que React le pone al hacer clic */
+  .nav-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0); /* El menú baja suavemente */
+  }
+
+  .nav-links {
+    flex-direction: column; /* Lista vertical */
+    width: 100%;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .nav-theme {
+    margin: 0; /* Centra el botón también */
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ========================================= */
 /* 4. LAYOUTS ESPECÍFICOS (Calculadora y Archivos) */

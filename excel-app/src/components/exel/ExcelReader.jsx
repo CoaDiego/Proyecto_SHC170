@@ -26,7 +26,7 @@ export default function ExcelReader() {
 
   const [fileName, setFileName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  const [loading, setLoading] = useState(false); // 👈 NUEVO: Estado de carga
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   const resetearEstado = () => {
@@ -56,7 +56,6 @@ export default function ExcelReader() {
         return;
       }
 
-      // 1. Encontrar la fila más larga
       let maxCols = 0;
       jsonData.forEach(row => {
         if (row.length > maxCols) maxCols = row.length;
@@ -69,19 +68,17 @@ export default function ExcelReader() {
         return;
       }
 
-      // 2. Construir columnas ESTILO EXCEL (A, B, C, D...)
       const cols = [];
       for (let i = 0; i < maxCols; i++) {
         cols.push({
           key: i.toString(),
-          name: getExcelColumnName(i), // Llama a la función para poner "A", "B", etc.
+          name: getExcelColumnName(i),
           resizable: true,
           width: 150,
           minWidth: 80
         });
       }
 
-      // 3. Transformar TODAS las filas a datos (sin comernos los títulos)
       const rowsFormatted = jsonData.map((row) => {
         let rowObj = {};
         for (let i = 0; i < maxCols; i++) {
@@ -99,12 +96,11 @@ export default function ExcelReader() {
       resetearEstado();
       alerta.error("Error de formato", "El contenido de esta hoja no se puede mostrar.");
     } finally {
-      // 👈 Aseguramos apagar el cartel de cargando al terminar
       setLoading(false); 
     }
   };
 
-  // --- LECTURA DE ARCHIVO CON "CARGANDO" ---
+  // --- LECTURA DE ARCHIVO ---
   const procesarArchivoLocal = (file) => {
     if (!file) return;
 
@@ -116,7 +112,7 @@ export default function ExcelReader() {
     }
 
     setFileName(file.name);
-    setLoading(true); // 👈 ENCENDEMOS EL CARGANDO
+    setLoading(true);
 
     const reader = new FileReader();
 
@@ -126,8 +122,6 @@ export default function ExcelReader() {
     };
 
     reader.onload = (evt) => {
-      // Usamos setTimeout para permitir que React dibuje el mensaje de "Cargando..." 
-      // antes de que el procesador bloquee la pantalla analizando los 1500+ datos.
       setTimeout(() => {
         try {
           const bstr = evt.target.result;
@@ -168,7 +162,7 @@ export default function ExcelReader() {
 
   const handleSheetChange = (e) => {
     if (!workbook) return;
-    setLoading(true); // 👈 Mostrar cargando si cambiamos de hoja
+    setLoading(true);
     const newIndex = Number(e.target.value);
     setActiveSheetIndex(newIndex);
     setTimeout(() => {
@@ -184,9 +178,10 @@ export default function ExcelReader() {
         onDrop={handleDrop}
         style={{
           padding: "10px",
-          border: isDragging ? "2px dashed #2563eb" : "2px dashed #a0aec0",
+          // 👇 Usamos variables dinámicas igual que en el Uploader
+          border: isDragging ? "2px dashed var(--accent-color)" : "2px dashed var(--border-color)",
           borderRadius: "5px",
-          backgroundColor: isDragging ? "#eff6ff" : "#f8fafc",
+          backgroundColor: isDragging ? "var(--bg-hover, transparent)" : "var(--bg-card)",
           textAlign: "center",
           transition: "all 0.3s ease",
           cursor: isDragging ? "copy" : "default"
@@ -202,10 +197,10 @@ export default function ExcelReader() {
         />
 
         <div style={{ marginBottom: "0px", pointerEvents: "none" }}>
-          <h6 style={{ margin: "0px", color: "#334155", fontSize: "1em" }}>
+          <h6 style={{ margin: "0px", color: "var(--text-main)", fontSize: "1em" }}>
             {isDragging ? "¡Suelta el archivo aquí!" : "Abre tu tabla local (Solo Lectura)"}
           </h6>
-          <p style={{ margin: 0, fontSize: "0.9em", color: "#64748b" }}>Formatos soportados: .xlsx, .xls</p>
+          <p style={{ margin: 0, fontSize: "0.9em", color: "var(--text-muted)" }}>Formatos soportados: .xlsx, .xls</p>
         </div>
 
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", flexWrap: "wrap", marginTop: "10px" }}>
@@ -213,23 +208,24 @@ export default function ExcelReader() {
             htmlFor="localFileInput"
             style={{
               cursor: "pointer",
-              padding: "5px",
-              backgroundColor: "#e2e8f0",
-              color: "#334155",
+              padding: "5px 10px",
+              backgroundColor: "var(--bg-input, transparent)",
+              color: "var(--text-main)",
               borderRadius: "5px",
-              border: "1px solid #cbd5e1",
-              transition: "background-color 0.2s",
+              border: "1px solid var(--border-color)",
+              transition: "opacity 0.2s",
               fontSize: "0.8em",
               fontWeight: "bold"
             }}
-            onMouseOver={(e) => e.target.style.backgroundColor = "#cbd5e1"}
-            onMouseOut={(e) => e.target.style.backgroundColor = "#e2e8f0"}
+            // Hover limpio con opacidad
+            onMouseOver={(e) => e.target.style.opacity = "0.7"}
+            onMouseOut={(e) => e.target.style.opacity = "1"}
           >
             Explorar archivos
           </label>
 
           <span style={{
-            color: fileName ? "#10b981" : "#94a3b8",
+            color: fileName ? "var(--accent-color)" : "var(--text-muted)",
             fontStyle: fileName ? "normal" : "italic",
             fontWeight: fileName ? "bold" : "normal",
             maxWidth: "250px",
@@ -243,9 +239,6 @@ export default function ExcelReader() {
         </div>
       </div>
 
-      {/* ==========================================
-          MENSAJE DE CARGA (Para Excel gigantes)
-      ========================================== */}
       {loading && (
         <div style={{ padding: "30px", textAlign: "center", color: "var(--accent-color)" }}>
            <h4 style={{ margin: 0 }}>⏳ Cargando y procesando datos...</h4>
@@ -253,20 +246,26 @@ export default function ExcelReader() {
         </div>
       )}
 
-      {/* ==========================================
-          VISTA DE LA TABLA RDG
-      ========================================== */}
       {!loading && rows.length > 0 && (
         <div style={{ height: '450px', display: 'flex', flexDirection: 'column', marginTop: "15px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <h4 style={{ margin: 0 }}>Vista Local: <span style={{ color: 'var(--accent-color)' }}>{fileName}</span></h4>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "10px" }}>
+            {/* 👇 Aplicamos text-main al título inferior */}
+            <h4 style={{ margin: 0, color: "var(--text-main)" }}>Vista Local: <span style={{ color: 'var(--accent-color)' }}>{fileName}</span></h4>
             {sheets.length > 0 && (
-              <div>
-                <label style={{ marginRight: "10px", fontWeight: "bold" }}>Hoja:</label>
+              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <label style={{ fontWeight: "bold", color: "var(--text-main)", fontSize: "0.9em" }}>Hoja:</label>
                 <select
                   value={activeSheetIndex}
                   onChange={handleSheetChange}
-                  style={{ padding: '5px', borderRadius: '4px' }}
+                  // 👇 Hacemos el select compatible con Modo Oscuro
+                  style={{ 
+                    padding: '5px', 
+                    borderRadius: '4px',
+                    backgroundColor: "var(--bg-input, transparent)",
+                    color: "var(--text-main)",
+                    border: "1px solid var(--border-color)",
+                    outline: "none"
+                  }}
                 >
                   {sheets.map((name, index) => <option key={index} value={index}>{name}</option>)}
                 </select>

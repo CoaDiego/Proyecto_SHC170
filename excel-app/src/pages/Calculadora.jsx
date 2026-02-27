@@ -132,7 +132,8 @@ export default function Calculadora() {
     // ==========================================================
 
     return (
-        <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: 'relative' }}>
+        // 👇 AGREGADO: flexWrap: 'wrap' para que salten de línea en pantallas pequeñas
+        <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: 'relative', flexWrap: 'wrap' }}>
 
             <button
                 onClick={() => setPanelAbierto(!panelAbierto)}
@@ -264,7 +265,8 @@ export default function Calculadora() {
 
             {/* ================= DERECHA: RESULTADOS O CREADOR ================= */}
 
-            <div className="calculadora-resultados">
+            {/* 👇 AGREGADO: minWidth: 0 para que la tabla no reviente el diseño */}
+            <div className="calculadora-resultados" style={{ minWidth: 0 }}>
 
                 {/* LÓGICA DE INTERRUPTOR: ¿QUÉ MOSTRAMOS AQUÍ? */}
                 {modoCreacion ? (
@@ -451,7 +453,8 @@ export default function Calculadora() {
                             ) : <p style={{ color: 'var(--text-muted)' }}>No hay resultados aún.</p>}
                         </div>
 
-                        <div className="graficos-grid">
+                        {/* 👇 AGREGADO: display flex para que los gráficos salten de línea si es necesario */}
+                        <div className="graficos-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '15px' }}>
                             {resultado && (
                                 !Array.isArray(resultado) && resultado.tipo === "bivariada" ? (
                                     <>

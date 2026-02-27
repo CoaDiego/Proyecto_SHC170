@@ -126,12 +126,33 @@ export default function Archivos() {
           Solo mostramos la lista y la vista previa del servidor
           SI estamos en modo "Subir al Servidor" (modoSubida === true)
           ======================================================== */}
+    {/* ========================================================
+          ZONA INFERIOR: LISTA Y VISTA PREVIA (AHORA SÍ RESPONSIVA)
+          ======================================================== */}
       {modoSubida && (
-        <div className="files-layout">
+        <div 
+          className="files-layout" 
+          style={{ 
+            display: "flex", 
+            flexWrap: "wrap", // 👈 LA MAGIA: Permite que salten de línea si no caben
+            gap: "20px", 
+            width: "100%", 
+            alignItems: "flex-start" 
+          }}
+        >
 
           {/* COLUMNA IZQUIERDA: LISTA */}
-          <div className="panel-section">
-            <h3>Archivos en el Servidor</h3>
+          <div 
+            className="panel-section" 
+            style={{ 
+              flex: "1 1 300px", // 👈 Crece y se encoge, pero su tamaño ideal es 300px
+              minWidth: "250px", 
+              maxWidth: "400px"  // Evita que se haga gigante en pantallas grandes
+            }}
+          >
+            <h3 style={{ color: "var(--text-main)", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px" }}>
+              Archivos en el Servidor
+            </h3>
             <ExcelViewer
               files={files}
               onSelect={setSelectedFile}
@@ -140,12 +161,29 @@ export default function Archivos() {
           </div>
 
           {/* COLUMNA DERECHA: CONTENIDO */}
-          <div className="panel-section">
-            <h3>Vista Previa (Servidor)</h3>
+          <div 
+            className="panel-section" 
+            style={{ 
+              flex: "2 1 500px", // 👈 Intenta ocupar el doble de espacio (500px ideal)
+              minWidth: 0,       // 👈 Mantiene el candado para que la tabla no se desborde
+              width: "100%", 
+              overflow: "hidden" 
+            }}
+          >
+            <h3 style={{ color: "var(--text-main)", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px" }}>
+              Vista Previa (Servidor)
+            </h3>
             {selectedFile ? (
               <ExcelContent filename={selectedFile} />
             ) : (
-              <div style={{ padding: "40px", border: "2px dashed var(--border-color)", color: "var(--text-muted)", textAlign: "center" }}>
+              <div style={{ 
+                padding: "40px", 
+                border: "2px dashed var(--border-color)", 
+                color: "var(--text-muted)", 
+                textAlign: "center",
+                borderRadius: "8px",
+                backgroundColor: "var(--bg-card)"
+              }}>
                 Selecciona un archivo de la lista izquierda para ver su contenido.
               </div>
             )}
