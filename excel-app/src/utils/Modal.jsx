@@ -2,7 +2,6 @@ import { useEffect } from "react";
 
 export default function Modal({ isOpen, onClose, title, children, maxWidth = "500px" }) {
     // Truco pro: Bloquear el scroll de la página de fondo cuando el modal se abre
-    // Truco pro: Bloquear el scroll de la página de fondo cuando el modal se abre
     useEffect(() => {
         if (isOpen) {
             // Bloqueamos tanto el body como el html para asegurar que no haya scroll

@@ -8,7 +8,7 @@ import ExcelContent from "../components/exel/ExcelContent";
 import GraficoEstadistico from "../components/graficos/GraficoEstadistico";
 import GraficoIntervalos from "../components/graficos/GraficoIntervalos";
 import TablaDinamica from "../components/exel/TablaDinamica";
-import Latex from "../components/exel/Latex"; // 👈 Asegúrate de tener este componente
+import Latex from "../components/exel/Latex"; 
 import GraficoBivariado from "../components/graficos/GraficoBivariado";
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 
@@ -23,9 +23,6 @@ function textEditor({ row, column, onRowChange, onClose }) {
             value={row[column.key]}
             onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
             onBlur={() => onClose(true)}
-
-            //Para la edicion dentro de la celdas
-
             onKeyDown={(e) => {
                 if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                     e.stopPropagation();
@@ -47,9 +44,7 @@ export default function Calculadora() {
     const [mostrarTabla, _setMostrarTabla] = useState(true);
     const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
 
-
     //minimizar y maximizar
-
     const [panelAbierto, setPanelAbierto] = useState(true);
 
     const {
@@ -69,19 +64,6 @@ export default function Calculadora() {
         }
         return valor;
     };
-
-    // Carga inicial
-    /*const cargarArchivos = () => {
-        fetch("http://127.0.0.1:8000/files")
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.files) {
-                    setFiles(data.files);
-                    if (data.files.length > 0 && !selectedFile) setSelectedFile(data.files[0].filename);
-                }
-            })
-            .catch(console.error);
-    };*/
 
     const cargarArchivos = async () => {
         try {
@@ -132,15 +114,13 @@ export default function Calculadora() {
     // ==========================================================
 
     return (
-        // 👇 AGREGADO: flexWrap: 'wrap' para que salten de línea en pantallas pequeñas
-        <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: 'relative', flexWrap: 'wrap' }}>
+        <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: 'relative' }}>
 
             <button
                 onClick={() => setPanelAbierto(!panelAbierto)}
                 className="boton-toggle-medio"
                 title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
             >
-                {/* Usamos iconos tipo "switch" que se ven mejor que el + y - */}
                 {panelAbierto ? "-" : "+"}
             </button>
 
@@ -158,7 +138,7 @@ export default function Calculadora() {
                             value={selectedFile}
                             onChange={(e) => {
                                 setSelectedFile(e.target.value);
-                                setModoCreacion(false); // Si selecciona archivo, salimos del modo creación
+                                setModoCreacion(false); 
                             }}
                             className="selector-archivo"
                             style={{ marginBottom: '15px', width: '100%' }}
@@ -239,7 +219,6 @@ export default function Calculadora() {
                                 </>
                             ) : <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Cargando datos o selecciona un archivo...</p>}
                         </div>
-                        {/* BOTÓN NUEVO: ACTIVAR MODO CREACIÓN */}
                         <br />
                         <button
                             onClick={() => setModoCreacion(!modoCreacion)}
@@ -247,7 +226,7 @@ export default function Calculadora() {
                                 width: '100%',
                                 padding: '10px',
                                 marginBottom: '20px',
-                                backgroundColor: modoCreacion ? 'var(--text-muted)' : 'var(--accent-color)', // Cambia color si está activo
+                                backgroundColor: modoCreacion ? 'var(--text-muted)' : 'var(--accent-color)', 
                                 fontWeight: 'bold',
                                 fontSize: '1em'
                             }}
@@ -265,26 +244,21 @@ export default function Calculadora() {
 
             {/* ================= DERECHA: RESULTADOS O CREADOR ================= */}
 
-            {/* 👇 AGREGADO: minWidth: 0 para que la tabla no reviente el diseño */}
-            <div className="calculadora-resultados" style={{ minWidth: 0 }}>
+            <div className="calculadora-resultados">
 
-                {/* LÓGICA DE INTERRUPTOR: ¿QUÉ MOSTRAMOS AQUÍ? */}
                 {modoCreacion ? (
-                    // 1. MODO CREACIÓN (Ocupa todo el panel derecho)
                     <TablaDinamica
                         onTablaCreada={() => {
-                            cargarArchivos(); // Recargar lista de archivos
-                            setModoCreacion(false); // Volver automáticamente a ver resultados
+                            cargarArchivos(); 
+                            setModoCreacion(false); 
                         }}
                     />
                 ) : (
-                    // 2. MODO RESULTADOS (Tu vista normal)
                     <>
                         <div className="frecuencias" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '15px', borderRadius: '8px' }}>
                             <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
                             {resultado ? (
                                 !Array.isArray(resultado) && resultado.tipo === "bivariada" ? (
-                                    // TABLA BIVARIADA (Ya tenía algo de Latex, se mantiene)
                                     <div style={{ overflowX: 'auto' }}>
                                         <table className="tabla-academica">
                                             <thead>
@@ -333,9 +307,6 @@ export default function Calculadora() {
                                         </table>
                                     </div>
                                 ) : Array.isArray(resultado) ? (
-                                    // ===============================================
-                                    // AQUI ESTA EL CAMBIO: LÓGICA DE TABLAS CON KATEX
-                                    // ===============================================
                                     <div style={{ overflowX: 'auto' }}>
                                         {calculo === "estadistica_descriptiva" ? (
                                             <table className="tabla-academica">
@@ -348,7 +319,6 @@ export default function Calculadora() {
                                                 </thead>
                                                 <tbody>
                                                     {resultado.map((row, i) => {
-                                                        // Truco visual: Solo mostrar la categoría en la primera fila del grupo
                                                         const mostrarCategoria = i === 0 || resultado[i - 1].Categoria !== row.Categoria;
                                                         return (
                                                             <tr key={i} style={{ borderTop: mostrarCategoria && i !== 0 ? '2px solid var(--border-color)' : 'none' }}>
@@ -365,7 +335,6 @@ export default function Calculadora() {
                                                 </tbody>
                                             </table>
                                         ) : calculo === "distribucion_intervalos" ? (
-                                            /* --- 1. TABLA INTERVALOS --- */
                                             <table className="tabla-academica">
                                                 <thead>
                                                     <tr>
@@ -393,7 +362,6 @@ export default function Calculadora() {
                                                 </tbody>
                                             </table>
                                         ) : calculo === "frecuencias_completas" ? (
-                                            /* --- 2. TABLA FRECUENCIAS COMPLETAS --- */
                                             <table className="tabla-academica">
                                                 <thead>
                                                     <tr>
@@ -422,13 +390,11 @@ export default function Calculadora() {
                                             </table>
 
                                         ) : (
-                                            /* --- 3. TABLA GENÉRICA (ABSOLUTA/RELATIVA) --- */
                                             <table className="tabla-academica">
                                                 <thead>
                                                     <tr>
                                                         {Object.keys(resultado[0]).map((key) => (
                                                             <th key={key}>
-                                                                {/* Intentamos poner Latex si coincide la key común */}
                                                                 {key === "f_i" ? <Latex formula="f_i" /> :
                                                                     key === "p_i" ? <Latex formula="p_i \%" /> :
                                                                         key === "Relativa" ? <Latex formula="h_i" /> :
@@ -453,8 +419,7 @@ export default function Calculadora() {
                             ) : <p style={{ color: 'var(--text-muted)' }}>No hay resultados aún.</p>}
                         </div>
 
-                        {/* 👇 AGREGADO: display flex para que los gráficos salten de línea si es necesario */}
-                        <div className="graficos-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '15px' }}>
+                        <div className="graficos-grid">
                             {resultado && (
                                 !Array.isArray(resultado) && resultado.tipo === "bivariada" ? (
                                     <>

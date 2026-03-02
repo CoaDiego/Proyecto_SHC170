@@ -403,26 +403,26 @@ header {
 
 /* --- Estilos Calculadora.jsx --- */
 .calculadora-layout {
-  display: grid;
-  grid-template-columns: 350px 1fr;
+display: grid;
+  grid-template-columns: 350px minmax(0, 1fr); /* 👈 minmax(0, 1fr) ES EL CANDADO PARA GRID */
   gap: 10px;
   margin-top: 20px;
   transition: grid-template-columns 0.3s ease;
-  position: relative; /* 👈 AGREGA ESTO AQUÍ */
+  position: relative;
 }
 
 .calculadora-layout.colapsado {
-  grid-template-columns: 45px 1fr; /* Reduce el panel de 350px a solo 60px */
+grid-template-columns: 45px minmax(0, 1fr); /* Reduce el panel de 350px a solo 45px */
   gap: 10px;
 }
 
 .calculadora-datos {
-  background-color: var(--bg-card);
+background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
   height: fit-content;
-  overflow: hidden; /* 👈 Evita que el contenido se salga al achicar */
+  overflow: hidden; 
   transition: padding 0.3s ease;
 }
 
@@ -441,6 +441,8 @@ header {
 }
 
 
+
+
 /* ========================================= */
 /* BOTÓN FLOTANTE EN EL MEDIO DE LOS PANELES */
 /* ========================================= */
@@ -454,8 +456,8 @@ header {
   
   background-color: var(--accent-color);
   color: white;
-  border: 1px solid var(--border-color); /* Un borde sutil para que resalte si se superpone en blanco */
-  border-radius: 5px; /* Botón circular */
+  border: 1px solid var(--border-color);
+  border-radius: 5px; 
   width: 25px;
   height: 25px;
   font-size: 1rem;
@@ -469,16 +471,62 @@ header {
 /* Efecto Hover */
 .boton-toggle-medio:hover {
   background-color: #e65c00;
-  transform: translateY(-50%) translateX(-50%) scale(1.15); /* Se agranda un poquito */
+  transform: translateY(-50%) translateX(-50%) scale(1.15); 
 }
 
 /* Cuando el panel se Cierra, el botón viaja a la nueva posición */
 .calculadora-layout.colapsado .boton-toggle-medio {
-  /* Panel colapsado = 45px. Mitad del gap (10/2) = 5px. 
-     45 + 5 = 50px desde la izquierda. */
   left: 30px; 
 }
 
+.graficos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 30px;
+  min-width: 0;
+}
+
+.grafico-card {
+  flex: 1;
+  min-width: 300px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+/* ======================================================= */
+/* 🚀 MAGIA RESPONSIVA (SOLO APLICARÁ EN PANTALLAS PEQUEÑAS) */
+/* ======================================================= */
+@media (max-width: 900px) {
+  
+  /* Rompemos el Grid de 2 columnas y forzamos 1 sola columna vertical */
+  .calculadora-layout {
+    grid-template-columns: 1fr; /* Una sola columna que ocupa el 100% */
+  }
+
+  /* Si está colapsado en celular, el panel de datos simplemente desaparece */
+  .calculadora-layout.colapsado {
+    grid-template-columns: 1fr; 
+  }
+  .calculadora-layout.colapsado .calculadora-datos {
+      display: none; 
+  }
+
+  /* Reposicionamos el botón para que tenga sentido en vertical */
+  .boton-toggle-medio {
+position: absolute;
+  top: 0%;
+  left: 50%; 
+  z-index: 2;
+  }
+  
+  .calculadora-layout.colapsado .boton-toggle-medio {
+    left: 50%;
+  }
+}
 
 .graficos-grid {
   display: flex;
