@@ -45,22 +45,31 @@ const titleStyle = {
 // =========================================================
 
 // Botón independiente
+// Botón independiente
 const MaximizeButton = ({ isExpanded, onToggle }) => (
   <button 
     onClick={onToggle}
     title={isExpanded ? "Cerrar" : "Maximizar"}
     style={{
-      position: "absolute", top: "10px", right: "10px",
+      /* Ajustes para evitar que se corte en móviles */
+      position: "absolute", 
+      top: "12px", 
+      right: "12px",
       background: "var(--bg-input)", 
       border: "1px solid var(--border-color)",
-      borderRadius: "4px", cursor: "pointer", padding: "4px",
-      zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center",
+      borderRadius: "4px", 
+      cursor: "pointer", 
+      padding: "6px", /* Un poco más de padding para que sea fácil de tocar */
+      zIndex: 10, 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center",
       transition: "background-color 0.2s"
     }}
     onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--border-color)"}
     onMouseOut={(e) => e.currentTarget.style.backgroundColor = "var(--bg-input)"}
   >
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       {isExpanded 
         ? <><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></> 
         : <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />}
@@ -125,17 +134,30 @@ const ChartContent = ({ type, isExpanded, datosProcesados }) => {
 };
 
 const ChartCard = ({ title, isExpanded, onToggle, children }) => (
-  <div style={chartContainerStyle}>
-    <h4 style={titleStyle}>{title}</h4>
+  <div style={{
+    ...chartContainerStyle,
+    /* Añadimos más espacio arriba para que el botón entre bien */
+    paddingTop: "40px",
+  }}>
+    <h4 style={{
+      ...titleStyle,
+      /* Movemos el título un poco arriba para centrarlo con el botón */
+      position: "absolute",
+      top: "15px",
+      left: "0",
+      right: "0",
+      margin: "0"
+    }}>{title}</h4>
+    
     <MaximizeButton isExpanded={isExpanded} onToggle={onToggle} />
-    <div style={{ flex: 1, width: "100%", minHeight: 0 }}>
+    
+    <div style={{ flex: 1, width: "100%", minHeight: 0, marginTop: "10px" }}>
       <ResponsiveContainer width="100%" height="100%">
         {children}
       </ResponsiveContainer>
     </div>
   </div>
 );
-
 // =========================================================
 // 3. COMPONENTE PRINCIPAL
 // =========================================================
@@ -162,7 +184,7 @@ export default function GraficoIntervalos({ datos }) {
 
   return (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "20px", width: "100%", marginTop: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginTop: "10px" }}>
         {/* CORRECCIÓN: Optimización de la lista de tarjetas y pasar keys correctos */}
         {['hist', 'poli', 'ojiva1', 'ojiva2', 'mixto'].map(id => (
           <ChartCard 
@@ -176,20 +198,26 @@ export default function GraficoIntervalos({ datos }) {
         ))}
       </div>
 
+      {/* VENTANA MODAL (MAXIMIZAR GRÁFICO) */}
       {expandedChart && (
         <div 
-          style={expandedOverlayStyle} 
+          className="modal-grafico-overlay" /* Usando la clase CSS */
           onClick={() => setExpandedChart(null)}
-          /* CORRECCIÓN: Accesibilidad de teclado y roles (Mata 2 warnings de golpe) */
           role="button"
           tabIndex={0}
           onKeyDown={(e) => { if(e.key === 'Escape' || e.key === 'Enter') setExpandedChart(null); }}
         >
-          <div style={expandedCardStyle} onClick={(e) => e.stopPropagation()} role="presentation">
+          <div className="modal-grafico-card" /* Usando la clase CSS */ 
+               onClick={(e) => e.stopPropagation()} 
+               role="presentation"
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-               <h2 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-main)' }}>Detalle del Gráfico</h2>
+               
+               <h2 className="modal-grafico-titulo">Detalle del Gráfico</h2> {/* Usando la clase CSS */}
+               
                <MaximizeButton isExpanded={true} onToggle={() => setExpandedChart(null)} />
             </div>
+            
             <div style={{ flex: 1, width: "100%", minHeight: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                  <ChartContent type={getChartType(expandedChart)} isExpanded={true} datosProcesados={datosProcesados} />
