@@ -93,7 +93,7 @@ export default function Archivos() {
               fontWeight: modoSubida ? "bold" : "normal",
               opacity: modoSubida ? 1 : 0.6,
               borderBottom: modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent",
-              transition: "all 0.2s ease"
+              transition: "opacity 0.2s ease, border-color 0.2s ease"
             }}
           >
           Subir al Servidor
@@ -108,7 +108,7 @@ export default function Archivos() {
               fontWeight: !modoSubida ? "bold" : "normal",
               opacity: !modoSubida ? 1 : 0.6,
               borderBottom: !modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent",
-              transition: "all 0.2s ease"
+              transition: "opacity 0.2s ease, border-color 0.2s ease"
             }}
           >
           Solo Leer (Local)

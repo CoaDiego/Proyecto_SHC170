@@ -349,23 +349,6 @@ nav ul li a.active {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ========================================= */
 /* MODAL DE GRÁFICOS EXPANDIDOS              */
 /* ========================================= */
@@ -903,5 +886,86 @@ html.dark .rdg {
 @media (max-width: 480px) {
   .login-card {
     padding: 20px;
+  }
+}
+
+
+
+
+/* ========================================= */
+/* SWITCH MODERNO: MODO OSCURO / CLARO       */
+/* ========================================= */
+
+.theme-toggle-btn {
+  width: 80px;
+  height: 32px;
+  /* Fondo semi-transparente para que el naranja del header respire */
+  background-color: rgba(255, 255, 255, 0.2); 
+  border: 2px solid white; 
+  border-radius: 30px; /* Forma de píldora */
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  /* Especificamos las propiedades exactas para alegrar a React Doctor */
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+/* Estado del fondo cuando es MODO OSCURO */
+.theme-toggle-btn.dark {
+  background-color: #333333;
+  border-color: #555555;
+}
+
+/* El Círculo que se desliza (Pulgar) */
+.theme-toggle-thumb {
+  width: 24px;
+  height: 24px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  left: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Animación de deslizamiento */
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.4s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Deslizamiento hacia la derecha en MODO OSCURO */
+.theme-toggle-btn.dark .theme-toggle-thumb {
+  transform: translateX(52px); /* Se mueve a la derecha */
+  background-color: #1e293b; /* Un gris muy oscuro elegante */
+}
+
+/* Los Iconos SVG dentro del círculo */
+.theme-toggle-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Color del sol y animación */
+.theme-toggle-icon.sun {
+  color: #f59e0b; /* Amarillo/naranja */
+  animation: spinIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+/* Color de la luna y animación */
+.theme-toggle-icon.moon {
+  color: #fbbf24; /* Amarillo claro */
+  animation: spinIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+/* Animación cuando los iconos cambian (Aparecen girando suavemente) */
+@keyframes spinIn {
+  0% {
+    transform: rotate(-90deg) scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
   }
 }
