@@ -118,10 +118,12 @@ export default function Calculadora() {
 
             <button
                 onClick={() => setPanelAbierto(!panelAbierto)}
-                className="boton-toggle-medio"
+                // Mantenemos tu clase original, pero le sumamos el estado
+                className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
                 title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
             >
-                {panelAbierto ? "-" : "+"}
+                {/* Este span será nuestro icono dibujado con CSS */}
+                <span className="icono-animado"></span>
             </button>
 
             {/* ================= IZQUIERDA: CONTROLES ================= */}

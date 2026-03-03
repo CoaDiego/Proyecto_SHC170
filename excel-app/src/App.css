@@ -367,7 +367,7 @@ nav ul li a.active {
 
 
 /* ========================================= */
-/* MODAL DE GRÁFICOS EXPANDIDOS (PC Y MÓVIL) */
+/* MODAL DE GRÁFICOS EXPANDIDOS              */
 /* ========================================= */
 
 /* 1. Estilo por defecto para LAPTOP / PC */
@@ -584,13 +584,73 @@ header {
 /* Efecto Hover */
 .boton-toggle-medio:hover {
   background-color: #e65c00;
-  transform: translateY(-50%) translateX(-50%) scale(1.15);
+  transform: translateY(-50%) translateX(-50%) scale(1.1);
 }
 
 /* Cuando el panel se Cierra, el botón viaja a la nueva posición */
 .calculadora-layout.colapsado .boton-toggle-medio {
   left: 30px;
 }
+
+
+/* ========================================= */
+/* ANIMACIÓN DEL ICONO (+ a -)               */
+/* ========================================= */
+
+.icono-animado {
+  position: relative;
+  width: 12px; /* Tamaño del icono dentro de tu botón de 25px */
+  height: 12px;
+  display: block;
+}
+
+/* Dibujamos las dos líneas (Horizontal y Vertical) */
+.icono-animado::before,
+.icono-animado::after {
+  content: '';
+  position: absolute;
+  background-color: white; /* El color de tu + y - */
+  border-radius: 2px;
+  top: 50%;
+  left: 50%;
+  /* Animación suave al rotar */
+  transition: transform 0.3s ease; 
+}
+
+/* Línea Horizontal (Siempre se queda quieta) */
+.icono-animado::before {
+  width: 12px;
+  height: 2px;
+  transform: translate(-50%, -50%); 
+}
+
+/* Línea Vertical (Esta es la que gira) */
+.icono-animado::after {
+  width: 2px;
+  height: 12px;
+  /* Estado normal (Cerrado): Está de pie formando un '+' */
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+/* Cuando la calculadora está abierta, giramos la línea vertical 90 grados */
+.boton-toggle-medio.abierto .icono-animado::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .graficos-grid {
   display: flex;
