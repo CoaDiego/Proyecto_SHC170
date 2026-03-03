@@ -55,7 +55,7 @@ export default function ExcelUploader({ onUpload }) {
         borderRadius: "5px",
         backgroundColor: isDragging ? "var(--bg-hover, transparent)" : "var(--bg-card)", 
         textAlign: "center",
-        transition: "all 0.3s ease",
+        transition: "border-color 0.3s ease, background-color 0.3s ease",
         cursor: isDragging ? "copy" : "default"
       }}
     >

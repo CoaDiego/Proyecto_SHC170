@@ -178,12 +178,12 @@ export default function ExcelReader() {
         onDrop={handleDrop}
         style={{
           padding: "10px",
-          // 👇 Usamos variables dinámicas igual que en el Uploader
+          //Usamos variables dinámicas igual que en el Uploader
           border: isDragging ? "2px dashed var(--accent-color)" : "2px dashed var(--border-color)",
           borderRadius: "5px",
           backgroundColor: isDragging ? "var(--bg-hover, transparent)" : "var(--bg-card)",
           textAlign: "center",
-          transition: "all 0.3s ease",
+          transition: "border-color 0.3s ease, background-color 0.3s ease",
           cursor: isDragging ? "copy" : "default"
         }}
       >
