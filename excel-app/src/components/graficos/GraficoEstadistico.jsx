@@ -126,7 +126,7 @@ export default function GraficoEstadistico({ datos = [], tipo = "barras" }) {
         </LineChart>
       </ResponsiveContainer>
     );
-  }
+  } 
 
   return <p>Tipo de gráfico no soportado.</p>;
 }
