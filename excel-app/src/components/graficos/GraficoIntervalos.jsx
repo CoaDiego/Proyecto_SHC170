@@ -19,7 +19,7 @@ const chartContainerStyle = {
   position: "relative",
   color: "var(--text-main)"
 };
-
+/*
 const expandedOverlayStyle = {
   position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
   backgroundColor: "rgba(0,0,0,0.8)", zIndex: 9999,
@@ -32,7 +32,7 @@ const expandedCardStyle = {
   display: "flex", flexDirection: "column",
   boxShadow: "0 4px 20px rgba(0,0,0,0.5)", position: "relative",
   color: "var(--text-main)"
-};
+};*/
 
 const titleStyle = {
   textAlign: "center", marginBottom: "10px", fontWeight: "bold",
@@ -184,7 +184,7 @@ export default function GraficoIntervalos({ datos }) {
 
   return (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginTop: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(370px, 1fr))", gap: "20px", marginTop: "10px" }}>
         {/* CORRECCIÓN: Optimización de la lista de tarjetas y pasar keys correctos */}
         {['hist', 'poli', 'ojiva1', 'ojiva2', 'mixto'].map(id => (
           <ChartCard 

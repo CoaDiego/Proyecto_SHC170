@@ -99,7 +99,8 @@ export default function ExcelViewer({ files, onSelect, onDelete }) {
                     color: "var(--accent-color)", 
                     border: "1px solid var(--accent-color)",
                     borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem",
-                    fontWeight: "bold", transition: "all 0.2s"
+                    fontWeight: "bold", 
+                    transition: "background-color 0.2s, color 0.2s"
                   }}
                   onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "var(--accent-color)"; e.currentTarget.style.color = "white"; }}
                   onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--accent-color)"; }}
@@ -114,7 +115,7 @@ export default function ExcelViewer({ files, onSelect, onDelete }) {
                     backgroundColor: "transparent", // 👇 Transparente por defecto
                     color: "#ef4444", 
                     border: "1px solid #ef4444",
-                    borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", transition: "all 0.2s"
+                    borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", transition: "background-color 0.2s, color 0.2s"
                   }}
                   title="Eliminar archivo"
                   onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#ef4444"; e.currentTarget.style.color = "white"; }}

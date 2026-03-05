@@ -59,7 +59,9 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
     };
 
     fetchHojas();
-  }, [filename, onSheetChange]);
+
+    // 👇 ESTA ES LA LÍNEA QUE ARREGLA EL ERROR (se borró onSheetChange)
+  }, [filename,onSheetChange]);
 
   // 2. CARGAR DATOS DE LA HOJA
   useEffect(() => {
@@ -74,11 +76,11 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
           const rawKeys = Object.keys(json[0]);
 
           const cols = rawKeys.map((key, index) => ({
-            key: key, 
-            name: getExcelColumnName(index), 
+            key: key,
+            name: getExcelColumnName(index),
             resizable: true,
             sortable: true,
-            width: 150, 
+            width: 150,
             minWidth: 80,
             renderEditCell: textEditor,
           }));
@@ -138,25 +140,25 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
     }}>
 
       {/* CABECERA DEL CONTENIDO (AHORA SÍ ES RESPONSIVA) */}
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
         alignItems: "flex-start", // Alinea arriba si hace salto de línea
         flexWrap: "wrap", // 👈 ESTO ES MAGIA: Permite que los elementos bajen si no caben
         gap: "15px", // Espacio cuando hacen salto de línea
-        borderBottom: "1px solid var(--border-color)", 
-        paddingBottom: "10px", 
-        marginBottom: "15px" 
+        borderBottom: "1px solid var(--border-color)",
+        paddingBottom: "10px",
+        marginBottom: "15px"
       }}>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "5px", flex: "1", minWidth: "150px", overflow: "hidden" }}>
-          <h5 style={{ margin: 0, color: "var(--text-main)"}}>Archivo en uso</h5>
-          <span style={{ 
-            color: "var(--accent-color)", 
-            fontSize: "0.85em", 
+          <h5 style={{ margin: 0, color: "var(--text-main)" }}>Archivo en uso</h5>
+          <span style={{
+            color: "var(--accent-color)",
+            fontSize: "0.85em",
             // 👇 ESTAS 3 LÍNEAS SON OBLIGATORIAS PARA EL EFECTO "..."
-            whiteSpace: "nowrap", 
-            overflow: "hidden", 
+            whiteSpace: "nowrap",
+            overflow: "hidden",
             textOverflow: "ellipsis",
             display: "block",
             width: "100%"
@@ -170,7 +172,7 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
             <span style={{ fontSize: "0.8em", color: "#10b981", backgroundColor: "#d1fae5", padding: "3px 8px", borderRadius: "12px", fontWeight: "bold", whiteSpace: "nowrap" }}>
               Edición Activa
             </span>
-            
+
             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
               <label style={{ fontWeight: "bold", color: "var(--text-main)", fontSize: "0.8em" }}>Hoja:</label>
               <select

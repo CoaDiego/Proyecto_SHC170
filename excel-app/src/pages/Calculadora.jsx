@@ -8,7 +8,7 @@ import ExcelContent from "../components/exel/ExcelContent";
 import GraficoEstadistico from "../components/graficos/GraficoEstadistico";
 import GraficoIntervalos from "../components/graficos/GraficoIntervalos";
 import TablaDinamica from "../components/exel/TablaDinamica";
-import Latex from "../components/exel/Latex"; 
+import Latex from "../components/exel/Latex";
 import GraficoBivariado from "../components/graficos/GraficoBivariado";
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 
@@ -79,8 +79,8 @@ export default function Calculadora() {
         }
     };
 
-    useEffect(() => { 
-        cargarArchivos(); 
+    useEffect(() => {
+        cargarArchivos();
     }, []);
 
     const esIntervalo = calculo === "distribucion_intervalos";
@@ -118,10 +118,12 @@ export default function Calculadora() {
 
             <button
                 onClick={() => setPanelAbierto(!panelAbierto)}
-                className="boton-toggle-medio"
+                // Mantenemos tu clase original, pero le sumamos el estado
+                className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
                 title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
             >
-                {panelAbierto ? "-" : "+"}
+                {/* Este span será nuestro icono dibujado con CSS */}
+                <span className="icono-animado"></span>
             </button>
 
             {/* ================= IZQUIERDA: CONTROLES ================= */}
@@ -138,7 +140,7 @@ export default function Calculadora() {
                             value={selectedFile}
                             onChange={(e) => {
                                 setSelectedFile(e.target.value);
-                                setModoCreacion(false); 
+                                setModoCreacion(false);
                             }}
                             className="selector-archivo"
                             style={{ marginBottom: '15px', width: '100%' }}
@@ -153,9 +155,9 @@ export default function Calculadora() {
                         <ExcelContent
                             filename={selectedFile}
                             mostrarTabla={false}
-                            onSheetChange={(index) => setSelectedSheet(index)}
+                            /* 👇 ESTA LÍNEA SE SIMPLIFICA PARA EVITAR EL BUCLE */
+                            onSheetChange={setSelectedSheet}
                         />
-
                         <div className="panel-controles-excel" style={{ marginTop: '20px', padding: '15px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-card)' }}>
                             <h3 style={{ fontSize: '1.1em', marginBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>Calculadora de Excel</h3>
 
@@ -226,7 +228,7 @@ export default function Calculadora() {
                                 width: '100%',
                                 padding: '10px',
                                 marginBottom: '20px',
-                                backgroundColor: modoCreacion ? 'var(--text-muted)' : 'var(--accent-color)', 
+                                backgroundColor: modoCreacion ? 'var(--text-muted)' : 'var(--accent-color)',
                                 fontWeight: 'bold',
                                 fontSize: '1em'
                             }}
@@ -249,8 +251,8 @@ export default function Calculadora() {
                 {modoCreacion ? (
                     <TablaDinamica
                         onTablaCreada={() => {
-                            cargarArchivos(); 
-                            setModoCreacion(false); 
+                            cargarArchivos();
+                            setModoCreacion(false);
                         }}
                     />
                 ) : (

@@ -339,6 +339,24 @@ export function useCalculadoraExcel(filename, sheet) {
     setResultado(res);
   };
 
+
+  // ==========================================
+  // --- EFECTO DE AUTO-CÁLCULO INTELIGENTE ---
+  // ==========================================
+  useEffect(() => {
+    // Si hay datos y una columna seleccionada, ejecutamos el cálculo automáticamente
+    if (excelData && excelData.length > 0 && selectedColumn) {
+      ejecutarCalculo();
+    }
+    
+    // 👇 NOTA: Excluimos 'excelData' de este arreglo a propósito.
+    // De esta manera, si escribes datos a mano en la tabla, NO se recalcula solo 
+    // (para eso usarás tu botón CALCULAR).
+    // Pero si cambias los selectores (la operación, la variable X o Y), sí se actualiza de inmediato.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado]);
+
+
   return {
     excelData, columns, selectedColumn, resultado,
     calculo, tipoIntervalo, metodoK, kPersonalizado,
