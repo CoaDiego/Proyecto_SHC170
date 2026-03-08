@@ -107,7 +107,7 @@ async def view_excel(filename: str, hoja: int = 0):
     try:
         with pd.ExcelFile(file_path) as xls:
             # Leer hoja sin asumir encabezados (header=None) para ver datos crudos
-            df = pd.read_excel(xls, sheet_name=hoja, header=None)
+            df = pd.read_excel(xls, sheet_name=hoja)
             
             # Eliminar filas totalmente vacías
             df = df.dropna(how="all")
@@ -120,7 +120,7 @@ async def view_excel(filename: str, hoja: int = 0):
                 return {"error": "Archivo sin datos detectables"}
             
             # Renombrar columnas genéricamente para evitar problemas de llaves duplicadas
-            df.columns = [f"Col {i+1}" for i in range(len(df.columns))]
+            df.columns = [str(c) for c in df.columns]
             
             json_data = df.to_dict(orient="records")
 
@@ -174,11 +174,12 @@ async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_fil
 
     filename = f"{nombre}.xlsx"
     file_path = os.path.join(EXCEL_FOLDER, filename)
-    df.to_excel(file_path, index=False)
+    df.to_excel(file_path, index=False, header= False)
 
     return {"message": "Tabla creada correctamente", "filename": filename}
 
 
+#correciones al momento de guardar un exel con datos
 
 @app.post("/save_table")
 async def save_table(body: dict = Body(...)):
@@ -202,6 +203,11 @@ async def save_table(body: dict = Body(...)):
         # Convertir a DataFrame
         df = pd.DataFrame(tabla)
         # Generar nombre de archivo
+
+        df.replace("", pd.NA , inplace= True)
+        df.dropna(how="all", inplace= True)
+
+
         contador = 1
         base_filename = f"{nombre}.xlsx"
         filepath = os.path.join(EXCEL_FOLDER, base_filename)
@@ -210,7 +216,7 @@ async def save_table(body: dict = Body(...)):
             filepath = os.path.join(EXCEL_FOLDER, f"{nombre}_{contador}.xlsx")
 
         # Guardar Excel
-        df.to_excel(filepath, index=False, header=[f"Col {i+1}" for i in range(df.shape[1])])
+        df.to_excel(filepath, index=False, header= True)
 
         # Guardar metadata
         meta_path = filepath + ".meta"
