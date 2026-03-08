@@ -15,6 +15,7 @@ export function useCalculadoraExcel(filename, sheet) {
   const [tipoIntervalo, setTipoIntervalo] = useState("semiabierto");
   const [metodoK, setMetodoK] = useState("sturges");
   const [kPersonalizado, setKPersonalizado] = useState("");
+  const [percentilK, setPercentilK] = useState(50);
 
   const [resultado, setResultado] = useState(null);
 
@@ -288,8 +289,242 @@ export function useCalculadoraExcel(filename, sheet) {
       { Categoria: "Forma", Estadistico: "Curtosis", Valor: curtosis },
       { Categoria: "Extremos", Estadistico: "Mínimo", Valor: min },
       { Categoria: "Extremos", Estadistico: "Máximo", Valor: max },
+      { Categoria: "Extremos", Estadistico: "Máximo", Valor: max },
     ];
   };
+
+  const calcularTendenciaCentral = (datos) => {
+    const n = datos.length;
+    if (n === 0) return [];
+
+    // ==========================================
+    // 1. D. INDIVIDUALES (Exactos)
+    // ==========================================
+    const sorted = [...datos].sort((a, b) => a - b);
+    const mediaExacta = sorted.reduce((a, b) => a + b, 0) / n;
+    const medianaExacta = calcularMediana(sorted);
+    const modaExactaStr = calcularModa(datos);
+
+    // Evitar logaritmos de 0 o negativos para Geo y Armónica
+    const datosPositivos = datos.filter(x => x > 0);
+    const nPos = datosPositivos.length;
+    const mediaGeoExacta = nPos > 0 ? Math.exp(datosPositivos.reduce((a, b) => a + Math.log(b), 0) / nPos) : 0;
+    const mediaArmExacta = nPos > 0 ? nPos / datosPositivos.reduce((a, b) => a + (1 / b), 0) : 0;
+
+    // ==========================================
+    // 2. D. AGRUPADOS (Por Intervalos)
+    // ==========================================
+    const min = sorted[0];
+    const max = sorted[n - 1];
+
+    let k;
+    switch (metodoK) {
+      case "cuadratica": k = Math.sqrt(n); break;
+      case "logaritmica": k = Math.log(n) / Math.log(2); break;
+      case "personalizada": k = Number(kPersonalizado) || 1; break;
+      default: k = 1 + 3.322 * Math.log10(n);
+    }
+    k = Math.round(k); if (k < 1) k = 1;
+
+    const rango = max - min;
+    const amplitud = Math.round((rango / k) + 1);
+
+    const intervalos = [];
+    let inicio = Math.floor(min);
+    for (let i = 0; i < k; i++) {
+      const fin = inicio + amplitud;
+      intervalos.push({ desde: inicio, hasta: fin, xm: (inicio + fin) / 2 });
+      inicio = fin;
+    }
+
+    const f = new Array(k).fill(0);
+    datos.forEach((v) => {
+      for (let i = 0; i < k; i++) {
+        let intv = intervalos[i];
+        let match = false;
+        let esUltimo = i === k - 1;
+
+        if (tipoIntervalo === "cerrado") { if (v >= intv.desde && v <= intv.hasta) match = true; }
+        else if (tipoIntervalo === "abierto") { if (v > intv.desde && v < intv.hasta) match = true; }
+        else { if (esUltimo) { if (v >= intv.desde && v <= intv.hasta) match = true; } else { if (v >= intv.desde && v < intv.hasta) match = true; } }
+
+        if (match) { f[i]++; break; }
+      }
+    });
+
+    let sumFXm = 0, maxF = -1, claseModalIdx = -1;
+    let sumFLogXm = 0, sumFDivXm = 0, nAgrupadoValido = 0;
+
+    for (let i = 0; i < k; i++) {
+      const fi = f[i];
+      const xm = intervalos[i].xm;
+      sumFXm += fi * xm;
+      if (fi > maxF) { maxF = fi; claseModalIdx = i; }
+
+      if (xm > 0) {
+        sumFLogXm += fi * Math.log(xm);
+        sumFDivXm += fi / xm;
+        nAgrupadoValido += fi;
+      }
+    }
+
+    const mediaAgrupada = sumFXm / n;
+
+    const posMe = n / 2;
+    let F_acum = 0, claseMedianaIdx = -1, F_ant = 0;
+    for (let i = 0; i < k; i++) {
+      F_acum += f[i];
+      if (F_acum >= posMe && claseMedianaIdx === -1) { claseMedianaIdx = i; break; }
+      F_ant = F_acum;
+    }
+
+    let medianaAgrupada = 0;
+    if (claseMedianaIdx !== -1) {
+      const Li = intervalos[claseMedianaIdx].desde;
+      const fi = f[claseMedianaIdx];
+      medianaAgrupada = fi !== 0 ? Li + ((posMe - F_ant) / fi) * amplitud : Li;
+    }
+
+    let modaAgrupada = 0;
+    if (claseModalIdx !== -1) {
+      const Li = intervalos[claseModalIdx].desde;
+      const fi = f[claseModalIdx];
+      const f_ant_val = claseModalIdx > 0 ? f[claseModalIdx - 1] : 0;
+      const f_sig_val = claseModalIdx < k - 1 ? f[claseModalIdx + 1] : 0;
+      const d1 = fi - f_ant_val;
+      const d2 = fi - f_sig_val;
+      modaAgrupada = (d1 + d2) !== 0 ? Li + (d1 / (d1 + d2)) * amplitud : Li;
+    }
+
+    const mediaGeoAgrupada = nAgrupadoValido > 0 ? Math.exp(sumFLogXm / nAgrupadoValido) : 0;
+    const mediaArmAgrupada = sumFDivXm !== 0 ? nAgrupadoValido / sumFDivXm : 0;
+
+    // ==========================================
+    // 3. COMPARACIÓN Y RESULTADO (Error Porcentual)
+    // ==========================================
+    const calcError = (exacto, agrupado) => exacto === 0 ? 0 : Math.abs((exacto - agrupado) / exacto) * 100;
+    
+    const modaExactaNum = Number(modaExactaStr);
+    const errorModa = !isNaN(modaExactaNum) ? `${calcError(modaExactaNum, modaAgrupada).toFixed(2)} %` : "-";
+    const formatModaEx = !isNaN(modaExactaNum) ? modaExactaNum : modaExactaStr;
+
+    return [
+      { Medida: "Media Aritmética (x̄)", "D. Individuales": mediaExacta, "D. Agrupados": mediaAgrupada, "Error %": `${calcError(mediaExacta, mediaAgrupada).toFixed(2)} %` },
+      { Medida: "Mediana (Me)", "D. Individuales": medianaExacta, "D. Agrupados": medianaAgrupada, "Error %": `${calcError(medianaExacta, medianaAgrupada).toFixed(2)} %` },
+      { Medida: "Moda (Mo)", "D. Individuales": formatModaEx, "D. Agrupados": modaAgrupada, "Error %": errorModa },
+      { Medida: "Media Geométrica (G)", "D. Individuales": mediaGeoExacta, "D. Agrupados": mediaGeoAgrupada, "Error %": `${calcError(mediaGeoExacta, mediaGeoAgrupada).toFixed(2)} %` },
+      { Medida: "Media Armónica (H)", "D. Individuales": mediaArmExacta, "D. Agrupados": mediaArmAgrupada, "Error %": `${calcError(mediaArmExacta, mediaArmAgrupada).toFixed(2)} %` }
+    ];
+  };
+
+ const calcularFractiles = (datos, kPerc) => {
+    const n = datos.length;
+    if (n === 0) return [];
+    const sorted = [...datos].sort((a, b) => a - b);
+
+    // ==========================================
+    // 1. CONFIGURACIÓN DE INTERVALOS (Motor Agrupado)
+    // ==========================================
+    const min = sorted[0];
+    const max = sorted[n - 1];
+
+    let k_int;
+    switch (metodoK) {
+      case "cuadratica": k_int = Math.sqrt(n); break;
+      case "logaritmica": k_int = Math.log(n) / Math.log(2); break;
+      case "personalizada": k_int = Number(kPersonalizado) || 1; break;
+      default: k_int = 1 + 3.322 * Math.log10(n);
+    }
+    k_int = Math.round(k_int); if (k_int < 1) k_int = 1;
+
+    const rango = max - min;
+    const amplitud = Math.round((rango / k_int) + 1);
+
+    const intervalos = [];
+    let inicio = Math.floor(min);
+    for (let i = 0; i < k_int; i++) {
+      const fin = inicio + amplitud;
+      intervalos.push({ desde: inicio, hasta: fin });
+      inicio = fin;
+    }
+
+    const f = new Array(k_int).fill(0);
+    datos.forEach((v) => {
+      for (let i = 0; i < k_int; i++) {
+        let match = false;
+        let intv = intervalos[i];
+        let esUltimo = i === k_int - 1;
+        if (tipoIntervalo === "cerrado") { if (v >= intv.desde && v <= intv.hasta) match = true; }
+        else if (tipoIntervalo === "abierto") { if (v > intv.desde && v < intv.hasta) match = true; }
+        else { if (esUltimo) { if (v >= intv.desde && v <= intv.hasta) match = true; } else { if (v >= intv.desde && v < intv.hasta) match = true; } }
+        if (match) { f[i]++; break; }
+      }
+    });
+
+    // Frecuencias Acumuladas (Necesarias para Cuartiles/Deciles/Percentiles)
+    const F = [];
+    let acum = 0;
+    for (let i = 0; i < k_int; i++) {
+      acum += f[i];
+      F.push(acum);
+    }
+
+    // ==========================================
+    // 2. FÓRMULAS DE CÁLCULO
+    // ==========================================
+    const calcFractilExacto = (p) => {
+      const pos = (n - 1) * p;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      return sorted[base + 1] !== undefined
+        ? sorted[base] + rest * (sorted[base + 1] - sorted[base])
+        : sorted[base];
+    };
+
+    const calcFractilAgrupado = (posicion) => {
+      let claseIdx = -1;
+      for (let i = 0; i < k_int; i++) {
+        if (F[i] >= posicion) { claseIdx = i; break; }
+      }
+      if (claseIdx === -1) return max; // Fallback de seguridad
+      
+      const Li = intervalos[claseIdx].desde;
+      const fi = f[claseIdx];
+      const Fant = claseIdx > 0 ? F[claseIdx - 1] : 0;
+      return fi !== 0 ? Li + ((posicion - Fant) / fi) * amplitud : Li;
+    };
+
+    const calcError = (exacto, agrupado) => exacto === 0 ? 0 : Math.abs((exacto - agrupado) / exacto) * 100;
+
+    // ==========================================
+    // 3. GENERAR RESULTADOS
+    // ==========================================
+    const resultados = [];
+    
+    const agregarResultado = (tipo, simbolo, proporcion) => {
+      const exacto = calcFractilExacto(proporcion);
+      const posAgrupada = n * proporcion; // Fórmula de posición para datos agrupados
+      const agrupado = calcFractilAgrupado(posAgrupada);
+      
+      resultados.push({
+        Tipo: tipo,
+        Símbolo: simbolo,
+        "D. Individuales": exacto,
+        "D. Agrupados": agrupado,
+        "Error %": `${calcError(exacto, agrupado).toFixed(2)} %`
+      });
+    };
+
+    // Calcular todo iterativamente
+    for(let i=1; i<=3; i++) agregarResultado("Cuartil", `Q${i}`, i/4);
+    for(let i=1; i<=9; i++) agregarResultado("Decil", `D${i}`, i/10);
+    
+    const k = Number(kPerc);
+    if(k > 0 && k < 100) agregarResultado("Percentil", `P${k}`, k/100);
+
+    return resultados;
+  };
+
 
 
   // --- Ejecutar Cálculo ---
@@ -334,6 +569,16 @@ export function useCalculadoraExcel(filename, sheet) {
       case "frecuencias_completas": res = calcularFrecuencias(datos); break;
       case "distribucion_intervalos": res = calcularDistribucionIntervalos(datos); break;
       case "estadistica_descriptiva": res = calcularDescriptivaTotal(datos); break;
+      case "tendencia_central": res = calcularTendenciaCentral(datos); break;
+      case "medidas_posicion": res = calcularFractiles(datos, percentilK); break;
+      case "tendencia_y_posicion": 
+        res = {
+          tipo: "tendencia_y_posicion",
+          tendencia: calcularTendenciaCentral(datos),
+          posicion: calcularFractiles(datos, percentilK)
+        };
+        break;
+
       default: res = [];
     }
     setResultado(res);
@@ -354,13 +599,13 @@ export function useCalculadoraExcel(filename, sheet) {
     // (para eso usarás tu botón CALCULAR).
     // Pero si cambias los selectores (la operación, la variable X o Y), sí se actualiza de inmediato.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado]);
-
+  }, [calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado, percentilK]);
 
   return {
     excelData, columns, selectedColumn, resultado,
     calculo, tipoIntervalo, metodoK, kPersonalizado,
     selectedColumnY, setSelectedColumnY, // <--- ¡AQUÍ EXPORTAMOS LA VARIABLE Y!
+    percentilK, setPercentilK,
     setSelectedColumn, setCalculo, setTipoIntervalo,
     setMetodoK, setKPersonalizado, handleChangeDato, ejecutarCalculo
   };

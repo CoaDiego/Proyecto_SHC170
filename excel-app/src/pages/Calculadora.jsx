@@ -43,6 +43,7 @@ export default function Calculadora() {
 
     const [mostrarTabla, _setMostrarTabla] = useState(true);
     const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
+    const [filtroFractil, setFiltroFractil] = useState("Cuartil");
 
     //minimizar y maximizar
     const [panelAbierto, setPanelAbierto] = useState(true);
@@ -51,6 +52,7 @@ export default function Calculadora() {
         excelData, columns, selectedColumn, setSelectedColumn,
         selectedColumnY, setSelectedColumnY, resultado, calculo,
         tipoIntervalo, metodoK, kPersonalizado,
+        percentilK, setPercentilK,
         setCalculo, setTipoIntervalo, setMetodoK, setKPersonalizado,
         handleChangeDato, ejecutarCalculo
     } = useCalculadoraExcel(selectedFile, selectedSheet);
@@ -171,8 +173,11 @@ export default function Calculadora() {
                                         <option value="distribucion_intervalos">Distribución por Intervalos</option>
                                         <option value="distribucion_bivariada">Distribución Bivariante</option>
                                         <option value="estadistica_descriptiva">Análisis Descriptivo</option>
+                                        <option value="tendencia_central">Medidas de Tendencia Central</option>
+                                        <option value="medidas_posicion">Medidas de Posición (Fractiles)</option>
                                         <option value="minimo">Mínimo</option>
                                         <option value="maximo">Máximo</option>
+                                        <option value="tendencia_y_posicion">Medidas de Tendencia y Posición</option>
                                     </select>
 
                                     <label>{calculo === "distribucion_bivariada" ? "Variable X (Filas):" : "Columna Seleccionada:"}</label>
@@ -198,7 +203,7 @@ export default function Calculadora() {
                                         </div>
                                     )}
 
-                                    {calculo === "distribucion_intervalos" && (
+                                    {(calculo === "distribucion_intervalos" || calculo === "tendencia_central" || calculo === "tendencia_y_posicion") && (
                                         <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '15px' }}>
                                             <label>Tipo Intervalo:</label>
                                             <select value={tipoIntervalo} onChange={(e) => setTipoIntervalo(e.target.value)} style={{ width: '100%', marginBottom: '8px' }}>
@@ -216,6 +221,31 @@ export default function Calculadora() {
                                             {metodoK === "personalizada" && <input type="number" value={kPersonalizado} onChange={(e) => setKPersonalizado(e.target.value)} placeholder="Valor k" style={{ width: '100%', marginTop: '5px' }} />}
                                         </div>
                                     )}
+
+                                    {calculo === "medidas_posicion" && (
+                                        <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '15px' }}>
+                                            <label style={{ display: 'block', marginBottom: '5px' }}>
+                                                Calcular Percentil Específico (1 - 99):
+                                            </label>
+                                            <input 
+                                                type="number" 
+                                                min="1" max="99" 
+                                                value={percentilK} 
+                                                onChange={(e) => setPercentilK(e.target.value)} 
+                                                style={{ width: '100%', padding: '5px' }} 
+                                            />
+                                            <small style={{ color: 'var(--text-muted)' }}>
+                                                Se calcularán automáticamente todos los Cuartiles y Deciles.
+                                            </small>
+                                        </div>
+                                    )}
+
+                                    {calculo === "tendencia_y_posicion" && (
+                                       <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '15px' }}>
+                                           <label style={{ display: 'block', marginBottom: '5px' }}>Calcular Percentil Específico (1 - 99):</label>
+                                           <input type="number" min="1" max="99" value={percentilK} onChange={(e) => setPercentilK(e.target.value)} style={{ width: '100%', padding: '5px' }} />
+                                       </div>
+                                   )}
 
                                     <button onClick={ejecutarCalculo} className="boton-calcular" style={{ width: '100%', padding: '10px', marginTop: '10px' }}>CALCULAR</button>
                                 </>
@@ -260,7 +290,92 @@ export default function Calculadora() {
                         <div className="frecuencias" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '15px', borderRadius: '8px' }}>
                             <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
                             {resultado ? (
-                                !Array.isArray(resultado) && resultado.tipo === "bivariada" ? (
+                                resultado.tipo === "tendencia_y_posicion" ? (
+                                    <div className="contenedor-tendencia-posicion">
+                                        {/* TABLA 1: TENDENCIA CENTRAL */}
+                                        <h4 style={{ color: 'var(--primary-color)', borderBottom: '2px solid var(--border-color)', paddingBottom: '5px' }}>
+                                            1. Análisis de Tendencia Central
+                                        </h4>
+                                        <div style={{ overflowX: 'auto', marginBottom: '30px' }}>
+                                            <table className="tabla-academica">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Medida</th>
+                                                        <th>D. Individuales</th>
+                                                        <th>D. Agrupados</th>
+                                                        <th>Error %</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {resultado.tendencia.map((row, i) => (
+                                                        <tr key={i}>
+                                                            <td style={{ fontWeight: 'bold' }}>{row["Medida"]}</td>
+                                                            <td>{formatearCelda(row["D. Individuales"])}</td>
+                                                            <td>{formatearCelda(row["D. Agrupados"])}</td>
+                                                            <td style={{ color: parseFloat(row["Error %"]) > 5 ? '#e74c3c' : 'inherit' }}>
+                                                                {row["Error %"]}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* TABLA 2: MEDIDAS DE POSICIÓN CON BOTONES DE FILTRO */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border-color)', paddingBottom: '5px', marginBottom: '10px' }}>
+                                            <h4 style={{ color: 'var(--primary-color)', margin: 0 }}>
+                                                2. Medidas de Posición
+                                            </h4>
+                                            <div style={{ display: 'flex', gap: '5px' }}>
+                                                {["Cuartil", "Decil", "Percentil"].map(tipo => (
+                                                    <button 
+                                                        key={tipo}
+                                                        onClick={() => setFiltroFractil(tipo)} 
+                                                        style={{ 
+                                                            padding: '5px 15px', 
+                                                            cursor: 'pointer',
+                                                            borderRadius: '4px',
+                                                            border: '1px solid var(--border-color)',
+                                                            backgroundColor: filtroFractil === tipo ? 'var(--accent-color)' : 'var(--bg-card)',
+                                                            color: filtroFractil === tipo ? '#fff' : 'inherit',
+                                                            fontWeight: filtroFractil === tipo ? 'bold' : 'normal'
+                                                        }}
+                                                    >
+                                                        {tipo}es
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div style={{ overflowX: 'auto' }}>
+                                         <table className="tabla-academica">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Medida</th>
+                                                        <th>Símbolo</th>
+                                                        <th>D. Individuales</th>
+                                                        <th>D. Agrupados</th>
+                                                        <th>Error %</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {resultado.posicion.filter(r => r.Medida === filtroFractil || r.Tipo === filtroFractil).map((row, i) => (
+                                                        <tr key={i}>
+                                                            <td>{row.Medida || row.Tipo}</td>
+                                                            <td style={{ fontWeight: 'bold' }}>{row.Símbolo}</td>
+                                                            <td style={{ fontFamily: 'monospace', fontSize: '1.1em' }}>{formatearCelda(row["D. Individuales"])}</td>
+                                                            <td style={{ fontFamily: 'monospace', fontSize: '1.1em' }}>{formatearCelda(row["D. Agrupados"])}</td>
+                                                            <td style={{ color: parseFloat(row["Error %"]) > 5 ? '#e74c3c' : 'inherit', fontWeight: 'bold' }}>
+                                                                {row["Error %"]}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+    
+                  
+                                                 ) :  !Array.isArray(resultado) && resultado.tipo === "bivariada" ? (
                                     <div style={{ overflowX: 'auto' }}>
                                         <table className="tabla-academica">
                                             <thead>
