@@ -417,6 +417,156 @@ export function useCalculadoraExcel(filename, sheet) {
     ];
   };
 
+
+  // ==========================================
+  // --- TEMA 4: VARIABILIDAD Y FORMA ---
+  // ==========================================
+  const calcularVariabilidadYForma = (datos) => {
+    const n = datos.length;
+    // Devolvemos la estructura vacía segura en lugar de null
+    if (n < 2) return { tipo: "variabilidad_y_forma", dispersion: [], forma: [] };
+
+    const sorted = [...datos].sort((a, b) => a - b);
+    const min = sorted[0];
+    const max = sorted[n - 1];
+
+    // --- 1. BASES EXACTAS ---
+    const mediaEx = sorted.reduce((a, b) => a + b, 0) / n;
+    
+    const calcFractilExacto = (p) => {
+      const pos = (n - 1) * p;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+    };
+    const Q1_ex = calcFractilExacto(0.25);
+    const Q3_ex = calcFractilExacto(0.75);
+
+    // --- 2. CONFIGURACIÓN DE AGRUPADOS (Intervalos y Frecuencias) ---
+    let k_int;
+    switch (metodoK) {
+      case "cuadratica": k_int = Math.sqrt(n); break;
+      case "logaritmica": k_int = Math.log(n) / Math.log(2); break;
+      case "personalizada": k_int = Number(kPersonalizado) || 1; break;
+      default: k_int = 1 + 3.322 * Math.log10(n);
+    }
+    k_int = Math.round(k_int); if (k_int < 1) k_int = 1;
+
+    const rangoExacto = max - min;
+    const amplitud = Math.round((rangoExacto / k_int) + 1);
+
+    const intervalos = [];
+    let inicio = Math.floor(min);
+    for (let i = 0; i < k_int; i++) {
+      const fin = inicio + amplitud;
+      intervalos.push({ desde: inicio, hasta: fin, xm: (inicio + fin) / 2 });
+      inicio = fin;
+    }
+
+    const f = new Array(k_int).fill(0);
+    datos.forEach((v) => {
+      for (let i = 0; i < k_int; i++) {
+        let match = false;
+        let esUltimo = i === k_int - 1;
+        if (tipoIntervalo === "cerrado") { if (v >= intervalos[i].desde && v <= intervalos[i].hasta) match = true; }
+        else if (tipoIntervalo === "abierto") { if (v > intervalos[i].desde && v < intervalos[i].hasta) match = true; }
+        else { if (esUltimo) { if (v >= intervalos[i].desde && v <= intervalos[i].hasta) match = true; } else { if (v >= intervalos[i].desde && v < intervalos[i].hasta) match = true; } }
+        if (match) { f[i]++; break; }
+      }
+    });
+
+    const F = [];
+    let acum = 0;
+    for (let i = 0; i < k_int; i++) { acum += f[i]; F.push(acum); }
+
+    // --- 3. BASES AGRUPADAS ---
+    let sumFXm = 0;
+    for (let i = 0; i < k_int; i++) sumFXm += f[i] * intervalos[i].xm;
+    const mediaAgrup = sumFXm / n;
+
+    const calcFractilAgrupado = (posicion) => {
+      let claseIdx = -1;
+      for (let i = 0; i < k_int; i++) { if (F[i] >= posicion) { claseIdx = i; break; } }
+      if (claseIdx === -1) return max;
+      const Li = intervalos[claseIdx].desde;
+      const fi = f[claseIdx];
+      const Fant = claseIdx > 0 ? F[claseIdx - 1] : 0;
+      return fi !== 0 ? Li + ((posicion - Fant) / fi) * amplitud : Li;
+    };
+    const Q1_agrup = calcFractilAgrupado(n * 0.25);
+    const Q3_agrup = calcFractilAgrupado(n * 0.75);
+
+    // --- 4. CÁLCULO DE DISPERSIÓN (Tabla 3) ---
+    const rangoAgrup = k_int * amplitud;
+    const RIC_ex = Q3_ex - Q1_ex;
+    const RIC_agrup = Q3_agrup - Q1_agrup;
+    
+    // Calculamos la Mediana exacta y agrupada (que es el Cuartil 2 o el 50%)
+    const medianaEx = calcFractilExacto(0.50);
+    const medianaAgrup = calcFractilAgrupado(n * 0.50);
+
+    // Cálculos Exactos
+    const DM_ex = datos.reduce((acc, val) => acc + Math.abs(val - mediaEx), 0) / n;
+    const DMe_ex = datos.reduce((acc, val) => acc + Math.abs(val - medianaEx), 0) / n; // <-- NUEVO: Desviación Mediana
+    const Var_ex = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 2), 0) / (n - 1);
+    const S_ex = Math.sqrt(Var_ex);
+    const CV_ex = mediaEx !== 0 ? (S_ex / Math.abs(mediaEx)) * 100 : 0;
+
+    // Cálculos Agrupados
+    let sumDM = 0, sumDMe = 0, sumVar = 0;
+    for (let i = 0; i < k_int; i++) {
+      const distMedia = Math.abs(intervalos[i].xm - mediaAgrup);
+      const distMediana = Math.abs(intervalos[i].xm - medianaAgrup); // <-- NUEVO
+      
+      sumDM += f[i] * distMedia;
+      sumDMe += f[i] * distMediana; // <-- NUEVO
+      sumVar += f[i] * Math.pow(intervalos[i].xm - mediaAgrup, 2);
+    }
+    
+    const DM_agrup = sumDM / n;
+    const DMe_agrup = sumDMe / n; // <-- NUEVO: Desviación Mediana Agrupada
+    const Var_agrup = sumVar / (n - 1);
+    const S_agrup = Math.sqrt(Var_agrup);
+    const CV_agrup = mediaAgrup !== 0 ? (S_agrup / Math.abs(mediaAgrup)) * 100 : 0;
+
+    const calcError = (ex, ag) => ex === 0 ? 0 : Math.abs((ex - ag) / ex) * 100;
+
+    const tablaDispersion = [
+      { Estadígrafo: "Rango o Recorrido", Sigla: "R", "D. Individuales": rangoExacto, "D. Agrupados": rangoAgrup, "Error %": `${calcError(rangoExacto, rangoAgrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Intercuartílica", Sigla: "RIC", "D. Individuales": RIC_ex, "D. Agrupados": RIC_agrup, "Error %": `${calcError(RIC_ex, RIC_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Media", Sigla: "DM", "D. Individuales": DM_ex, "D. Agrupados": DM_agrup, "Error %": `${calcError(DM_ex, DM_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Mediana", Sigla: "DMe", "D. Individuales": DMe_ex, "D. Agrupados": DMe_agrup, "Error %": `${calcError(DMe_ex, DMe_agrup).toFixed(2)} %` }, // <-- NUEVA FILA
+      { Estadígrafo: "Varianza Muestral", Sigla: "S²", "D. Individuales": Var_ex, "D. Agrupados": Var_agrup, "Error %": `${calcError(Var_ex, Var_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Estándar", Sigla: "S", "D. Individuales": S_ex, "D. Agrupados": S_agrup, "Error %": `${calcError(S_ex, S_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Coeficiente de Variación", Sigla: "CV", "D. Individuales": CV_ex, "D. Agrupados": CV_agrup, "Error %": `${calcError(CV_ex, CV_agrup).toFixed(2)} %` }
+    ];
+
+    // --- 5. CÁLCULO DE FORMA (Tabla 4 - Método de Momentos) ---
+    // Usamos momentos poblacionales (m2, m3, m4) para la geometría pura de Fisher
+    const m2 = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 2), 0) / n;
+    const m3 = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 3), 0) / n;
+    const m4 = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 4), 0) / n;
+
+    const asimetria = m2 > 0 ? m3 / Math.pow(Math.sqrt(m2), 3) : 0;
+    const curtosis = m2 > 0 ? (m4 / Math.pow(m2, 2)) - 3 : 0; // -3 para el exceso de curtosis
+
+    // Lógica condicional con un pequeño margen de tolerancia (0.05) para considerar el 0 absoluto en JS
+    let interpretacionAsimetria = "Distribución Simétrica";
+    if (asimetria > 0.05) interpretacionAsimetria = "Asimetría Positiva (Cola a la derecha)";
+    else if (asimetria < -0.05) interpretacionAsimetria = "Asimetría Negativa (Cola a la izquierda)";
+
+    let interpretacionCurtosis = "Mesocúrtica (Normal)";
+    if (curtosis > 0.05) interpretacionCurtosis = "Leptocúrtica (Muy puntiaguda)";
+    else if (curtosis < -0.05) interpretacionCurtosis = "Platicúrtica (Aplastada)";
+
+    const tablaForma = [
+      { Estadígrafo: "Coeficiente de Asimetría", "Valor Calculado": asimetria, Interpretación: interpretacionAsimetria },
+      { Estadígrafo: "Curtosis (Apuntamiento)", "Valor Calculado": curtosis, Interpretación: interpretacionCurtosis }
+    ];
+
+    return { tipo: "variabilidad_y_forma", dispersion: tablaDispersion, forma: tablaForma };
+  };
+
  const calcularFractiles = (datos, kPerc) => {
     const n = datos.length;
     if (n === 0) return [];
@@ -535,6 +685,8 @@ export function useCalculadoraExcel(filename, sheet) {
       return;
     }
 
+    
+
     const datos = obtenerDatosNumericos();
     // Validación suave para permitir conteos simples
     if (datos.length === 0 && calculo !== "frecuencia_absoluta" && calculo !== "frecuencia_relativa") {
@@ -578,6 +730,21 @@ export function useCalculadoraExcel(filename, sheet) {
           posicion: calcularFractiles(datos, percentilK)
         };
         break;
+
+        // ... los casos anteriores ...
+      case "tendencia_y_posicion": 
+        res = {
+          tipo: "tendencia_y_posicion",
+          tendencia: calcularTendenciaCentral(datos),
+          posicion: calcularFractiles(datos, percentilK)
+        };
+        break;
+
+      // 👇 INSERTA ESTO AQUÍ 👇
+      case "variabilidad_y_forma":
+        res = calcularVariabilidadYForma(datos);
+        break;
+      // 👆 HASTA AQUÍ 👆
 
       default: res = [];
     }

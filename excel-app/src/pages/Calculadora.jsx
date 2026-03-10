@@ -178,6 +178,7 @@ export default function Calculadora() {
                                         <option value="minimo">Mínimo</option>
                                         <option value="maximo">Máximo</option>
                                         <option value="tendencia_y_posicion">Medidas de Tendencia y Posición</option>
+                                        <option value="variabilidad_y_forma">Análisis de Variabilidad y Forma de la Distribución</option>
                                     </select>
 
                                     <label>{calculo === "distribucion_bivariada" ? "Variable X (Filas):" : "Columna Seleccionada:"}</label>
@@ -203,7 +204,7 @@ export default function Calculadora() {
                                         </div>
                                     )}
 
-                                    {(calculo === "distribucion_intervalos" || calculo === "tendencia_central" || calculo === "tendencia_y_posicion") && (
+                                    {(calculo === "distribucion_intervalos" || calculo === "tendencia_central" || calculo === "tendencia_y_posicion" || calculo === "variabilidad_y_forma") && (
                                         <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '15px' }}>
                                             <label>Tipo Intervalo:</label>
                                             <select value={tipoIntervalo} onChange={(e) => setTipoIntervalo(e.target.value)} style={{ width: '100%', marginBottom: '8px' }}>
@@ -239,6 +240,7 @@ export default function Calculadora() {
                                             </small>
                                         </div>
                                     )}
+
 
                                     {calculo === "tendencia_y_posicion" && (
                                        <div style={{ padding: '10px', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '15px' }}>
@@ -367,6 +369,70 @@ export default function Calculadora() {
                                                             <td style={{ color: parseFloat(row["Error %"]) > 5 ? '#e74c3c' : 'inherit', fontWeight: 'bold' }}>
                                                                 {row["Error %"]}
                                                             </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    
+                                    ) : resultado && resultado.tipo === "variabilidad_y_forma" && resultado.dispersion ? (
+                                    <div className="contenedor-variabilidad-forma">
+                                        {/* TABLA 3: DISPERSIÓN */}
+                                        <h4 style={{ color: 'var(--primary-color)', borderBottom: '2px solid var(--border-color)', paddingBottom: '5px' }}>
+                                            3. Medidas de Dispersión
+                                        </h4>
+                                        <div style={{ overflowX: 'auto', marginBottom: '30px' }}>
+                                            <table className="tabla-academica">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Estadígrafo</th>
+                                                        <th>Sigla</th>
+                                                        <th>D. Individuales</th>
+                                                        <th>D. Agrupados</th>
+                                                        <th>Error %</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {/* Los signos de interrogación evitan que la pantalla se ponga blanca */}
+                                                    {resultado?.dispersion?.map((row, i) => (
+                                                        <tr key={i}>
+                                                            <td>{row["Estadígrafo"]}</td>
+                                                            <td style={{ fontWeight: 'bold' }}>{row["Sigla"]}</td>
+                                                            <td style={{ fontFamily: 'monospace', fontSize: '1.1em' }}>{formatearCelda(row["D. Individuales"])}</td>
+                                                            <td style={{ fontFamily: 'monospace', fontSize: '1.1em' }}>{formatearCelda(row["D. Agrupados"])}</td>
+                                                            <td style={{ color: parseFloat(row["Error %"]) > 5 ? '#e74c3c' : 'inherit', fontWeight: 'bold' }}>
+                                                                {row["Error %"]}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* TABLA 4: FORMA */}
+                                        <h4 style={{ color: 'var(--primary-color)', borderBottom: '2px solid var(--border-color)', paddingBottom: '5px' }}>
+                                            4. Medidas de Forma
+                                        </h4>
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <table className="tabla-academica">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Estadígrafo</th>
+                                                        <th>Valor Calculado</th>
+                                                        <th>Interpretación</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {/* Los signos de interrogación evitan que la pantalla se ponga blanca */}
+                                                    {resultado?.forma?.map((row, i) => (
+                                                        <tr key={i}>
+                                                            <td style={{ fontWeight: 'bold' }}>{row["Estadígrafo"]}</td>
+                                                            <td style={{ fontFamily: 'monospace', fontSize: '1.1em', color: 'var(--primary-color)' }}>
+                                                                {formatearCelda(row["Valor Calculado"])}
+                                                            </td>
+                                                            <td style={{ fontStyle: 'italic' }}>{row["Interpretación"]}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
