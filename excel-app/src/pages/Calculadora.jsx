@@ -167,16 +167,12 @@ export default function Calculadora() {
                                 <>
                                     <label>Operación:</label>
                                     <select value={calculo} onChange={(e) => setCalculo(e.target.value)} style={{ width: '100%', marginBottom: '15px' }}>
-                                        <option value="frecuencia_absoluta">Frecuencia Absoluta</option>
-                                        <option value="frecuencia_relativa">Frecuencia Relativa</option>
                                         <option value="frecuencias_completas">Tabla de Frecuencias</option>
                                         <option value="distribucion_intervalos">Distribución por Intervalos</option>
                                         <option value="distribucion_bivariada">Distribución Bivariante</option>
                                         <option value="estadistica_descriptiva">Análisis Descriptivo</option>
                                         <option value="tendencia_central">Medidas de Tendencia Central</option>
                                         <option value="medidas_posicion">Medidas de Posición (Fractiles)</option>
-                                        <option value="minimo">Mínimo</option>
-                                        <option value="maximo">Máximo</option>
                                         <option value="tendencia_y_posicion">Medidas de Tendencia y Posición</option>
                                         <option value="variabilidad_y_forma">Análisis de Variabilidad y Forma de la Distribución</option>
                                     </select>

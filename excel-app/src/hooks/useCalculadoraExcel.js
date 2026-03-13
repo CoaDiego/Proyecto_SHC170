@@ -11,7 +11,7 @@ export function useCalculadoraExcel(filename, sheet) {
   const [selectedColumn, setSelectedColumn] = useState("");   // Variable X
   const [selectedColumnY, setSelectedColumnY] = useState(""); // Variable Y (Para Bivariada)
 
-  const [calculo, setCalculo] = useState("frecuencia_absoluta");
+  const [calculo, setCalculo] = useState("frecuencias_completas");
   const [tipoIntervalo, setTipoIntervalo] = useState("semiabierto");
   const [metodoK, setMetodoK] = useState("sturges");
   const [kPersonalizado, setKPersonalizado] = useState("");
@@ -689,35 +689,14 @@ export function useCalculadoraExcel(filename, sheet) {
 
     const datos = obtenerDatosNumericos();
     // Validación suave para permitir conteos simples
-    if (datos.length === 0 && calculo !== "frecuencia_absoluta" && calculo !== "frecuencia_relativa") {
-      // Si no hay números y pide intervalos, error.
-      alert("Este cálculo requiere datos numéricos.");
-      return;
+    if (datos.length === 0) {
+         alert("Este cálculo requiere datos numéricos.");
+         return;
     }
 
     let res;
     switch (calculo) {
-      case "frecuencia_absoluta":{
-        const colData = obtenerColumna(selectedColumn);
-        res = {};
-        colData.forEach((val) => (res[val] = (res[val] || 0) + 1));
-        res = Object.entries(res).map(([k, v]) => ({ Valor: k, Frecuencia: v }));
-        break;
-      }
-      case "frecuencia_relativa":{
-        res = [];
-        const colDataRel = obtenerDatosNumericos();
-        // Si queremos relativa de texto, usamos colDataRel = obtenerColumna(selectedColumn) y n = colDataRel.length
-        // Por ahora lo dejo numérico como tenías, o podemos cambiarlo a genérico:
-        const dataGen = obtenerColumna(selectedColumn);
-        const total = dataGen.length;
-        const conteo = {};
-        dataGen.forEach((val) => (conteo[val] = (conteo[val] || 0) + 1));
-        res = Object.entries(conteo).map(([k, v]) => ({ Valor: k, Relativa: (v / total).toFixed(4) }));
-        break;
-      }
-      case "minimo": res = [{ Resultado: "Mínimo", Valor: Math.min(...datos) }]; break;
-      case "maximo": res = [{ Resultado: "Máximo", Valor: Math.max(...datos) }]; break;
+
       case "frecuencias_completas": res = calcularFrecuencias(datos); break;
       case "distribucion_intervalos": res = calcularDistribucionIntervalos(datos); break;
       case "estadistica_descriptiva": res = calcularDescriptivaTotal(datos); break;
