@@ -138,6 +138,173 @@ export function useCalculadoraExcel(filename, sheet) {
     };
   };
 
+  // ==========================================
+  // --- TEMA 5: BIVARIANTE AVANZADA (PRUEBA) ---
+  // ==========================================
+  // ==========================================
+  // --- TEMA 5: BIVARIANTE AVANZADA (INTELIGENTE) ---
+  // ==========================================
+  const calcularTema5_Bivariante = () => {
+    if (!selectedColumn || !selectedColumnY) return null;
+
+    const dataX = obtenerColumna(selectedColumn);
+    const dataY = obtenerColumna(selectedColumnY);
+    const n = dataX.length;
+    if (n === 0) return null;
+
+    // 1. Escáner: ¿Son números continuos o texto categórico?
+    const esNumerico = dataX.every(v => typeof v === 'number' && !isNaN(v)) && 
+                       dataY.every(v => typeof v === 'number' && !isNaN(v));
+
+    let categoriasX = [];
+    let categoriasY = [];
+    let matriz = {};
+    let totalFilas = {};
+    let totalColumnas = {};
+
+    // 2. CONSTRUCCIÓN DE LA TABLA
+    if (esNumerico && n > 1) {
+      // --- MODO INTERVALOS (Para domar los decimales) ---
+      
+      // Regla de Sturges para calcular cuántos intervalos (k) necesitamos
+      const k = Math.round(1 + 3.322 * Math.log10(n));
+      
+      // Min, Max y Amplitud para X
+      const minX = Math.min(...dataX);
+      const maxX = Math.max(...dataX);
+      const ampX = (maxX - minX) / k || 1; 
+      
+      // Min, Max y Amplitud para Y
+      const minY = Math.min(...dataY);
+      const maxY = Math.max(...dataY);
+      const ampY = (maxY - minY) / k || 1;
+
+      // Crear las "Cajas" (Intervalos)
+      const limitesX = [];
+      const limitesY = [];
+      
+      for (let i = 0; i < k; i++) {
+        const lInfX = minX + i * ampX;
+        const lSupX = i === k - 1 ? maxX : minX + (i + 1) * ampX; // El último intervalo cierra exacto
+        const labelX = `[${lInfX.toFixed(2)} - ${lSupX.toFixed(2)}${i === k - 1 ? ']' : ')'}`;
+        categoriasX.push(labelX);
+        limitesX.push({ min: lInfX, max: lSupX, label: labelX, isLast: i === k - 1 });
+
+        const lInfY = minY + i * ampY;
+        const lSupY = i === k - 1 ? maxY : minY + (i + 1) * ampY;
+        const labelY = `[${lInfY.toFixed(2)} - ${lSupY.toFixed(2)}${i === k - 1 ? ']' : ')'}`;
+        categoriasY.push(labelY);
+        limitesY.push({ min: lInfY, max: lSupY, label: labelY, isLast: i === k - 1 });
+      }
+
+      // Inicializar la matriz limpia con los nuevos intervalos
+      categoriasX.forEach(catX => {
+        matriz[catX] = {};
+        totalFilas[catX] = 0;
+        categoriasY.forEach(catY => {
+          matriz[catX][catY] = 0;
+          totalColumnas[catY] = 0;
+        });
+      });
+
+      // Clasificar cada dato en su caja correspondiente
+      for (let i = 0; i < n; i++) {
+        const valX = dataX[i];
+        const valY = dataY[i];
+        
+        // Buscar el intervalo correcto
+        let binX = limitesX.find(b => b.isLast ? (valX >= b.min && valX <= b.max) : (valX >= b.min && valX < b.max));
+        let binY = limitesY.find(b => b.isLast ? (valY >= b.min && valY <= b.max) : (valY >= b.min && valY < b.max));
+        
+        // Salvavidas por redondeo de decimales en JS
+        if (!binX) binX = limitesX[limitesX.length - 1];
+        if (!binY) binY = limitesY[limitesY.length - 1];
+
+        matriz[binX.label][binY.label]++;
+        totalFilas[binX.label]++;
+        totalColumnas[binY.label]++;
+      }
+
+    } else {
+      // --- MODO TEXTO (Cruza tal cual como en el libro) ---
+      categoriasX = [...new Set(dataX)].sort();
+      categoriasY = [...new Set(dataY)].sort();
+
+      categoriasX.forEach(catX => {
+        matriz[catX] = {};
+        totalFilas[catX] = 0;
+        categoriasY.forEach(catY => {
+          matriz[catX][catY] = 0;
+          totalColumnas[catY] = 0;
+        });
+      });
+      categoriasY.forEach(catY => totalColumnas[catY] = 0);
+
+      for (let i = 0; i < n; i++) {
+        const valX = dataX[i];
+        const valY = dataY[i];
+        if (matriz[valX] && matriz[valX][valY] !== undefined) {
+          matriz[valX][valY]++;
+          totalFilas[valX]++;
+          totalColumnas[valY]++;
+        }
+      }
+    }
+
+    // 3. CÁLCULO DE COVARIANZA Y CORRELACIÓN (Siempre se usan los datos exactos)
+    let covarianza = null;
+    let correlacion = null;
+    let interpretacion = "No aplicable (Variables Categóricas)";
+    
+    if (esNumerico && n > 1) {
+      const meanX = dataX.reduce((a, b) => a + b, 0) / n;
+      const meanY = dataY.reduce((a, b) => a + b, 0) / n;
+
+      let sumCross = 0, sumSqX = 0, sumSqY = 0;
+
+      for (let i = 0; i < n; i++) {
+        const dx = dataX[i] - meanX;
+        const dy = dataY[i] - meanY;
+        sumCross += dx * dy;
+        sumSqX += dx * dx;
+        sumSqY += dy * dy;
+      }
+
+      covarianza = sumCross / (n - 1); 
+      const stdX = Math.sqrt(sumSqX / (n - 1));
+      const stdY = Math.sqrt(sumSqY / (n - 1));
+
+      if (stdX > 0 && stdY > 0) {
+        correlacion = covarianza / (stdX * stdY);
+        
+        const absR = Math.abs(correlacion);
+        if (absR >= 0.9) interpretacion = correlacion > 0 ? "Correlación Positiva Muy Fuerte" : "Correlación Negativa Muy Fuerte";
+        else if (absR >= 0.7) interpretacion = correlacion > 0 ? "Correlación Positiva Fuerte" : "Correlación Negativa Fuerte";
+        else if (absR >= 0.4) interpretacion = correlacion > 0 ? "Correlación Positiva Moderada" : "Correlación Negativa Moderada";
+        else if (absR >= 0.2) interpretacion = correlacion > 0 ? "Correlación Positiva Débil" : "Correlación Negativa Débil";
+        else interpretacion = "Correlación Nula o Inexistente";
+      } else {
+        correlacion = 0;
+        interpretacion = "Sin variación en los datos";
+      }
+    }
+
+    // 4. Se envía el paquete completo a la interfaz
+    return {
+      tipo: "bivariada_avanzada",
+      filas: categoriasX,
+      columnas: categoriasY,
+      datos: matriz,
+      totalFilas,
+      totalColumnas,
+      granTotal: n,
+      esNumerico,
+      covarianza,
+      correlacion,
+      interpretacion
+    };
+  };
+
   // --- Otros Cálculos (Frecuencias, Intervalos) ---
   const calcularFrecuencias = (datos) => {
     const N = datos.length;
@@ -677,59 +844,112 @@ export function useCalculadoraExcel(filename, sheet) {
 
 
 
+
   // --- Ejecutar Cálculo ---
   const ejecutarCalculo = () => {
+    
+    // 1. EL "PASE VIP": Estos dos cálculos se ejecutan directo porque SÍ aceptan TEXTO
     if (calculo === "distribucion_bivariada") {
-      const res = calcularBivariada();
-      setResultado(res);
+      setResultado(calcularBivariada());
+      return;
+    }
+    if (calculo === "distribucion_bivariada_avanzada") {
+      setResultado(calcularTema5_Bivariante());
       return;
     }
 
-    
-
+    // 2. LA PUERTA: Todo lo que pase de aquí para abajo exige estrictamente NÚMEROS
     const datos = obtenerDatosNumericos();
-    // Validación suave para permitir conteos simples
     if (datos.length === 0) {
          alert("Este cálculo requiere datos numéricos.");
          return;
     }
 
+    // 3. LOS CÁLCULOS MATEMÁTICOS UNIDIMENSIONALES
     let res;
     switch (calculo) {
-
-      case "frecuencias_completas": res = calcularFrecuencias(datos); break;
-      case "distribucion_intervalos": res = calcularDistribucionIntervalos(datos); break;
-      case "estadistica_descriptiva": res = calcularDescriptivaTotal(datos); break;
-      case "tendencia_central": res = calcularTendenciaCentral(datos); break;
-      case "medidas_posicion": res = calcularFractiles(datos, percentilK); break;
-      case "tendencia_y_posicion": 
+      case "frecuencias_completas":
+        res = calcularFrecuencias(datos);
+        break;
+      case "distribucion_intervalos":
+        res = calcularDistribucionIntervalos(datos);
+        break;
+      case "estadistica_descriptiva":
+        res = calcularDescriptivaTotal(datos);
+        break;
+      case "tendencia_central":
+        res = calcularTendenciaCentral(datos);
+        break;
+      case "medidas_posicion":
+        res = calcularFractiles(datos, percentilK);
+        break;
+      case "tendencia_y_posicion":
         res = {
           tipo: "tendencia_y_posicion",
           tendencia: calcularTendenciaCentral(datos),
-          posicion: calcularFractiles(datos, percentilK)
+          posicion: calcularFractiles(datos, percentilK),
         };
         break;
-
-        // ... los casos anteriores ...
-      case "tendencia_y_posicion": 
-        res = {
-          tipo: "tendencia_y_posicion",
-          tendencia: calcularTendenciaCentral(datos),
-          posicion: calcularFractiles(datos, percentilK)
-        };
-        break;
-
-      // 👇 INSERTA ESTO AQUÍ 👇
       case "variabilidad_y_forma":
         res = calcularVariabilidadYForma(datos);
         break;
-      // 👆 HASTA AQUÍ 👆
 
-      default: res = [];
+      // Dentro de ejecutarCalculo en useCalculadoraExcel.js
+
+      case "distribucion_bivariada":
+        // Extraemos los datos de ambas columnas seleccionadas
+        const datosX = excelData.map((fila) => fila[selectedColumn]);
+        const datosY = excelData.map((fila) => fila[selectedColumnY]);
+
+        if (datosX.length > 0 && datosY.length > 0) {
+          // Aquí llamamos a una función que cree la tabla de doble entrada
+          res = calcularBivariadaLocal(datosX, datosY);
+        }
+        break;
+
+      case "distribucion_bivariada_avanzada":
+        const dX = excelData.map((f) => f[selectedColumn]);
+        const dY = excelData.map((f) => f[selectedColumnY]);
+
+        if (dX.length > 0 && dY.length > 0) {
+          // Función para correlación y regresión (Tema 5)
+          res = calcularBivariadaAvanzadaLocal(dX, dY);
+        }
+        break;
+
+      default:
+        res = [];
     }
     setResultado(res);
   };
 
+  // --- FUNCIONES DE APOYO BIVARIANTE (Al final del archivo, fuera del hook) ---
+const calcularBivariadaLocal = (X, Y) => {
+    const nivelesX = [...new Set(X)].sort();
+    const nivelesY = [...new Set(Y)].sort();
+
+    const estructuraDatos = {};
+    const totalFilas = {};
+
+    nivelesX.forEach(x => {
+        estructuraDatos[x] = {};
+        let sumaFila = 0;
+        nivelesY.forEach(y => {
+            const freq = X.filter((val, i) => val === x && Y[i] === y).length;
+            estructuraDatos[x][y] = freq;
+            sumaFila += freq;
+        });
+        totalFilas[x] = sumaFila;
+    });
+
+    return {
+        tipo: "bivariada",
+        filas: nivelesX,      // El gráfico espera 'filas'
+        columnas: nivelesY,   // El gráfico espera 'columnas'
+        datos: estructuraDatos,
+        totalFilas: totalFilas
+    };
+};
 
   // ==========================================
   // --- EFECTO DE AUTO-CÁLCULO INTELIGENTE ---
