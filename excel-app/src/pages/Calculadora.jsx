@@ -54,7 +54,8 @@ export default function Calculadora() {
         tipoIntervalo, metodoK, kPersonalizado,
         percentilK, setPercentilK,
         setCalculo, setTipoIntervalo, setMetodoK, setKPersonalizado,
-        handleChangeDato, ejecutarCalculo
+        handleChangeDato, ejecutarCalculo,
+        errorNumerico
     } = useCalculadoraExcel(selectedFile, selectedSheet);
 
     // Helper formateo
@@ -299,6 +300,12 @@ export default function Calculadora() {
                             </option>
                           ))}
                         </select>
+                      </div>
+                    )}
+
+                    {errorNumerico && (
+                      <div style={{ marginBottom: '15px', color: '#d9534f', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                        * La columna seleccionada no contiene datos numéricos.
                       </div>
                     )}
 

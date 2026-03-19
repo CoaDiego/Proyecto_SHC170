@@ -17,6 +17,8 @@ export function useCalculadoraExcel(filename, sheet) {
   const [kPersonalizado, setKPersonalizado] = useState("");
   const [percentilK, setPercentilK] = useState(50);
 
+  const [errorNumerico, setErrorNumerico] = useState(false);
+
   const [resultado, setResultado] = useState(null);
 
   // 1. Cargar datos desde el backend
@@ -323,8 +325,11 @@ export function useCalculadoraExcel(filename, sheet) {
     // Inversas
     for (let i = 0; i < tabla.length; i++) {
       const resto = tabla.slice(i);
-      const F_inv = resto.reduce((acc, curr) => acc + curr.f_i, 0); tabla[i].F_i_inv = F_inv;
-      const P_inv = resto.reduce((acc, curr) => acc + curr.p_i, 0); tabla[i].P_i_inv = +P_inv.toFixed(2);
+      const F_inv = resto.reduce((acc, curr) => acc + curr.f_i, 0); 
+      tabla[i].F_i_inv = F_inv;
+      
+      // 2. CAMBIO: Usamos la 'N' que YA existía en tu código
+      tabla[i].P_i_inv = +((F_inv / N) * 100).toFixed(2);
     }
     return tabla.map(fila => ({ "x_i": fila.x_i, "f_i": fila.f_i, "F_i": fila.F_i, "F_i_inv": fila.F_i_inv, "p_i": fila.p_i, "P_i": fila.P_i, "P_i_inv": fila.P_i_inv }));
   };
@@ -861,9 +866,11 @@ export function useCalculadoraExcel(filename, sheet) {
     // 2. LA PUERTA: Todo lo que pase de aquí para abajo exige estrictamente NÚMEROS
     const datos = obtenerDatosNumericos();
     if (datos.length === 0) {
-         alert("Este cálculo requiere datos numéricos.");
-         return;
+         setErrorNumerico(true); // Enciende el aviso visual
+         setResultado(null);     // Limpia la tabla
+         return;                 // Detiene el cálculo
     }
+    setErrorNumerico(false);
 
     // 3. LOS CÁLCULOS MATEMÁTICOS UNIDIMENSIONALES
     let res;
@@ -973,6 +980,8 @@ const calcularBivariadaLocal = (X, Y) => {
     selectedColumnY, setSelectedColumnY, // <--- ¡AQUÍ EXPORTAMOS LA VARIABLE Y!
     percentilK, setPercentilK,
     setSelectedColumn, setCalculo, setTipoIntervalo,
-    setMetodoK, setKPersonalizado, handleChangeDato, ejecutarCalculo
+    setMetodoK, setKPersonalizado, handleChangeDato, ejecutarCalculo,
+ 
+    errorNumerico
   };
 }
