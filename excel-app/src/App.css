@@ -943,3 +943,64 @@ html.dark .rdg {
     opacity: 1;
   }
 }
+
+/* ========================================= */
+/* AJUSTES PARA MODO OSCURO (html.dark)     */
+/* ========================================= */
+
+/* Quitamos la inversión para que vuelvan a ser blancos */
+html.dark .pie-logo-usfx,
+html.dark .pie-logo-siglos {
+  filter: invert(0);
+}
+
+
+/* ========================================= */
+/* 10. EFECTO PULSO (INICIO)                 */
+/* ========================================= */
+
+.inicio-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 65vh; /* Centra el contenido verticalmente en la pantalla */
+  text-align: center;
+}
+
+.logo-inicio {
+  width: 500px; /* Ajusta este valor si lo quieres más grande o pequeño */
+  height: auto;
+  margin-bottom: 2rem;
+  
+  /* Aquí aplicamos la animación del latido */
+  animation: latido 3s infinite ease-in-out;
+  
+  /* TRUCO PARA EL MODO CLARO: Invertimos el logo blanco a gris oscuro */
+  filter: invert(0.8) drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.1));
+  transition: filter 0.3s ease;
+}
+
+/* TRUCO PARA EL MODO OSCURO: Le quitamos la inversión para que vuelva a ser blanco */
+html.dark .logo-inicio {
+  filter: invert(0) drop-shadow(0px 10px 20px rgba(255, 255, 255, 0.1));
+}
+
+/* ========================================= */
+/* DEFINICIÓN DE LA ANIMACIÓN (LATIDO)       */
+/* ========================================= */
+@keyframes latido {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08); /* Crece un 8% */
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+

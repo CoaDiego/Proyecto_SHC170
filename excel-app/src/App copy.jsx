@@ -1,9 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Menu from "./components/ui/Menu";
 
-// 👈 1. IMPORTAMOS EL COMPONENTE (Ajusta la ruta si lo guardaste dentro de 'ui')
-import Pie_pagina from "./components/Pie_pagina"; 
-
 import { useState } from "react";
 import { sileo, Toaster } from "sileo";
 
@@ -22,10 +19,10 @@ function App() {
       <div className="App">
 
         {/* 👇 2. Colocamos el Toaster en la parte más alta de la app */}
+
         <>
           <Toaster position="bottom-right" />
         </>
-        
         {/* Menú de navegación con el botón incluido */}
         {isAuth && (
           <header className="flex justify-between items-center p-4 shadow-md">
@@ -35,6 +32,7 @@ function App() {
 
         {/* Contenido que cambia según la ruta */}
         <div className="content">
+
           <Routes>
             {!isAuth ? (
               <>
@@ -52,9 +50,6 @@ function App() {
             )}
           </Routes>
         </div>
-
-        {/* 👇 3. AGREGAMOS EL PIE DE PÁGINA AL FINAL */}
-        {isAuth && <Pie_pagina />}
 
       </div>
     </Router>

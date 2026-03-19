@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
-import escudo from "../../assets/images/escudousfx.png"; 
+import escudoAdmin from "../../assets/images/escudoAdmin.png";
 
 export default function Menu() {
   // Estado para saber si el menú del celular está abierto o cerrado
@@ -15,7 +15,7 @@ export default function Menu() {
       
       {/* 1. ZONA DEL LOGO */}
       <div className="nav-brand">
-        <img src={escudo} alt="Escudo Universidad" className="nav-logo" />
+       <img src={escudoAdmin} alt="Escudo Administración" className="nav-logo" />
       </div>
 
       {/* 2. BOTÓN DE HAMBURGUESA (Solo visible en Celular) */}
