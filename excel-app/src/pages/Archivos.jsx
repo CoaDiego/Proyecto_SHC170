@@ -164,8 +164,8 @@ export default function Archivos() {
           <div 
             className="panel-section" 
             style={{ 
-              flex: "2 1 500px", // 👈 Intenta ocupar el doble de espacio (500px ideal)
-              minWidth: 0,       // 👈 Mantiene el candado para que la tabla no se desborde
+              flex: "2 1 500px", //  Intenta ocupar el doble de espacio (500px ideal)
+              minWidth: 0,       //  Mantiene el candado para que la tabla no se desborde
               width: "100%", 
               overflow: "hidden" 
             }}

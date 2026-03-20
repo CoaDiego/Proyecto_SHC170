@@ -6,11 +6,14 @@ import { alerta } from '../../utils/Notificaciones';
 
 import { api } from '../../services/api';
 
+import "../../styles/components/excel/TablaDinamica.css";
+
+
 // Editor manual (Mismo que usamos en Calculadora)
 function textEditor({ row, column, onRowChange, onClose }) {
   return (
     <input
-      style={{ width: '100%', border: 'none', padding: '0 5px', outline: 'none', background: 'transparent', color: 'inherit' }}
+      className="editor_text"
       autoFocus
       value={row[column.key]}
       onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
@@ -120,22 +123,8 @@ export default function TablaDinamica({ onTablaCreada }) {
     // Si tu backend espera solo datos, comenta la siguiente linea:
     //const matrizConCabeceras = [columns.map(c => c.name), ...matriz];
 
-    /*try {
-      const res = await fetch("http://127.0.0.1:8000/save_table", { // Asegúrate que este endpoint exista en tu main.py
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: nombre,
-          tabla: datosLimpios // Enviamos datos
-        }),
-      });*/
-
     try {
       await api.guardarTabla(nombre, datosLimpios);
-
-      /*const data = await res.json();
-
-      if (res.ok) {*/
       alerta.success(`Cambios guardados: ${nombre}.xlsx`, "Tu tabla se ha guardado correctamente.");
       // Avisar al padre (Calculadora) que recargue la lista
       if (onTablaCreada) onTablaCreada();
@@ -163,54 +152,53 @@ const columnasEditables = columns.map(col => ({
           e.stopPropagation();
         }
       }}
-      style={{ width: '100%', border: 'none', background: 'transparent', color: 'inherit', fontWeight: 'bold', outline: 'none', textAlign: 'center' }}
+      className="columnas_editor"
       placeholder="Nombre Columna"
-    />
+    /> 
   )
 }));
 
 
 return (
-  <div style={{ padding: "20px", border: "1px solid var(--border-color)", borderRadius: "8px", background: "var(--bg-card)" }}>
-    <h3 style={{ marginTop: 0, color: "var(--primary-color)" }}>Tablas Manuales</h3>
+  <div className="container_tablas_Dinamica">
+    <h3 className="titulo">Tablas Manuales</h3>
 
     {/* Inputs Nombre */}
-    <div style={{ marginBottom: "15px" }}>
-      <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Nombre del Archivo:</label>
-      <div style={{ display: "flex", gap: "10px" }}>
+    <div className="container_input">
+      <label>Nombre del Archivo:</label>
+      <div className="container_input_datos">
         <input
           value={nombre}
           onChange={e => setNombre(e.target.value)}
           placeholder="Ej: Datos_Encuesta"
-          style={{ flex: 1 }}
         />
-        <span style={{ alignSelf: "center", color: "var(--text-muted)" }}>.xlsx</span>
+        <span>.xlsx</span>
       </div>
     </div>
 
     {/* Barra de Herramientas */}
-    <div style={{ marginBottom: "15px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
-      <button onClick={agregarFila} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
+    <div className="container_herramientas">
+      <button onClick={agregarFila} className="button_fila_columna">
         Agregar Fila
       </button>
-      <button onClick={eliminarUltimaFila} style={{ backgroundColor: "var(--bg-input)", color: "red", border: "1px solid var(--border-color)" }}>
+      <button onClick={eliminarUltimaFila} className="button_eliminar_fila ">
         Eliminar Fila
       </button>
-      <button onClick={agregarColumna} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>
+      <button onClick={agregarColumna} className="button_fila_columna">
         Agregar Columna
       </button>
 
       <div style={{ flex: 1 }}></div> {/* Espaciador */}
 
-      <button onClick={guardarTabla} disabled={loading} style={{ backgroundColor: "var(--accent-color)" }}>
+      <button onClick={guardarTabla} disabled={loading} className="button_guardar">
         {loading ? "Guardando..." : "Guardar Tabla"}
       </button>
     </div>
 
-    {mensaje && <p style={{ marginBottom: "15px", fontWeight: "bold", color: mensaje.startsWith("✅") ? "green" : "red" }}>{mensaje}</p>}
+    {mensaje && <p className="mensaje" style={{color: mensaje.startsWith("✅") ? "green" : "red" }}>{mensaje}</p>}
 
     {/* GRILLA EDITABLE */}
-    <div style={{ height: "400px", border: "1px solid var(--border-color)" }}>
+    <div className="container_grilla">
       <DataGrid
         key={columns.length}
         columns={columnasEditables}
@@ -221,7 +209,7 @@ return (
       />
     </div>
 
-    <p style={{ marginTop: "10px", fontSize: "0.8em", color: "var(--text-muted)" }}>
+    <p className="informacion_grilla">
       * Doble clic en una celda para editar. Usa Tab para moverte.
     </p>
   </div>

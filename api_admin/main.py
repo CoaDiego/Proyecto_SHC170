@@ -387,3 +387,30 @@ async def calcular_multivariante(data: DataMultivariante):
         return {"intercepto": intercept, "coeficientes": coef}
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/update_excel")
+async def update_excel(body: dict = Body(...)):
+    try:
+        filename = body.get("filename")
+        hoja_index = body.get("hoja_index", 0)
+        datos = body.get("datos", [])
+
+        file_path = os.path.join(EXCEL_FOLDER, filename)
+        
+        df_nuevo = pd.DataFrame(datos)
+
+        for col in df_nuevo.columns:
+            df_nuevo = df_nuevo[df_nuevo[col] != col]
+
+        with pd.ExcelFile(file_path) as xls:
+            nombre_hoja = xls.sheet_names[hoja_index]
+
+        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+            df_nuevo.to_excel(writer, sheet_name=nombre_hoja, index=False, header=True)
+
+        return {"message": "Actualizado correctamente"}
+    except Exception as e:
+        return {"error": str(e)} 
+
+    
+

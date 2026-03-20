@@ -11,7 +11,7 @@ export function useCalculadoraExcel(filename, sheet) {
   const [selectedColumn, setSelectedColumn] = useState("");   // Variable X
   const [selectedColumnY, setSelectedColumnY] = useState(""); // Variable Y (Para Bivariada)
 
-  const [calculo, setCalculo] = useState("frecuencia_absoluta");
+  const [calculo, setCalculo] = useState("frecuencias_completas");
   const [tipoIntervalo, setTipoIntervalo] = useState("semiabierto");
   const [metodoK, setMetodoK] = useState("sturges");
   const [kPersonalizado, setKPersonalizado] = useState("");
@@ -135,6 +135,173 @@ export function useCalculadoraExcel(filename, sheet) {
       totalFilas: totalFilas,
       totalColumnas: totalColumnas,
       granTotal: n
+    };
+  };
+
+  // ==========================================
+  // --- TEMA 5: BIVARIANTE AVANZADA (PRUEBA) ---
+  // ==========================================
+  // ==========================================
+  // --- TEMA 5: BIVARIANTE AVANZADA (INTELIGENTE) ---
+  // ==========================================
+  const calcularTema5_Bivariante = () => {
+    if (!selectedColumn || !selectedColumnY) return null;
+
+    const dataX = obtenerColumna(selectedColumn);
+    const dataY = obtenerColumna(selectedColumnY);
+    const n = dataX.length;
+    if (n === 0) return null;
+
+    // 1. Escáner: ¿Son números continuos o texto categórico?
+    const esNumerico = dataX.every(v => typeof v === 'number' && !isNaN(v)) && 
+                       dataY.every(v => typeof v === 'number' && !isNaN(v));
+
+    let categoriasX = [];
+    let categoriasY = [];
+    let matriz = {};
+    let totalFilas = {};
+    let totalColumnas = {};
+
+    // 2. CONSTRUCCIÓN DE LA TABLA
+    if (esNumerico && n > 1) {
+      // --- MODO INTERVALOS (Para domar los decimales) ---
+      
+      // Regla de Sturges para calcular cuántos intervalos (k) necesitamos
+      const k = Math.round(1 + 3.322 * Math.log10(n));
+      
+      // Min, Max y Amplitud para X
+      const minX = Math.min(...dataX);
+      const maxX = Math.max(...dataX);
+      const ampX = (maxX - minX) / k || 1; 
+      
+      // Min, Max y Amplitud para Y
+      const minY = Math.min(...dataY);
+      const maxY = Math.max(...dataY);
+      const ampY = (maxY - minY) / k || 1;
+
+      // Crear las "Cajas" (Intervalos)
+      const limitesX = [];
+      const limitesY = [];
+      
+      for (let i = 0; i < k; i++) {
+        const lInfX = minX + i * ampX;
+        const lSupX = i === k - 1 ? maxX : minX + (i + 1) * ampX; // El último intervalo cierra exacto
+        const labelX = `[${lInfX.toFixed(2)} - ${lSupX.toFixed(2)}${i === k - 1 ? ']' : ')'}`;
+        categoriasX.push(labelX);
+        limitesX.push({ min: lInfX, max: lSupX, label: labelX, isLast: i === k - 1 });
+
+        const lInfY = minY + i * ampY;
+        const lSupY = i === k - 1 ? maxY : minY + (i + 1) * ampY;
+        const labelY = `[${lInfY.toFixed(2)} - ${lSupY.toFixed(2)}${i === k - 1 ? ']' : ')'}`;
+        categoriasY.push(labelY);
+        limitesY.push({ min: lInfY, max: lSupY, label: labelY, isLast: i === k - 1 });
+      }
+
+      // Inicializar la matriz limpia con los nuevos intervalos
+      categoriasX.forEach(catX => {
+        matriz[catX] = {};
+        totalFilas[catX] = 0;
+        categoriasY.forEach(catY => {
+          matriz[catX][catY] = 0;
+          totalColumnas[catY] = 0;
+        });
+      });
+
+      // Clasificar cada dato en su caja correspondiente
+      for (let i = 0; i < n; i++) {
+        const valX = dataX[i];
+        const valY = dataY[i];
+        
+        // Buscar el intervalo correcto
+        let binX = limitesX.find(b => b.isLast ? (valX >= b.min && valX <= b.max) : (valX >= b.min && valX < b.max));
+        let binY = limitesY.find(b => b.isLast ? (valY >= b.min && valY <= b.max) : (valY >= b.min && valY < b.max));
+        
+        // Salvavidas por redondeo de decimales en JS
+        if (!binX) binX = limitesX[limitesX.length - 1];
+        if (!binY) binY = limitesY[limitesY.length - 1];
+
+        matriz[binX.label][binY.label]++;
+        totalFilas[binX.label]++;
+        totalColumnas[binY.label]++;
+      }
+
+    } else {
+      // --- MODO TEXTO (Cruza tal cual como en el libro) ---
+      categoriasX = [...new Set(dataX)].sort();
+      categoriasY = [...new Set(dataY)].sort();
+
+      categoriasX.forEach(catX => {
+        matriz[catX] = {};
+        totalFilas[catX] = 0;
+        categoriasY.forEach(catY => {
+          matriz[catX][catY] = 0;
+          totalColumnas[catY] = 0;
+        });
+      });
+      categoriasY.forEach(catY => totalColumnas[catY] = 0);
+
+      for (let i = 0; i < n; i++) {
+        const valX = dataX[i];
+        const valY = dataY[i];
+        if (matriz[valX] && matriz[valX][valY] !== undefined) {
+          matriz[valX][valY]++;
+          totalFilas[valX]++;
+          totalColumnas[valY]++;
+        }
+      }
+    }
+
+    // 3. CÁLCULO DE COVARIANZA Y CORRELACIÓN (Siempre se usan los datos exactos)
+    let covarianza = null;
+    let correlacion = null;
+    let interpretacion = "No aplicable (Variables Categóricas)";
+    
+    if (esNumerico && n > 1) {
+      const meanX = dataX.reduce((a, b) => a + b, 0) / n;
+      const meanY = dataY.reduce((a, b) => a + b, 0) / n;
+
+      let sumCross = 0, sumSqX = 0, sumSqY = 0;
+
+      for (let i = 0; i < n; i++) {
+        const dx = dataX[i] - meanX;
+        const dy = dataY[i] - meanY;
+        sumCross += dx * dy;
+        sumSqX += dx * dx;
+        sumSqY += dy * dy;
+      }
+
+      covarianza = sumCross / (n - 1); 
+      const stdX = Math.sqrt(sumSqX / (n - 1));
+      const stdY = Math.sqrt(sumSqY / (n - 1));
+
+      if (stdX > 0 && stdY > 0) {
+        correlacion = covarianza / (stdX * stdY);
+        
+        const absR = Math.abs(correlacion);
+        if (absR >= 0.9) interpretacion = correlacion > 0 ? "Correlación Positiva Muy Fuerte" : "Correlación Negativa Muy Fuerte";
+        else if (absR >= 0.7) interpretacion = correlacion > 0 ? "Correlación Positiva Fuerte" : "Correlación Negativa Fuerte";
+        else if (absR >= 0.4) interpretacion = correlacion > 0 ? "Correlación Positiva Moderada" : "Correlación Negativa Moderada";
+        else if (absR >= 0.2) interpretacion = correlacion > 0 ? "Correlación Positiva Débil" : "Correlación Negativa Débil";
+        else interpretacion = "Correlación Nula o Inexistente";
+      } else {
+        correlacion = 0;
+        interpretacion = "Sin variación en los datos";
+      }
+    }
+
+    // 4. Se envía el paquete completo a la interfaz
+    return {
+      tipo: "bivariada_avanzada",
+      filas: categoriasX,
+      columnas: categoriasY,
+      datos: matriz,
+      totalFilas,
+      totalColumnas,
+      granTotal: n,
+      esNumerico,
+      covarianza,
+      correlacion,
+      interpretacion
     };
   };
 
@@ -417,6 +584,156 @@ export function useCalculadoraExcel(filename, sheet) {
     ];
   };
 
+
+  // ==========================================
+  // --- TEMA 4: VARIABILIDAD Y FORMA ---
+  // ==========================================
+  const calcularVariabilidadYForma = (datos) => {
+    const n = datos.length;
+    // Devolvemos la estructura vacía segura en lugar de null
+    if (n < 2) return { tipo: "variabilidad_y_forma", dispersion: [], forma: [] };
+
+    const sorted = [...datos].sort((a, b) => a - b);
+    const min = sorted[0];
+    const max = sorted[n - 1];
+
+    // --- 1. BASES EXACTAS ---
+    const mediaEx = sorted.reduce((a, b) => a + b, 0) / n;
+    
+    const calcFractilExacto = (p) => {
+      const pos = (n - 1) * p;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+    };
+    const Q1_ex = calcFractilExacto(0.25);
+    const Q3_ex = calcFractilExacto(0.75);
+
+    // --- 2. CONFIGURACIÓN DE AGRUPADOS (Intervalos y Frecuencias) ---
+    let k_int;
+    switch (metodoK) {
+      case "cuadratica": k_int = Math.sqrt(n); break;
+      case "logaritmica": k_int = Math.log(n) / Math.log(2); break;
+      case "personalizada": k_int = Number(kPersonalizado) || 1; break;
+      default: k_int = 1 + 3.322 * Math.log10(n);
+    }
+    k_int = Math.round(k_int); if (k_int < 1) k_int = 1;
+
+    const rangoExacto = max - min;
+    const amplitud = Math.round((rangoExacto / k_int) + 1);
+
+    const intervalos = [];
+    let inicio = Math.floor(min);
+    for (let i = 0; i < k_int; i++) {
+      const fin = inicio + amplitud;
+      intervalos.push({ desde: inicio, hasta: fin, xm: (inicio + fin) / 2 });
+      inicio = fin;
+    }
+
+    const f = new Array(k_int).fill(0);
+    datos.forEach((v) => {
+      for (let i = 0; i < k_int; i++) {
+        let match = false;
+        let esUltimo = i === k_int - 1;
+        if (tipoIntervalo === "cerrado") { if (v >= intervalos[i].desde && v <= intervalos[i].hasta) match = true; }
+        else if (tipoIntervalo === "abierto") { if (v > intervalos[i].desde && v < intervalos[i].hasta) match = true; }
+        else { if (esUltimo) { if (v >= intervalos[i].desde && v <= intervalos[i].hasta) match = true; } else { if (v >= intervalos[i].desde && v < intervalos[i].hasta) match = true; } }
+        if (match) { f[i]++; break; }
+      }
+    });
+
+    const F = [];
+    let acum = 0;
+    for (let i = 0; i < k_int; i++) { acum += f[i]; F.push(acum); }
+
+    // --- 3. BASES AGRUPADAS ---
+    let sumFXm = 0;
+    for (let i = 0; i < k_int; i++) sumFXm += f[i] * intervalos[i].xm;
+    const mediaAgrup = sumFXm / n;
+
+    const calcFractilAgrupado = (posicion) => {
+      let claseIdx = -1;
+      for (let i = 0; i < k_int; i++) { if (F[i] >= posicion) { claseIdx = i; break; } }
+      if (claseIdx === -1) return max;
+      const Li = intervalos[claseIdx].desde;
+      const fi = f[claseIdx];
+      const Fant = claseIdx > 0 ? F[claseIdx - 1] : 0;
+      return fi !== 0 ? Li + ((posicion - Fant) / fi) * amplitud : Li;
+    };
+    const Q1_agrup = calcFractilAgrupado(n * 0.25);
+    const Q3_agrup = calcFractilAgrupado(n * 0.75);
+
+    // --- 4. CÁLCULO DE DISPERSIÓN (Tabla 3) ---
+    const rangoAgrup = k_int * amplitud;
+    const RIC_ex = Q3_ex - Q1_ex;
+    const RIC_agrup = Q3_agrup - Q1_agrup;
+    
+    // Calculamos la Mediana exacta y agrupada (que es el Cuartil 2 o el 50%)
+    const medianaEx = calcFractilExacto(0.50);
+    const medianaAgrup = calcFractilAgrupado(n * 0.50);
+
+    // Cálculos Exactos
+    const DM_ex = datos.reduce((acc, val) => acc + Math.abs(val - mediaEx), 0) / n;
+    const DMe_ex = datos.reduce((acc, val) => acc + Math.abs(val - medianaEx), 0) / n; // <-- NUEVO: Desviación Mediana
+    const Var_ex = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 2), 0) / (n - 1);
+    const S_ex = Math.sqrt(Var_ex);
+    const CV_ex = mediaEx !== 0 ? (S_ex / Math.abs(mediaEx)) * 100 : 0;
+
+    // Cálculos Agrupados
+    let sumDM = 0, sumDMe = 0, sumVar = 0;
+    for (let i = 0; i < k_int; i++) {
+      const distMedia = Math.abs(intervalos[i].xm - mediaAgrup);
+      const distMediana = Math.abs(intervalos[i].xm - medianaAgrup); // <-- NUEVO
+      
+      sumDM += f[i] * distMedia;
+      sumDMe += f[i] * distMediana; // <-- NUEVO
+      sumVar += f[i] * Math.pow(intervalos[i].xm - mediaAgrup, 2);
+    }
+    
+    const DM_agrup = sumDM / n;
+    const DMe_agrup = sumDMe / n; // <-- NUEVO: Desviación Mediana Agrupada
+    const Var_agrup = sumVar / (n - 1);
+    const S_agrup = Math.sqrt(Var_agrup);
+    const CV_agrup = mediaAgrup !== 0 ? (S_agrup / Math.abs(mediaAgrup)) * 100 : 0;
+
+    const calcError = (ex, ag) => ex === 0 ? 0 : Math.abs((ex - ag) / ex) * 100;
+
+    const tablaDispersion = [
+      { Estadígrafo: "Rango o Recorrido", Sigla: "R", "D. Individuales": rangoExacto, "D. Agrupados": rangoAgrup, "Error %": `${calcError(rangoExacto, rangoAgrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Intercuartílica", Sigla: "RIC", "D. Individuales": RIC_ex, "D. Agrupados": RIC_agrup, "Error %": `${calcError(RIC_ex, RIC_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Media", Sigla: "DM", "D. Individuales": DM_ex, "D. Agrupados": DM_agrup, "Error %": `${calcError(DM_ex, DM_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Mediana", Sigla: "DMe", "D. Individuales": DMe_ex, "D. Agrupados": DMe_agrup, "Error %": `${calcError(DMe_ex, DMe_agrup).toFixed(2)} %` }, // <-- NUEVA FILA
+      { Estadígrafo: "Varianza Muestral", Sigla: "S²", "D. Individuales": Var_ex, "D. Agrupados": Var_agrup, "Error %": `${calcError(Var_ex, Var_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Desviación Estándar", Sigla: "S", "D. Individuales": S_ex, "D. Agrupados": S_agrup, "Error %": `${calcError(S_ex, S_agrup).toFixed(2)} %` },
+      { Estadígrafo: "Coeficiente de Variación", Sigla: "CV", "D. Individuales": CV_ex, "D. Agrupados": CV_agrup, "Error %": `${calcError(CV_ex, CV_agrup).toFixed(2)} %` }
+    ];
+
+    // --- 5. CÁLCULO DE FORMA (Tabla 4 - Método de Momentos) ---
+    // Usamos momentos poblacionales (m2, m3, m4) para la geometría pura de Fisher
+    const m2 = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 2), 0) / n;
+    const m3 = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 3), 0) / n;
+    const m4 = datos.reduce((acc, val) => acc + Math.pow(val - mediaEx, 4), 0) / n;
+
+    const asimetria = m2 > 0 ? m3 / Math.pow(Math.sqrt(m2), 3) : 0;
+    const curtosis = m2 > 0 ? (m4 / Math.pow(m2, 2)) - 3 : 0; // -3 para el exceso de curtosis
+
+    // Lógica condicional con un pequeño margen de tolerancia (0.05) para considerar el 0 absoluto en JS
+    let interpretacionAsimetria = "Distribución Simétrica";
+    if (asimetria > 0.05) interpretacionAsimetria = "Asimetría Positiva (Cola a la derecha)";
+    else if (asimetria < -0.05) interpretacionAsimetria = "Asimetría Negativa (Cola a la izquierda)";
+
+    let interpretacionCurtosis = "Mesocúrtica (Normal)";
+    if (curtosis > 0.05) interpretacionCurtosis = "Leptocúrtica (Muy puntiaguda)";
+    else if (curtosis < -0.05) interpretacionCurtosis = "Platicúrtica (Aplastada)";
+
+    const tablaForma = [
+      { Estadígrafo: "Coeficiente de Asimetría", "Valor Calculado": asimetria, Interpretación: interpretacionAsimetria },
+      { Estadígrafo: "Curtosis (Apuntamiento)", "Valor Calculado": curtosis, Interpretación: interpretacionCurtosis }
+    ];
+
+    return { tipo: "variabilidad_y_forma", dispersion: tablaDispersion, forma: tablaForma };
+  };
+
  const calcularFractiles = (datos, kPerc) => {
     const n = datos.length;
     if (n === 0) return [];
@@ -527,63 +844,112 @@ export function useCalculadoraExcel(filename, sheet) {
 
 
 
+
   // --- Ejecutar Cálculo ---
   const ejecutarCalculo = () => {
+    
+    // 1. EL "PASE VIP": Estos dos cálculos se ejecutan directo porque SÍ aceptan TEXTO
     if (calculo === "distribucion_bivariada") {
-      const res = calcularBivariada();
-      setResultado(res);
+      setResultado(calcularBivariada());
+      return;
+    }
+    if (calculo === "distribucion_bivariada_avanzada") {
+      setResultado(calcularTema5_Bivariante());
       return;
     }
 
+    // 2. LA PUERTA: Todo lo que pase de aquí para abajo exige estrictamente NÚMEROS
     const datos = obtenerDatosNumericos();
-    // Validación suave para permitir conteos simples
-    if (datos.length === 0 && calculo !== "frecuencia_absoluta" && calculo !== "frecuencia_relativa") {
-      // Si no hay números y pide intervalos, error.
-      alert("Este cálculo requiere datos numéricos.");
-      return;
+    if (datos.length === 0) {
+         alert("Este cálculo requiere datos numéricos.");
+         return;
     }
 
+    // 3. LOS CÁLCULOS MATEMÁTICOS UNIDIMENSIONALES
     let res;
     switch (calculo) {
-      case "frecuencia_absoluta":{
-        const colData = obtenerColumna(selectedColumn);
-        res = {};
-        colData.forEach((val) => (res[val] = (res[val] || 0) + 1));
-        res = Object.entries(res).map(([k, v]) => ({ Valor: k, Frecuencia: v }));
+      case "frecuencias_completas":
+        res = calcularFrecuencias(datos);
         break;
-      }
-      case "frecuencia_relativa":{
-        res = [];
-        const colDataRel = obtenerDatosNumericos();
-        // Si queremos relativa de texto, usamos colDataRel = obtenerColumna(selectedColumn) y n = colDataRel.length
-        // Por ahora lo dejo numérico como tenías, o podemos cambiarlo a genérico:
-        const dataGen = obtenerColumna(selectedColumn);
-        const total = dataGen.length;
-        const conteo = {};
-        dataGen.forEach((val) => (conteo[val] = (conteo[val] || 0) + 1));
-        res = Object.entries(conteo).map(([k, v]) => ({ Valor: k, Relativa: (v / total).toFixed(4) }));
+      case "distribucion_intervalos":
+        res = calcularDistribucionIntervalos(datos);
         break;
-      }
-      case "minimo": res = [{ Resultado: "Mínimo", Valor: Math.min(...datos) }]; break;
-      case "maximo": res = [{ Resultado: "Máximo", Valor: Math.max(...datos) }]; break;
-      case "frecuencias_completas": res = calcularFrecuencias(datos); break;
-      case "distribucion_intervalos": res = calcularDistribucionIntervalos(datos); break;
-      case "estadistica_descriptiva": res = calcularDescriptivaTotal(datos); break;
-      case "tendencia_central": res = calcularTendenciaCentral(datos); break;
-      case "medidas_posicion": res = calcularFractiles(datos, percentilK); break;
-      case "tendencia_y_posicion": 
+      case "estadistica_descriptiva":
+        res = calcularDescriptivaTotal(datos);
+        break;
+      case "tendencia_central":
+        res = calcularTendenciaCentral(datos);
+        break;
+      case "medidas_posicion":
+        res = calcularFractiles(datos, percentilK);
+        break;
+      case "tendencia_y_posicion":
         res = {
           tipo: "tendencia_y_posicion",
           tendencia: calcularTendenciaCentral(datos),
-          posicion: calcularFractiles(datos, percentilK)
+          posicion: calcularFractiles(datos, percentilK),
         };
         break;
+      case "variabilidad_y_forma":
+        res = calcularVariabilidadYForma(datos);
+        break;
 
-      default: res = [];
+      // Dentro de ejecutarCalculo en useCalculadoraExcel.js
+
+      case "distribucion_bivariada":
+        // Extraemos los datos de ambas columnas seleccionadas
+        const datosX = excelData.map((fila) => fila[selectedColumn]);
+        const datosY = excelData.map((fila) => fila[selectedColumnY]);
+
+        if (datosX.length > 0 && datosY.length > 0) {
+          // Aquí llamamos a una función que cree la tabla de doble entrada
+          res = calcularBivariadaLocal(datosX, datosY);
+        }
+        break;
+
+      case "distribucion_bivariada_avanzada":
+        const dX = excelData.map((f) => f[selectedColumn]);
+        const dY = excelData.map((f) => f[selectedColumnY]);
+
+        if (dX.length > 0 && dY.length > 0) {
+          // Función para correlación y regresión (Tema 5)
+          res = calcularBivariadaAvanzadaLocal(dX, dY);
+        }
+        break;
+
+      default:
+        res = [];
     }
     setResultado(res);
   };
 
+  // --- FUNCIONES DE APOYO BIVARIANTE (Al final del archivo, fuera del hook) ---
+const calcularBivariadaLocal = (X, Y) => {
+    const nivelesX = [...new Set(X)].sort();
+    const nivelesY = [...new Set(Y)].sort();
+
+    const estructuraDatos = {};
+    const totalFilas = {};
+
+    nivelesX.forEach(x => {
+        estructuraDatos[x] = {};
+        let sumaFila = 0;
+        nivelesY.forEach(y => {
+            const freq = X.filter((val, i) => val === x && Y[i] === y).length;
+            estructuraDatos[x][y] = freq;
+            sumaFila += freq;
+        });
+        totalFilas[x] = sumaFila;
+    });
+
+    return {
+        tipo: "bivariada",
+        filas: nivelesX,      // El gráfico espera 'filas'
+        columnas: nivelesY,   // El gráfico espera 'columnas'
+        datos: estructuraDatos,
+        totalFilas: totalFilas
+    };
+};
 
   // ==========================================
   // --- EFECTO DE AUTO-CÁLCULO INTELIGENTE ---

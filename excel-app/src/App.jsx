@@ -2,14 +2,19 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Menu from "./components/ui/Menu";
 
 import { useState } from "react";
+
 import { sileo, Toaster } from "sileo";
 
+import Mat251 from "./pages/MAT251/Mat251";
 import Inicio from "./pages/Inicio";
 import Archivos from "./pages/Archivos";
 import Calculadora from "./pages/Calculadora";
 import About from "./pages/About";
 import Login from "./pages/Login";
-import "./App.css";
+
+import "./App.css"; 
+
+
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -44,6 +49,7 @@ function App() {
                 <Route path="/" element={<Inicio />} />
                 <Route path="/archivos" element={<Archivos />} />
                 <Route path="/calculadora" element={<Calculadora />} />
+                <Route path="/MAT251" element={<Mat251 />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Navigate to="/" />} />
               </>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import logoCarrera from "../assets/images/escudoAdmin.png";
+import logoCarrera from "../assets/images/Logo-Adm.png";
 
 import { alerta} from '../utils/Notificaciones';
 
@@ -25,9 +25,9 @@ export default function Login({ onLogin }) {
           <img
             src={logoCarrera}
             alt="Logo Administración de Empresas"
-            style={{ width: '180px', height: 'auto' }}
+            style={{ width: '200px', height: 'auto' }}
           />
-          <h4 style={{ color: "white", marginBottom: '20px' }}>ADMINISTRACIÓN DE EMPRESAS</h4>
+          
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
