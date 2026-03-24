@@ -38,6 +38,13 @@
     text-Align: center;
 }
 
+.modal_header h3{
+     margin: auto; 
+     color: #1e293b; 
+     font-Size: 1rem; 
+     text-Align: center;
+}
+
 .modal_button {
     background: transparent;
     border: none;
