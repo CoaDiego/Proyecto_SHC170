@@ -20,7 +20,7 @@ import "../styles/pages/Calculadora.css";
 function textEditor({ row, column, onRowChange, onClose }) {
     return (
         <input
-            className="editor_text"
+            style={{ width: '100%', border: 'none', padding: '0 5px', outline: 'none', background: 'transparent', color: 'inherit' }}
             autoFocus
             value={row[column.key]}
             onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
@@ -56,7 +56,8 @@ export default function Calculadora() {
         tipoIntervalo, metodoK, kPersonalizado,
         percentilK, setPercentilK,
         setCalculo, setTipoIntervalo, setMetodoK, setKPersonalizado,
-        handleChangeDato, ejecutarCalculo
+        handleChangeDato, ejecutarCalculo,
+        errorNumerico
     } = useCalculadoraExcel(selectedFile, selectedSheet);
 
     // Helper formateo
@@ -156,6 +157,7 @@ export default function Calculadora() {
                   setModoCreacion(false);
                 }}
                 className="selector-archivo"
+                style={{ marginBottom: "15px", width: "100%" }}
               >
                 {files.map((file) => (
                   <option key={file.filename} value={file.filename}>
@@ -167,14 +169,26 @@ export default function Calculadora() {
               <ExcelContent
                 filename={selectedFile}
                 mostrarTabla={false}
-                permitirEdicion={false}
                 /* 👇 ESTA LÍNEA SE SIMPLIFICA PARA EVITAR EL BUCLE */
                 onSheetChange={setSelectedSheet}
               />
               <div
                 className="panel-controles-excel"
+                style={{
+                  marginTop: "20px",
+                  padding: "15px",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "8px",
+                  background: "var(--bg-card)",
+                }}
               >
-                <h3 className="panel-controles-excel_h3">
+                <h3
+                  style={{
+                    fontSize: "1.1em",
+                    marginBottom: "10px",
+                    borderBottom: "1px solid var(--border-color)",
+                  }}
+                >
                   Calculadora de Excel
                 </h3>
 
@@ -184,7 +198,15 @@ export default function Calculadora() {
                     <select
                       value={calculo}
                       onChange={(e) => setCalculo(e.target.value)}
-                      className="container_operaciones"
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        borderRadius: "4px",
+                        border: "1px solid var(--border-color)",
+                        backgroundColor: "var(--bg-card)",
+                        color: "var(--text-color)",
+                        marginBottom: "15px",
+                      }}
                     >
                       {/* TEMA 2: DISTRIBUCIÓN DE FRECUENCIAS */}
                       <optgroup label="Tema 2: Distribución de Frecuencias">
@@ -283,10 +305,28 @@ export default function Calculadora() {
                       </div>
                     )}
 
+                    {errorNumerico && (
+                      <div style={{ marginBottom: '15px', color: '#d9534f', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                        * La columna seleccionada no contiene datos numéricos.
+                      </div>
+                    )}
+
                     {mostrarTabla && excelData.length > 0 && (
-                      <div className="container_dataset">
+                      <div
+                        style={{
+                          marginBottom: "15px",
+                          height: "350px",
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
                         <p
-                          className="info_vista"
+                          style={{
+                            fontSize: "0.8em",
+                            fontWeight: "bold",
+                            marginBottom: "5px",
+                            color: "var(--text-muted)",
+                          }}
                         >
                           {" "}
                           Vista Previa (Doble clic para editar):
@@ -309,13 +349,18 @@ export default function Calculadora() {
                       calculo === "tendencia_y_posicion" ||
                       calculo === "variabilidad_y_forma") && (
                       <div
-                        className="container_intervalos"
+                        style={{
+                          padding: "10px",
+                          border: "1px solid var(--border-color)",
+                          borderRadius: "4px",
+                          marginBottom: "15px",
+                        }}
                       >
                         <label>Tipo Intervalo:</label>
                         <select
                           value={tipoIntervalo}
                           onChange={(e) => setTipoIntervalo(e.target.value)}
-                          className="container_select"
+                          style={{ width: "100%", marginBottom: "8px" }}
                         >
                           <option value="semiabierto">
                             Semiabierto [a, b)
@@ -327,7 +372,7 @@ export default function Calculadora() {
                         <select
                           value={metodoK}
                           onChange={(e) => setMetodoK(e.target.value)}
-                          className="container_select"
+                          style={{ width: "100%", marginBottom: "5px" }}
                         >
                           <option value="sturges">Sturges</option>
                           <option value="cuadratica">Cuadrática</option>
@@ -340,7 +385,7 @@ export default function Calculadora() {
                             value={kPersonalizado}
                             onChange={(e) => setKPersonalizado(e.target.value)}
                             placeholder="Valor k"
-                            className="container_cal_input"
+                            style={{ width: "100%", marginTop: "5px" }}
                           />
                         )}
                       </div>
@@ -348,9 +393,16 @@ export default function Calculadora() {
 
                     {calculo === "medidas_posicion" && (
                       <div
-                        className="container_cal_percentil"
+                        style={{
+                          padding: "10px",
+                          border: "1px solid var(--border-color)",
+                          borderRadius: "4px",
+                          marginBottom: "15px",
+                        }}
                       >
-                        <label >
+                        <label
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
                           Calcular Percentil Específico (1 - 99):
                         </label>
                         <input
@@ -359,8 +411,9 @@ export default function Calculadora() {
                           max="99"
                           value={percentilK}
                           onChange={(e) => setPercentilK(e.target.value)}
+                          style={{ width: "100%", padding: "5px" }}
                         />
-                        <small>
+                        <small style={{ color: "var(--text-muted)" }}>
                           Se calcularán automáticamente todos los Cuartiles y
                           Deciles.
                         </small>
@@ -369,9 +422,16 @@ export default function Calculadora() {
 
                     {calculo === "tendencia_y_posicion" && (
                       <div
-                        className="container_tendencia_posicion"
+                        style={{
+                          padding: "10px",
+                          border: "1px solid var(--border-color)",
+                          borderRadius: "4px",
+                          marginBottom: "15px",
+                        }}
                       >
-                        <label >
+                        <label
+                          style={{ display: "block", marginBottom: "5px" }}
+                        >
                           Calcular Percentil Específico (1 - 99):
                         </label>
                         <input
@@ -380,18 +440,27 @@ export default function Calculadora() {
                           max="99"
                           value={percentilK}
                           onChange={(e) => setPercentilK(e.target.value)}
+                          style={{ width: "100%", padding: "5px" }}
                         />
                       </div>
                     )}
 
                     <button
                       onClick={ejecutarCalculo}
-                      className="button_calcular">
+                      className="boton-calcular"
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        marginTop: "10px",
+                      }}
+                    >
                       CALCULAR
                     </button>
                   </>
                 ) : (
-                  <p className="info_cargando">
+                  <p
+                    style={{ textAlign: "center", color: "var(--text-muted)" }}
+                  >
                     Cargando datos o selecciona un archivo...
                   </p>
                 )}
@@ -400,18 +469,22 @@ export default function Calculadora() {
               <button
                 onClick={() => setModoCreacion(!modoCreacion)}
                 style={{
+                  width: "100%",
+                  padding: "10px",
+                  marginBottom: "20px",
                   backgroundColor: modoCreacion
                     ? "var(--text-muted)"
                     : "var(--accent-color)",
+                  fontWeight: "bold",
+                  fontSize: "1em",
                 }}
-                className="button_resultados"
               >
                 {modoCreacion ? "Volver a Resultados" : "Crear Tabla de Datos"}
               </button>
               <br />
               <button
                 onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
-                className="button_resultados_manual"
+                style={{ width: "100%", padding: "8px", background: "#6b7280" }}
               >
                 {mostrarCalculadora
                   ? "Ocultar Calculadora Manual"
@@ -436,6 +509,12 @@ export default function Calculadora() {
             <>
               <div
                 className="frecuencias"
+                style={{
+                  backgroundColor: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
+                  padding: "15px",
+                  borderRadius: "8px",
+                }}
               >
                 <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
                 {resultado ? (
@@ -443,11 +522,15 @@ export default function Calculadora() {
                     <div className="contenedor-tendencia-posicion">
                       {/* TABLA 1: TENDENCIA CENTRAL */}
                       <h4
-                        className="tendencias"
+                        style={{
+                          color: "var(--primary-color)",
+                          borderBottom: "2px solid var(--border-color)",
+                          paddingBottom: "5px",
+                        }}
                       >
                         1. Análisis de Tendencia Central
                       </h4>
-                      <div className="container_tablas_academica ">
+                      <div style={{ overflowX: "auto", marginBottom: "30px" }}>
                         <table className="tabla-academica">
                           <thead>
                             <tr>
@@ -485,18 +568,30 @@ export default function Calculadora() {
 
                       {/* TABLA 2: MEDIDAS DE POSICIÓN CON BOTONES DE FILTRO */}
                       <div
-                        className="container_tendencia_posicion"
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          borderBottom: "2px solid var(--border-color)",
+                          paddingBottom: "5px",
+                          marginBottom: "10px",
+                        }}
                       >
-                        <h4>
+                        <h4
+                          style={{ color: "var(--primary-color)", margin: 0 }}
+                        >
                           2. Medidas de Posición
                         </h4>
-                        <div className="container_subtendencia">
+                        <div style={{ display: "flex", gap: "5px" }}>
                           {["Cuartil", "Decil", "Percentil"].map((tipo) => (
                             <button
                               key={tipo}
                               onClick={() => setFiltroFractil(tipo)}
-                              className="button_subtendencia"
                               style={{
+                                padding: "5px 15px",
+                                cursor: "pointer",
+                                borderRadius: "4px",
+                                border: "1px solid var(--border-color)",
                                 backgroundColor:
                                   filtroFractil === tipo
                                     ? "var(--accent-color)"
@@ -574,7 +669,13 @@ export default function Calculadora() {
                     resultado.dispersion ? (
                     <div className="contenedor-variabilidad-forma">
                       {/* TABLA 3: DISPERSIÓN */}
-                      <h4>
+                      <h4
+                        style={{
+                          color: "var(--primary-color)",
+                          borderBottom: "2px solid var(--border-color)",
+                          paddingBottom: "5px",
+                        }}
+                      >
                         3. Medidas de Dispersión
                       </h4>
                       <div style={{ overflowX: "auto", marginBottom: "30px" }}>
@@ -675,7 +776,13 @@ export default function Calculadora() {
                     </div>
                   ) : resultado && resultado.tipo === "bivariada_avanzada" ? (
                     <div className="contenedor-bivariada-avanzada">
-                      <h4>
+                      <h4
+                        style={{
+                          color: "var(--primary-color)",
+                          borderBottom: "2px solid var(--border-color)",
+                          paddingBottom: "5px",
+                        }}
+                      >
                         Tema 5: Análisis Bivariante, Covarianza y Correlación
                       </h4>
 

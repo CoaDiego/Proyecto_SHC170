@@ -1,0 +1,124 @@
+/* ========================================= */
+/* ESTILOS DEL PIE DE PÁGINA                 */
+/* ========================================= */
+
+.pie-pagina-institucional {
+  width: 100%;
+  margin-top: 50px;
+  background-color: var(--header-bg); 
+/*   border-top: 2px solid var(--primary-color); */
+  font-family: system-ui, sans-serif;
+}
+
+.pie-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 5%;
+  flex-wrap: wrap; 
+  gap: 20px;
+}
+
+.pie-col-izq {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.pie-logo-usfx {
+  width: 250px;
+  height: auto;
+  
+  /* ✨ EL TRUCO MAGISTRAL PARA MODO CLARO ✨ */
+  /* Agregamos una sombra oscura detrás del texto blanco para que resalte en fondos claros,
+     sin alterar los colores del escudo original */
+  filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.7));
+  transition: filter 0.3s ease;
+}
+
+.pie-divisor {
+  width: 2px;
+  height: 50px;
+  background-color: var(--border-color);
+}
+
+.pie-texto-oficial {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.pie-logo-siglos {
+  width: 180px;
+  height: auto;
+  filter: invert(0.8);
+  transition: filter 0.3s ease;
+}
+
+.pie-col-der {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.icono-ojo {
+  width: 20px;
+  height: 20px;
+}
+
+.pie-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 5%;
+  background-color: var(--bg-card); 
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* --- ICONOS DE REDES SOCIALES --- */
+.pie-redes {
+  display: flex;
+  gap: 15px;
+}
+
+.red-icono {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px; /* Lo hicimos un poquito más grande para que el icono luzca */
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  color: var(--text-main);
+  text-decoration: none; /* Quita la línea de los enlaces */
+  transition: all 0.3s ease;
+}
+
+/* Tamaño de los dibujos SVG adentro del círculo */
+.red-icono svg {
+  width: 18px;
+  height: 18px;
+  transition: stroke 0.3s ease;
+}
+
+/* Efecto al pasar el mouse por encima */
+.red-icono:hover {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  transform: translateY(-3px); /* Pequeño saltito elegante */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .pie-logo-usfx {
+  filter: drop-shadow(0px 0px 0px rgba(0, 0, 0, 0));
+}
+
+html.dark .pie-logo-siglos {
+  filter: invert(0);
+}
