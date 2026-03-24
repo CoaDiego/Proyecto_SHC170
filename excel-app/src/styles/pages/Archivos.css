@@ -1,0 +1,100 @@
+.page-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.titulo_archivos {
+    border-Bottom: 0px solid var(--border-color);
+    padding-Bottom: 10px;
+}
+
+.upload-section {
+    background-color: var(--bg-card);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.upload-section_container {
+    margin-Bottom: 20px;
+    display: flex;
+    gap: 15px;
+    border-Bottom: 0px solid var(--border-color);
+}
+
+.button_upload_1 {
+    cursor: pointer;
+    border: none;
+    font-Size: 0.8rem;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.button_upload_2 {
+    cursor: pointer;
+    border: none;
+    font-Size: 0.8rem;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.container_excelUploader {
+    position: relative;
+    z-Index: 10;
+}
+
+.files-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+    display: flex;
+    flex-Wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    align-Items: flex-start;
+}
+
+
+.panel-section_1 {
+    background-color: var(--bg-card);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    min-height: 300px;
+    flex: 1 1 300px;
+    min-Width: 250px;
+    max-Width: 400px;
+}
+
+.panel-section_1 h3 {
+    color: var(--text-main);
+    border-Bottom: 1px solid var(--border-color);
+    padding-Bottom: 10px;
+}
+
+.panel-section_2 {
+    background-color: var(--bg-card);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    min-height: 300px;
+    flex: 2 1 500px;
+    min-Width: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.panel-section_2 h3 {
+    color: var(--text-main);
+    border-Bottom: 1px solid var(--border-color);
+    padding-Bottom: 10px;
+}
+
+.container_reader_archivo {
+    padding: 40px;
+    border: 2px dashed var(--border-color);
+    color: var(--text-muted);
+    text-Align: center;
+    border-Radius: 8px;
+    background-Color: var(--bg-card);
+}

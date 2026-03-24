@@ -1,9 +1,9 @@
 .boton_minimizar {
-    position: absoluto;
+    position: absolute;
     top: 12px;
     right: 12px;
     background: var(--bg-input);
-    border: px solid var(--border-color);
+    border: 1px solid var(--border-color);
     border-Radius: 4px;
     cursor: pointer;
     padding: 6px;
@@ -48,4 +48,10 @@
     margin-Bottom: 10px;
     border-Bottom: 1px solid var(--border-color);
     padding-bottom: 10px;
+}
+
+.container_responsivo {
+    flex: 1;
+    width: 100%;
+    min-Height: 0;
 }

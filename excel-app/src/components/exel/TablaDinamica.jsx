@@ -82,7 +82,6 @@ export default function TablaDinamica({ onTablaCreada }) {
 
   const guardarTabla = async () => {
 
-
     //algunas correcciones al momento de guardar un exel con datos
 
     const filasConDatos = rows.filter(row => {

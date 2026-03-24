@@ -8,6 +8,8 @@ import { api } from "../services/api";
 
 import { alerta } from '../utils/Notificaciones';
 
+import "../styles/pages/Archivos.css";
+
 export default function Archivos() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -77,24 +79,21 @@ export default function Archivos() {
 
  return (
     <div className="page-container">
-      <h2 style={{ borderBottom: "0px solid var(--border-color)", paddingBottom: "10px" }}>Gestión de Archivos</h2>
+      <h2 className="titulo_archivos">Gestión de Archivos</h2>
 
       {error && <p style={{ color: "red", fontWeight: "bold" }}>Error: {error}</p>}
 
       {/* SECCIÓN DE HERRAMIENTAS (Botones y Uploader/Reader) */}
       <div className="upload-section">
-        <div style={{ marginBottom: "20px", display: "flex", gap: "15px", borderBottom: "0px solid var(--border-color)" }}>
+        <div className="upload-section_container">
           <button
             onClick={() => setModoSubida(true)}
             style={{
-              cursor: "pointer",
-              border: "none",
-              fontSize: "0.8rem",
               fontWeight: modoSubida ? "bold" : "normal",
               opacity: modoSubida ? 1 : 0.6,
-              borderBottom: modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent",
-              transition: "opacity 0.2s ease, border-color 0.2s ease"
+              borderBottom: modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent"
             }}
+            className="button_upload_1"
           >
           Subir al Servidor
           </button>
@@ -102,21 +101,18 @@ export default function Archivos() {
           <button
             onClick={() => setModoSubida(false)}
             style={{
-              cursor: "pointer",
-              border: "none",
-              fontSize: "0.8rem",
               fontWeight: !modoSubida ? "bold" : "normal",
               opacity: !modoSubida ? 1 : 0.6,
-              borderBottom: !modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent",
-              transition: "opacity 0.2s ease, border-color 0.2s ease"
+              borderBottom: !modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent"
             }}
+            className="button_upload_2"
           >
           Solo Leer (Local)
           </button>
         </div>
 
         {/* Carga condicional de los componentes de subida/lectura */}
-        <div style={{ position: "relative", zIndex: 10 }}>
+        <div className="container_excelUploader">
           {modoSubida ? <ExcelUploader onUpload={handleUploadFile} /> : <ExcelReader />}
         </div>
       </div>
@@ -131,26 +127,14 @@ export default function Archivos() {
           ======================================================== */}
       {modoSubida && (
         <div 
-          className="files-layout" 
-          style={{ 
-            display: "flex", 
-            flexWrap: "wrap", // 👈 LA MAGIA: Permite que salten de línea si no caben
-            gap: "20px", 
-            width: "100%", 
-            alignItems: "flex-start" 
-          }}
+          className="files-layout"
         >
 
           {/* COLUMNA IZQUIERDA: LISTA */}
           <div 
-            className="panel-section" 
-            style={{ 
-              flex: "1 1 300px", // 👈 Crece y se encoge, pero su tamaño ideal es 300px
-              minWidth: "250px", 
-              maxWidth: "400px"  // Evita que se haga gigante en pantallas grandes
-            }}
+            className="panel-section_1" 
           >
-            <h3 style={{ color: "var(--text-main)", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px" }}>
+            <h3>
               Archivos en el Servidor
             </h3>
             <ExcelViewer
@@ -162,28 +146,15 @@ export default function Archivos() {
 
           {/* COLUMNA DERECHA: CONTENIDO */}
           <div 
-            className="panel-section" 
-            style={{ 
-              flex: "2 1 500px", //  Intenta ocupar el doble de espacio (500px ideal)
-              minWidth: 0,       //  Mantiene el candado para que la tabla no se desborde
-              width: "100%", 
-              overflow: "hidden" 
-            }}
+            className="panel-section_2" 
           >
-            <h3 style={{ color: "var(--text-main)", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px" }}>
+            <h3>
               Vista Previa (Servidor)
             </h3>
             {selectedFile ? (
               <ExcelContent filename={selectedFile} />
             ) : (
-              <div style={{ 
-                padding: "40px", 
-                border: "2px dashed var(--border-color)", 
-                color: "var(--text-muted)", 
-                textAlign: "center",
-                borderRadius: "8px",
-                backgroundColor: "var(--bg-card)"
-              }}>
+              <div className="container_reader_archivo">
                 Selecciona un archivo de la lista izquierda para ver su contenido.
               </div>
             )}

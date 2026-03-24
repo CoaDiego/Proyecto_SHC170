@@ -467,74 +467,6 @@ header {
   /* margin: 0 auto; */
 }
 
-/* --- Layout General --- */
-.page-container {
-  padding: 20px;
-  max-width: 1400px;
-  /* Ancho máximo para pantallas grandes */
-  margin: 0 auto;
-}
-
-/* --- Estilos Archivos.jsx --- */
-.upload-section {
-  background-color: var(--bg-card);
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
-  border: 1px solid var(--border-color);
-}
-
-.files-layout {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 30px;
-}
-
-.panel-section {
-  background-color: var(--bg-card);
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  min-height: 300px;
-}
-
-/* --- Estilos Calculadora.jsx --- */
-.calculadora-layout {
-  display: grid;
-  grid-template-columns: 350px minmax(0, 1fr);
-  /* 👈 minmax(0, 1fr) ES EL CANDADO PARA GRID */
-  gap: 10px;
-  margin-top: 20px;
-  transition: grid-template-columns 0.3s ease;
-  position: relative;
-}
-
-.calculadora-layout.colapsado {
-  grid-template-columns: 45px minmax(0, 1fr);
-  /* Reduce el panel de 350px a solo 45px */
-  gap: 10px;
-}
-
-.calculadora-datos {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 20px;
-  height: fit-content;
-  overflow: hidden;
-  transition: padding 0.3s ease;
-}
-
-/* Ajusta el espacio interno cuando se hace pequeño */
-.calculadora-layout.colapsado .calculadora-datos {
-  padding: 0px;
-  border: none;
-  /* Quitamos el borde para que no se vea */
-  opacity: 0;
-  /* Lo hacemos invisible */
-  margin: 0;
-}
-
 .calculadora-resultados {
   width: 100%;
   min-width: 0;
@@ -548,83 +480,9 @@ header {
 /* BOTÓN FLOTANTE EN EL MEDIO DE LOS PANELES */
 /* ========================================= */
 
-.boton-toggle-medio {
-  position: absolute;
-  top: 15px;
-  left: 355px;
-  transform: translateY(-50%) translateX(-50%);
-  z-index: 2;
-  /* Lo pone arriba de las tablas */
-
-  background-color: var(--accent-color);
-  color: white;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  width: 25px;
-  height: 25px;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: left 0.3s ease, transform 0.2s, background-color 0.2s;
-}
-
-/* Efecto Hover */
-.boton-toggle-medio:hover {
-  background-color: #e65c00;
-  transform: translateY(-50%) translateX(-50%) scale(1.1);
-}
-
-/* Cuando el panel se Cierra, el botón viaja a la nueva posición */
-.calculadora-layout.colapsado .boton-toggle-medio {
-  left: 30px;
-}
-
-
 /* ========================================= */
 /* ANIMACIÓN DEL ICONO (+ a -)               */
 /* ========================================= */
-
-.icono-animado {
-  position: relative;
-  width: 12px; /* Tamaño del icono dentro de tu botón de 25px */
-  height: 12px;
-  display: block;
-}
-
-/* Dibujamos las dos líneas (Horizontal y Vertical) */
-.icono-animado::before,
-.icono-animado::after {
-  content: '';
-  position: absolute;
-  background-color: white; /* El color de tu + y - */
-  border-radius: 2px;
-  top: 50%;
-  left: 50%;
-  /* Animación suave al rotar */
-  transition: transform 0.3s ease; 
-}
-
-/* Línea Horizontal (Siempre se queda quieta) */
-.icono-animado::before {
-  width: 12px;
-  height: 2px;
-  transform: translate(-50%, -50%); 
-}
-
-/* Línea Vertical (Esta es la que gira) */
-.icono-animado::after {
-  width: 2px;
-  height: 12px;
-  /* Estado normal (Cerrado): Está de pie formando un '+' */
-  transform: translate(-50%, -50%) rotate(0deg);
-}
-
-/* Cuando la calculadora está abierta, giramos la línea vertical 90 grados */
-.boton-toggle-medio.abierto .icono-animado::after {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
 
 
 /* ======================================================= */
@@ -681,26 +539,6 @@ header {
 /* ========================================= */
 /* 5. TABLAS ACADÉMICAS (El estilo clave)    */
 /* ========================================= */
-.tabla-academica {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: "Times New Roman", serif;
-  font-size: 1.1em;
-  margin-top: 10px;
-}
-
-.tabla-academica th,
-.tabla-academica td {
-  border: 1px solid var(--border-color);
-  padding: 8px;
-  text-align: center;
-  color: var(--text-main);
-}
-
-.tabla-academica th {
-  background-color: var(--header-bg);
-  font-weight: bold;
-}
 
 .celda-x {
   background-color: var(--bg-card);
@@ -850,10 +688,6 @@ html.dark .rdg {
   outline: none;
 }
 
-.etiqueta {
-  font-size: 0.9rem;
-  font-weight: bold;
-}
 
 /* Ajuste para pantallas pequeñas (Celulares) */
 @media (max-width: 480px) {

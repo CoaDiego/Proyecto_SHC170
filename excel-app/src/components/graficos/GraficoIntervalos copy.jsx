@@ -1,3 +1,5 @@
+
+
 import React, { useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -5,11 +7,6 @@ import {
 } from "recharts";
 
 import "../../styles/components/graficos/GraficoIntervalos.css";
-
-// =========================================================
-// 1. SUB-COMPONENTES (Respetando tus botones)
-// =========================================================
-
 const MaximizeButton = ({ isExpanded, onToggle }) => (
   <button
     onClick={onToggle}
@@ -26,7 +23,8 @@ const MaximizeButton = ({ isExpanded, onToggle }) => (
   </button>
 );
 
-const ChartContent = ({ type, isExpanded, datosProcesados, limites }) => {
+// CORRECCIÓN: Convertido a Componente en mayúsculas (Mata el warning "Inline render function")
+const ChartContent = ({ type, isExpanded, datosProcesados }) => {
   const fontSize = isExpanded ? 14 : 11;
   const margin = isExpanded
     ? { top: 20, right: 30, bottom: 20, left: 10 }
@@ -35,23 +33,10 @@ const ChartContent = ({ type, isExpanded, datosProcesados, limites }) => {
   const currentAxisStyle = { fontSize, fill: 'var(--text-main)' };
   const commonProps = { margin };
   const commonGrid = <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />;
+  const commonX = <XAxis dataKey="Intervalo" tick={currentAxisStyle} interval={0} angle={-10} textAnchor="end" height={isExpanded ? 60 : 40} stroke="var(--text-main)" />;
   const commonY = <YAxis tick={currentAxisStyle} stroke="var(--text-main)" />;
   const commonTooltip = <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} />;
   const commonLegend = <Legend wrapperStyle={{ fontSize: isExpanded ? '1.2rem' : '0.8rem', color: 'var(--text-main)' }} />;
-
-  // --- SOLO SE MODIFICÓ ESTE EJE X ---
-  // Cambiamos a tipo numérico, usando midpoint para posicionar y limites para las etiquetas
-  const commonX = (
-    <XAxis 
-      type="number" 
-      dataKey="midpoint" 
-      ticks={limites} 
-      domain={[limites[0], limites[limites.length - 1]]} 
-      tick={currentAxisStyle} 
-      stroke="var(--text-main)" 
-    />
-  );
-  // --- FIN DE LA MODIFICACIÓN EXCLUSIVA ---
 
   switch (type) {
     case 'histograma':
@@ -97,7 +82,9 @@ const ChartContent = ({ type, isExpanded, datosProcesados, limites }) => {
 const ChartCard = ({ title, isExpanded, onToggle, children }) => (
   <div className="chartContainerStyle">
     <h4 className="titleStyle ">{title}</h4>
+
     <MaximizeButton isExpanded={isExpanded} onToggle={onToggle} />
+
     <div style={{ flex: 1, width: "100%", minHeight: 0, marginTop: "10px" }}>
       <ResponsiveContainer width="100%" height="100%">
         {children}
@@ -105,35 +92,20 @@ const ChartCard = ({ title, isExpanded, onToggle, children }) => (
     </div>
   </div>
 );
-
 // =========================================================
-// 2. COMPONENTE PRINCIPAL
+// 3. COMPONENTE PRINCIPAL
 // =========================================================
 export default function GraficoIntervalos({ datos }) {
   const [expandedChart, setExpandedChart] = useState(null);
 
   if (!datos || datos.length === 0) return <p style={{ color: "var(--text-muted)" }}>No hay datos para graficar.</p>;
 
-  // PROCESAMIENTO EXCLUSIVO PARA EL EJE X NUMÉRICO
-  const limitesSet = new Set();
-  const datosProcesados = datos.map(item => {
-    const intervaloStr = item["Haber básico"] || item["Intervalos"] || item["Intervalo"] || "";
-    const partes = intervaloStr.split("-").map(n => parseFloat(n.trim()));
-    
-    // Extraemos límites para los ticks
-    if (!isNaN(partes[0])) limitesSet.add(partes[0]);
-    if (!isNaN(partes[1])) limitesSet.add(partes[1]);
-
-    return {
-      Intervalo: intervaloStr,
-      midpoint: (partes[0] + partes[1]) / 2, // Calculamos midpoint para posicionamiento numérico
-      f_i: Number(item["f_i"] || item["fi"] || 0),
-      F_i: Number(item["F_i"] || item["Fi"] || 0),
-      "F'i": Number(item["F'i"] || item["F_i_inv"] || 0)
-    };
-  });
-
-  const limites = Array.from(limitesSet).sort((a, b) => a - b);
+  const datosProcesados = datos.map(item => ({
+    Intervalo: item["Haber básico"] || item["Intervalos"] || item["Intervalo"] || "",
+    f_i: Number(item["f_i"] || item["fi"] || 0),
+    F_i: Number(item["F_i"] || item["Fi"] || 0),
+    "F'i": Number(item["F'i"] || item["F_i_inv"] || 0)
+  }));
 
   const handleToggle = (chartId) => {
     setExpandedChart(expandedChart === chartId ? null : chartId);
@@ -147,6 +119,7 @@ export default function GraficoIntervalos({ datos }) {
   return (
     <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(370px, 1fr))", gap: "20px", marginTop: "10px" }}>
+        {/* CORRECCIÓN: Optimización de la lista de tarjetas y pasar keys correctos */}
         {['hist', 'poli', 'ojiva1', 'ojiva2', 'mixto'].map(id => (
           <ChartCard
             key={id}
@@ -154,22 +127,34 @@ export default function GraficoIntervalos({ datos }) {
             isExpanded={expandedChart === id}
             onToggle={() => handleToggle(id)}
           >
-            <ChartContent type={getChartType(id)} isExpanded={false} datosProcesados={datosProcesados} limites={limites} />
+            <ChartContent type={getChartType(id)} isExpanded={false} datosProcesados={datosProcesados} />
           </ChartCard>
         ))}
       </div>
 
       {/* VENTANA MODAL (MAXIMIZAR GRÁFICO) */}
       {expandedChart && (
-        <div className="modal-grafico-overlay" onClick={() => setExpandedChart(null)}>
-          <div className="modal-grafico-card" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-grafico-overlay" /* Usando la clase CSS */
+          onClick={() => setExpandedChart(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') setExpandedChart(null); }}
+        >
+          <div className="modal-grafico-card" /* Usando la clase CSS */
+            onClick={(e) => e.stopPropagation()}
+            role="presentation"
+          >
             <div className="modal-grafico-header">
-              <h2 className="modal-grafico-titulo">Detalle del Gráfico</h2>
+
+              <h2 className="modal-grafico-titulo">Detalle del Gráfico</h2> {/* Usando la clase CSS */}
+
               <MaximizeButton isExpanded={true} onToggle={() => setExpandedChart(null)} />
             </div>
+
             <div className="container_responsivo">
               <ResponsiveContainer width="100%" height="100%">
-                <ChartContent type={getChartType(expandedChart)} isExpanded={true} datosProcesados={datosProcesados} limites={limites} />
+                <ChartContent type={getChartType(expandedChart)} isExpanded={true} datosProcesados={datosProcesados} />
               </ResponsiveContainer>
             </div>
           </div>
