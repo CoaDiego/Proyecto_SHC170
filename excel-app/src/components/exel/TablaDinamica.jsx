@@ -160,7 +160,7 @@ const columnasEditables = columns.map(col => ({
 
 return (
   <div className="container_tablas_Dinamica">
-    <h3 className="titulo">Tablas Manuales</h3>
+    <h3 className="titulo_tabla">Tablas Manuales</h3>
 
     {/* Inputs Nombre */}
     <div className="container_input">

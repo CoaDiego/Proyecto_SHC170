@@ -24,9 +24,10 @@
     background: var(--bg-card);
 }
 
-.titulo {
+.titulo_tabla {
     margin-Top: 0;
     color: var(--primary-color);
+    
 }
 
 .container_input {
