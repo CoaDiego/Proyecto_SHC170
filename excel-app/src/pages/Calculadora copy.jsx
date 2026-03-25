@@ -218,7 +218,9 @@ export default function Calculadora() {
 
                       {/* TEMA 3: TENDENCIA CENTRAL Y POSICIÓN */}
                       <optgroup label="Tema 3: Medidas de Tendencia y Posición">
-                     
+                        <option value="estadistica_descriptiva">
+                          Análisis Descriptivo
+                        </option>
                         <option value="tendencia_central">
                           Medidas de Tendencia Central
                         </option>
