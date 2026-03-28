@@ -39,7 +39,7 @@ export default function GraficoBivariado({ datos, tipo }) {
         {titulo}
       </h4>
 
-      <ResponsiveContainer width="100%" height="85%">
+      <ResponsiveContainer width="100%" height="350">
         <BarChart
           data={dataGrafico}
           margin={{ top: 30, right: 30, left: 20, bottom: 20 }}
