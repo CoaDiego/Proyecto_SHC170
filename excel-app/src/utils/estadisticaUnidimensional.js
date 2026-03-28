@@ -270,36 +270,24 @@ export const calcularTendenciaCentral = (datos, config) => {
   const medianaExacta = calcularMediana(sorted);
   const modaExactaStr = calcularModa(datos);
 
-  const datosPositivos = datos.filter((x) => x > 0);
+  const datosPositivos = datos.filter(x => x > 0);
   const nPos = datosPositivos.length;
-  const mediaGeoExacta =
-    nPos > 0
-      ? Math.exp(datosPositivos.reduce((a, b) => a + Math.log(b), 0) / nPos)
-      : 0;
-  const mediaArmExacta =
-    nPos > 0 ? nPos / datosPositivos.reduce((a, b) => a + 1 / b, 0) : 0;
+  const mediaGeoExacta = nPos > 0 ? Math.exp(datosPositivos.reduce((a, b) => a + Math.log(b), 0) / nPos) : 0;
+  const mediaArmExacta = nPos > 0 ? nPos / datosPositivos.reduce((a, b) => a + (1 / b), 0) : 0;
 
   const min = sorted[0];
   const max = sorted[n - 1];
   let k;
   switch (metodoK) {
-    case "cuadratica":
-      k = Math.sqrt(n);
-      break;
-    case "logaritmica":
-      k = Math.log(n) / Math.log(2);
-      break;
-    case "personalizada":
-      k = Number(kPersonalizado) || 1;
-      break;
-    default:
-      k = 1 + 3.322 * Math.log10(n);
+    case "cuadratica": k = Math.sqrt(n); break;
+    case "logaritmica": k = Math.log(n) / Math.log(2); break;
+    case "personalizada": k = Number(kPersonalizado) || 1; break;
+    default: k = 1 + 3.322 * Math.log10(n);
   }
-  k = Math.round(k);
-  if (k < 1) k = 1;
+  k = Math.round(k); if (k < 1) k = 1;
 
   const rango = max - min;
-  const amplitud = Math.round(rango / k + 1);
+  const amplitud = Math.round((rango / k) + 1);
 
   const intervalos = [];
   let inicio = Math.floor(min);
@@ -315,39 +303,21 @@ export const calcularTendenciaCentral = (datos, config) => {
       let intv = intervalos[i];
       let match = false;
       let esUltimo = i === k - 1;
-      if (tipoIntervalo === "cerrado") {
-        if (v >= intv.desde && v <= intv.hasta) match = true;
-      } else if (tipoIntervalo === "abierto") {
-        if (v > intv.desde && v < intv.hasta) match = true;
-      } else {
-        if (esUltimo) {
-          if (v >= intv.desde && v <= intv.hasta) match = true;
-        } else {
-          if (v >= intv.desde && v < intv.hasta) match = true;
-        }
-      }
-      if (match) {
-        f[i]++;
-        break;
-      }
+      if (tipoIntervalo === "cerrado") { if (v >= intv.desde && v <= intv.hasta) match = true; }
+      else if (tipoIntervalo === "abierto") { if (v > intv.desde && v < intv.hasta) match = true; }
+      else { if (esUltimo) { if (v >= intv.desde && v <= intv.hasta) match = true; } else { if (v >= intv.desde && v < intv.hasta) match = true; } }
+      if (match) { f[i]++; break; }
     }
   });
 
-  let sumFXm = 0,
-    maxF = -1,
-    claseModalIdx = -1;
-  let sumFLogXm = 0,
-    sumFDivXm = 0,
-    nAgrupadoValido = 0;
+  let sumFXm = 0, maxF = -1, claseModalIdx = -1;
+  let sumFLogXm = 0, sumFDivXm = 0, nAgrupadoValido = 0;
 
   for (let i = 0; i < k; i++) {
     const fi = f[i];
     const xm = intervalos[i].xm;
     sumFXm += fi * xm;
-    if (fi > maxF) {
-      maxF = fi;
-      claseModalIdx = i;
-    }
+    if (fi > maxF) { maxF = fi; claseModalIdx = i; }
     if (xm > 0) {
       sumFLogXm += fi * Math.log(xm);
       sumFDivXm += fi / xm;
@@ -358,15 +328,10 @@ export const calcularTendenciaCentral = (datos, config) => {
   const mediaAgrupada = sumFXm / n;
 
   const posMe = n / 2;
-  let F_acum = 0,
-    claseMedianaIdx = -1,
-    F_ant = 0;
+  let F_acum = 0, claseMedianaIdx = -1, F_ant = 0;
   for (let i = 0; i < k; i++) {
     F_acum += f[i];
-    if (F_acum >= posMe && claseMedianaIdx === -1) {
-      claseMedianaIdx = i;
-      break;
-    }
+    if (F_acum >= posMe && claseMedianaIdx === -1) { claseMedianaIdx = i; break; }
     F_ant = F_acum;
   }
 
@@ -385,52 +350,42 @@ export const calcularTendenciaCentral = (datos, config) => {
     const f_sig_val = claseModalIdx < k - 1 ? f[claseModalIdx + 1] : 0;
     const d1 = fi - f_ant_val;
     const d2 = fi - f_sig_val;
-    modaAgrupada = d1 + d2 !== 0 ? Li + (d1 / (d1 + d2)) * amplitud : Li;
+    modaAgrupada = (d1 + d2) !== 0 ? Li + (d1 / (d1 + d2)) * amplitud : Li;
   }
 
-  const mediaGeoAgrupada =
-    nAgrupadoValido > 0 ? Math.exp(sumFLogXm / nAgrupadoValido) : 0;
+  const mediaGeoAgrupada = nAgrupadoValido > 0 ? Math.exp(sumFLogXm / nAgrupadoValido) : 0;
   const mediaArmAgrupada = sumFDivXm !== 0 ? nAgrupadoValido / sumFDivXm : 0;
 
-  const calcError = (exacto, agrupado) =>
-    exacto === 0 ? 0 : Math.abs((exacto - agrupado) / exacto) * 100;
+  const calcError = (exacto, agrupado) => exacto === 0 ? 0 : Math.abs((exacto - agrupado) / exacto) * 100;
   const modaExactaNum = Number(modaExactaStr);
-  const errorModa = !isNaN(modaExactaNum)
-    ? `${calcError(modaExactaNum, modaAgrupada).toFixed(2)} %`
-    : "-";
+  const errorModa = !isNaN(modaExactaNum) ? `${calcError(modaExactaNum, modaAgrupada).toFixed(2)} %` : "-";
   const formatModaEx = !isNaN(modaExactaNum) ? modaExactaNum : modaExactaStr;
 
+  // ==========================================
+  // PREPARACIÓN DE GRÁFICOS (Tema 3)
+  // ==========================================
+  let F_acumulada_grafico = 0;
+  const dataGraficos = intervalos.map((intv, i) => {
+    F_acumulada_grafico += f[i];
+    return {
+      rango: `[${intv.desde.toFixed(1)}-${intv.hasta.toFixed(1)})`,
+      frecuencia: f[i],
+      F_i: F_acumulada_grafico, // Para la ojiva
+      P_i: (F_acumulada_grafico / n) * 100, // Para la ojiva porcentual
+      xm: intv.xm,
+      desde: intv.desde,
+      hasta: intv.hasta
+    };
+  });
+
   return [
-    {
-      Medida: "Media Aritmética (x̄)",
-      "D. Individuales": mediaExacta,
-      "D. Agrupados": mediaAgrupada,
-      "Error %": `${calcError(mediaExacta, mediaAgrupada).toFixed(2)} %`,
-    },
-    {
-      Medida: "Mediana (Me)",
-      "D. Individuales": medianaExacta,
-      "D. Agrupados": medianaAgrupada,
-      "Error %": `${calcError(medianaExacta, medianaAgrupada).toFixed(2)} %`,
-    },
-    {
-      Medida: "Moda (Mo)",
-      "D. Individuales": formatModaEx,
-      "D. Agrupados": modaAgrupada,
-      "Error %": errorModa,
-    },
-    {
-      Medida: "Media Geométrica (G)",
-      "D. Individuales": mediaGeoExacta,
-      "D. Agrupados": mediaGeoAgrupada,
-      "Error %": `${calcError(mediaGeoExacta, mediaGeoAgrupada).toFixed(2)} %`,
-    },
-    {
-      Medida: "Media Armónica (H)",
-      "D. Individuales": mediaArmExacta,
-      "D. Agrupados": mediaArmAgrupada,
-      "Error %": `${calcError(mediaArmExacta, mediaArmAgrupada).toFixed(2)} %`,
-    },
+    { Medida: "Media Aritmética (x̄)", "D. Individuales": mediaExacta, "D. Agrupados": mediaAgrupada, "Error %": `${calcError(mediaExacta, mediaAgrupada).toFixed(2)} %` },
+    { Medida: "Mediana (Me)", "D. Individuales": medianaExacta, "D. Agrupados": medianaAgrupada, "Error %": `${calcError(medianaExacta, medianaAgrupada).toFixed(2)} %` },
+    { Medida: "Moda (Mo)", "D. Individuales": formatModaEx, "D. Agrupados": modaAgrupada, "Error %": errorModa },
+    { Medida: "Media Geométrica (G)", "D. Individuales": mediaGeoExacta, "D. Agrupados": mediaGeoAgrupada, "Error %": `${calcError(mediaGeoExacta, mediaGeoAgrupada).toFixed(2)} %` },
+    { Medida: "Media Armónica (H)", "D. Individuales": mediaArmExacta, "D. Agrupados": mediaArmAgrupada, "Error %": `${calcError(mediaArmExacta, mediaArmAgrupada).toFixed(2)} %` },
+    // "Hack" para mandar los datos de los gráficos sin romper la tabla
+    { graficoData: dataGraficos, indicadores: { media: mediaAgrupada, mediana: medianaAgrupada, moda: modaAgrupada } } 
   ];
 };
 

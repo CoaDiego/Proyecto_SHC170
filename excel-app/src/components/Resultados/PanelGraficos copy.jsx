@@ -12,10 +12,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
   const esBivariada = !Array.isArray(resultado) && 
     (resultado.tipo === "bivariada" || resultado.tipo === "bivariada_avanzada");
 
-  // =======================================================
-  // GRÁFICOS TEMA 4: VARIABILIDAD Y FORMA
-  // =======================================================
-  if (resultado.tipo === "variabilidad_y_forma") {
+    if (resultado.tipo === "variabilidad_y_forma") {
     return (
       <div className="graficos-grid">
         <div className="grafico-card" style={{ width: "100%", height: "350px" }}>
@@ -32,50 +29,11 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
         </div>
       </div>
     );
-  }
 
-  // =======================================================
-  // GRÁFICOS TEMA 3: TENDENCIA Y POSICIÓN
-  // =======================================================
+    // 👇 AGREGAR ESTO PARA EL TEMA 3 👇
   if (resultado.tipo === "tendencia_y_posicion") {
     const graficosTema3 = resultado.graficosTema3?.graficoData;
     const indicadores = resultado.graficosTema3?.indicadores;
-
-    // MAGIA DE REUTILIZACIÓN: Formateamos los datosPuros al vuelo para que 
-    // tu componente GraficoDispersionForma crea que viene del Tema 4 y dibuje el Boxplot.
-    let mockResultadoBoxplot = null;
-    if (resultado.datosPuros && resultado.datosPuros.length >= 4) {
-      const datos = resultado.datosPuros;
-      const n = datos.length;
-      
-      const getQ = (p) => {
-        const pos = (n - 1) * p; const base = Math.floor(pos); const rest = pos - base;
-        return datos[base + 1] !== undefined ? datos[base] + rest * (datos[base + 1] - datos[base]) : datos[base];
-      };
-      
-      const q1 = getQ(0.25);
-      const mediana = getQ(0.50);
-      const q3 = getQ(0.75);
-      const RI = q3 - q1;
-      const LIIS = q1 - 1.5 * RI;
-      const LSIS = q3 + 1.5 * RI;
-      
-      const outliers = datos.filter(v => v < LIIS || v > LSIS);
-      const inliers = datos.filter(v => v >= LIIS && v <= LSIS);
-      
-      // Creamos la estructura idéntica a la que espera el Boxplot
-      mockResultadoBoxplot = {
-        graficos: { histograma: [], desviaciones: [] }, // No los usa el boxplot, pero evita errores
-        estadisticas: {
-          absoluteMin: datos[0],
-          absoluteMax: datos[n - 1],
-          minAdyacente: Math.min(...inliers),
-          q1, mediana, q3,
-          maxAdyacente: Math.max(...inliers),
-          RI, LIIS, LSIS, outliers
-        }
-      };
-    }
 
     return (
       <div className="graficos-grid">
@@ -85,27 +43,25 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
         </div>
         
         <div className="grafico-card" style={{ width: "100%", height: "350px" }}>
-          <h4>Gráfico de Ojiva (Frecuencias Acumuladas)</h4>
+          <h4>Gráfico de Ojiva (Fractiles)</h4>
           <GraficoTendenciaPosicion tipo="ojiva" graficos={graficosTema3} />
         </div>
 
-        {/* Reutilizamos el Boxplot de Variabilidad */}
-        {mockResultadoBoxplot && (
+        {/* 🤯 REUTILIZACIÓN NIVEL DIOS: Llamamos a tu componente de Variabilidad para dibujar el Boxplot del Tema 3 */}
+        {resultado.datosPuros && (
           <div className="grafico-card" style={{ width: "100%", height: "350px", gridColumn: "1 / -1" }}>
             <h4>Diagrama de Caja y Bigotes (Medidas de Posición)</h4>
-            <p style={{textAlign: "center", color: "var(--text-muted)", fontSize: "0.9em", margin: "0 0 10px 0"}}>
-              Visualización de los Cuartiles y Valores Atípicos (Método Tukey)
+            <p style={{textAlign: "center", color: "var(--text-muted)", fontSize: "0.9em"}}>
+              Visualización de la distribución basada en los Cuartiles calculados.
             </p>
-            <GraficoDispersionForma tipo="boxplot" resultado={mockResultadoBoxplot} />
+            {/* Como necesitamos calcular los cuartiles de Tukey para el gráfico, importaremos la función matemática pura aquí mismo */}
           </div>
         )}
       </div>
     );
   }
+  }
 
-  // =======================================================
-  // GRÁFICOS TEMA 2 Y 5: TABLAS SIMPLES, INTERVALOS, BIVARIADAS
-  // =======================================================
   return (
     <div className="graficos-grid">
       {esBivariada ? (
@@ -120,6 +76,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
           </div>
         </>
       ) : Array.isArray(resultado) && esIntervalo ? (
+        // 👇 AQUÍ LE AGREGAMOS EL minHeight
         <div className="grafico-card" style={{ width: "100%", minHeight: "400px" }}> 
           <h3>Gráficos de Intervalos</h3>
           <GraficoIntervalos datos={resultado} />
