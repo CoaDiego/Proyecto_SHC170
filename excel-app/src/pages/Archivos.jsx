@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import ExcelViewer from "../components/exel/ExcelViewer";
-import ExcelUploader from "../components/exel/ExcelUploader";
-import ExcelContent from "../components/exel/ExcelContent";
-import ExcelReader from "../components/exel/ExcelReader";
+import ExcelViewer from "../components/excel/ExcelViewer";
+import ExcelUploader from "../components/excel/ExcelUploader";
+import ExcelContent from "../components/excel/ExcelContent";
+import ExcelReader from "../components/excel/ExcelReader";
 
 import { api } from "../services/api";
 
