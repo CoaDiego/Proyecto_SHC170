@@ -146,9 +146,6 @@ export function useCalculadoraExcel(filename, sheet) {
   };
 
   // ==========================================
-  // --- TEMA 5: BIVARIANTE AVANZADA (PRUEBA) ---
-  // ==========================================
-  // ==========================================
   // --- TEMA 5: BIVARIANTE AVANZADA (INTELIGENTE) ---
   // ==========================================
   const calcularTema5_Bivariante = () => {

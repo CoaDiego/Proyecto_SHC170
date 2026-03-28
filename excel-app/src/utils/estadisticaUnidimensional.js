@@ -436,7 +436,8 @@ export const calcularTendenciaCentral = (datos, config) => {
 
 export const calcularVariabilidadYForma = (datos, config) => {
   const n = datos.length;
-  if (n < 2) return { tipo: "variabilidad_y_forma", dispersion: [], forma: [] };
+  // Se necesitan al menos 2 datos para varianza, pero para Boxplot académico con RI, 4 es más seguro
+  if (n < 4) return { tipo: "variabilidad_y_forma", dispersion: [], forma: [] };
 
   // ==========================================
   // 1. DATOS INDIVIDUALES (Exactos)
@@ -444,10 +445,7 @@ export const calcularVariabilidadYForma = (datos, config) => {
   const sorted = [...datos].sort((a, b) => a - b);
   const media = sorted.reduce((a, b) => a + b, 0) / n;
 
-  let sumAbs = 0,
-    sumSq = 0,
-    sumCub = 0,
-    sumQuart = 0;
+  let sumAbs = 0, sumSq = 0, sumCub = 0, sumQuart = 0;
   for (let i = 0; i < n; i++) {
     const diff = datos[i] - media;
     sumAbs += Math.abs(diff);
@@ -461,42 +459,32 @@ export const calcularVariabilidadYForma = (datos, config) => {
   const desvStdInd = Math.sqrt(varianzaInd);
   const cvInd = media !== 0 ? (desvStdInd / media) * 100 : 0;
 
-  // Medidas de Forma
   const m3 = sumCub / n;
   const m4 = sumQuart / n;
-  const desvPob = Math.sqrt(sumSq / n); // Se usa la poblacional para la asimetría teórica
+  const desvPob = Math.sqrt(sumSq / n); 
   const asimetria = desvPob !== 0 ? m3 / Math.pow(desvPob, 3) : 0;
-  const curtosis = desvPob !== 0 ? m4 / Math.pow(desvPob, 4) - 3 : 0;
+  const curtosis = desvPob !== 0 ? (m4 / Math.pow(desvPob, 4)) - 3 : 0;
 
   // ==========================================
-  // 2. DATOS AGRUPADOS
+  // 2. DATOS AGRUPADOS (Intervalos)
   // ==========================================
   const { metodoK, kPersonalizado, tipoIntervalo } = config;
-  const min = sorted[0];
-  const max = sorted[n - 1];
+  const absoluteMin = sorted[0]; const absoluteMax = sorted[n - 1];
 
   let k;
   switch (metodoK) {
-    case "cuadratica":
-      k = Math.sqrt(n);
-      break;
-    case "logaritmica":
-      k = Math.log(n) / Math.log(2);
-      break;
-    case "personalizada":
-      k = Number(kPersonalizado) || 1;
-      break;
-    default:
-      k = 1 + 3.322 * Math.log10(n);
+    case "cuadratica": k = Math.sqrt(n); break;
+    case "logaritmica": k = Math.log(n) / Math.log(2); break;
+    case "personalizada": k = Number(kPersonalizado) || 1; break;
+    default: k = 1 + 3.322 * Math.log10(n);
   }
-  k = Math.round(k);
-  if (k < 1) k = 1;
+  k = Math.round(k); if (k < 1) k = 1;
 
-  const rango = max - min;
-  const amplitud = Math.round(rango / k + 1);
+  const rango = absoluteMax - absoluteMin;
+  const amplitud = Math.round((rango / k) + 1);
 
   const intervalos = [];
-  let inicio = Math.floor(min);
+  let inicio = Math.floor(absoluteMin);
   for (let i = 0; i < k; i++) {
     const fin = inicio + amplitud;
     intervalos.push({ desde: inicio, hasta: fin, xm: (inicio + fin) / 2 });
@@ -506,24 +494,11 @@ export const calcularVariabilidadYForma = (datos, config) => {
   const f = new Array(k).fill(0);
   datos.forEach((v) => {
     for (let i = 0; i < k; i++) {
-      let match = false;
-      let intv = intervalos[i];
-      let esUltimo = i === k - 1;
-      if (tipoIntervalo === "cerrado") {
-        if (v >= intv.desde && v <= intv.hasta) match = true;
-      } else if (tipoIntervalo === "abierto") {
-        if (v > intv.desde && v < intv.hasta) match = true;
-      } else {
-        if (esUltimo) {
-          if (v >= intv.desde && v <= intv.hasta) match = true;
-        } else {
-          if (v >= intv.desde && v < intv.hasta) match = true;
-        }
-      }
-      if (match) {
-        f[i]++;
-        break;
-      }
+      let match = false; let intv = intervalos[i]; let esUltimo = i === k - 1;
+      if (tipoIntervalo === "cerrado") { if (v >= intv.desde && v <= intv.hasta) match = true; }
+      else if (tipoIntervalo === "abierto") { if (v > intv.desde && v < intv.hasta) match = true; }
+      else { if (esUltimo) { if (v >= intv.desde && v <= intv.hasta) match = true; } else { if (v >= intv.desde && v < intv.hasta) match = true; } }
+      if (match) { f[i]++; break; }
     }
   });
 
@@ -531,8 +506,7 @@ export const calcularVariabilidadYForma = (datos, config) => {
   for (let i = 0; i < k; i++) sumFXm += f[i] * intervalos[i].xm;
   const mediaAgr = sumFXm / n;
 
-  let sumFAbs = 0,
-    sumFSq = 0;
+  let sumFAbs = 0, sumFSq = 0;
   for (let i = 0; i < k; i++) {
     const diffAgr = intervalos[i].xm - mediaAgr;
     sumFAbs += f[i] * Math.abs(diffAgr);
@@ -547,85 +521,98 @@ export const calcularVariabilidadYForma = (datos, config) => {
   // ==========================================
   // 3. CONSTRUCCIÓN DE TABLAS
   // ==========================================
-  const calcError = (ex, ag) => (ex === 0 ? 0 : Math.abs((ex - ag) / ex) * 100);
+  const calcError = (ex, ag) => ex === 0 ? 0 : Math.abs((ex - ag) / ex) * 100;
 
   const tablaDispersion = [
-    {
-      Estadígrafo: "Desviación Media",
-      Sigla: "DM",
-      "D. Individuales": desvMediaInd,
-      "D. Agrupados": desvMediaAgr,
-      "Error %": `${calcError(desvMediaInd, desvMediaAgr).toFixed(2)} %`,
-    },
-    {
-      Estadígrafo: "Varianza",
-      Sigla: "S²",
-      "D. Individuales": varianzaInd,
-      "D. Agrupados": varianzaAgr,
-      "Error %": `${calcError(varianzaInd, varianzaAgr).toFixed(2)} %`,
-    },
-    {
-      Estadígrafo: "Desviación Estándar",
-      Sigla: "S",
-      "D. Individuales": desvStdInd,
-      "D. Agrupados": desvStdAgr,
-      "Error %": `${calcError(desvStdInd, desvStdAgr).toFixed(2)} %`,
-    },
-    {
-      Estadígrafo: "Coeficiente de Variación",
-      Sigla: "CV",
-      "D. Individuales": cvInd,
-      "D. Agrupados": cvAgr,
-      "Error %": `${calcError(cvInd, cvAgr).toFixed(2)} %`,
-    },
+    { Estadígrafo: "Desviación Media", Sigla: "DM", "D. Individuales": desvMediaInd, "D. Agrupados": desvMediaAgr, "Error %": `${calcError(desvMediaInd, desvMediaAgr).toFixed(2)} %` },
+    { Estadígrafo: "Varianza", Sigla: "S²", "D. Individuales": varianzaInd, "D. Agrupados": varianzaAgr, "Error %": `${calcError(varianzaInd, varianzaAgr).toFixed(2)} %` },
+    { Estadígrafo: "Desviación Estándar", Sigla: "S", "D. Individuales": desvStdInd, "D. Agrupados": desvStdAgr, "Error %": `${calcError(desvStdInd, desvStdAgr).toFixed(2)} %` },
+    { Estadígrafo: "Coeficiente de Variación", Sigla: "CV", "D. Individuales": cvInd, "D. Agrupados": cvAgr, "Error %": `${calcError(cvInd, cvAgr).toFixed(2)} %` }
   ];
 
   let interpAsimetria = "Simétrica";
-  if (asimetria > 0.1)
-    interpAsimetria = "Asimétrica Positiva (Sesgada a la derecha)";
-  if (asimetria < -0.1)
-    interpAsimetria = "Asimétrica Negativa (Sesgada a la izquierda)";
+  if (asimetria > 0.1) interpAsimetria = "Asimétrica Positiva (Sesgada a la derecha)";
+  if (asimetria < -0.1) interpAsimetria = "Asimétrica Negativa (Sesgada a la izquierda)";
 
   let interpCurtosis = "Mesocúrtica (Normal)";
   if (curtosis > 0.1) interpCurtosis = "Leptocúrtica (Apuntada)";
   if (curtosis < -0.1) interpCurtosis = "Platicúrtica (Achatada)";
 
   const tablaForma = [
-    {
-      Estadígrafo: "Coeficiente de Asimetría (Fisher)",
-      "Valor Calculado": asimetria,
-      Interpretación: interpAsimetria,
-    },
-    {
-      Estadígrafo: "Curtosis",
-      "Valor Calculado": curtosis,
-      Interpretación: interpCurtosis,
-    },
+    { Estadígrafo: "Coeficiente de Asimetría (Fisher)", "Valor Calculado": asimetria, Interpretación: interpAsimetria },
+    { Estadígrafo: "Curtosis", "Valor Calculado": curtosis, Interpretación: interpCurtosis }
   ];
 
-  // Helper para el Boxplot
-  const getP = (p) => {
-    const pos = (n - 1) * p;
-    const base = Math.floor(pos);
-    const rest = pos - base;
-    return sorted[base + 1] !== undefined
-      ? sorted[base] + rest * (sorted[base + 1] - sorted[base])
-      : sorted[base];
+  // Helper para los cuartiles de los datos ordenados
+  const getQ = (p) => {
+    const pos = (n - 1) * p; const base = Math.floor(pos); const rest = pos - base;
+    return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
   };
 
-  return {
-    tipo: "variabilidad_y_forma",
-    dispersion: tablaDispersion,
+  // ==========================================
+  // 4. MODIFICACIÓN: LÓGICA DE BOXPLOT ACADÉMICO (Tukey)
+  // ==========================================
+  const Q1 = getQ(0.25);
+  const Mediana = getQ(0.50);
+  const Q3 = getQ(0.75);
+  const RI = Q3 - Q1; // Rango Intercuartílico
+
+  // Cercas Internas (Cercas de Seguridad de Tukey)
+  const LIIS = Q1 - 1.5 * RI; // Límite Inferior de Seguridad
+  const LSIS = Q3 + 1.5 * RI; // Límite Superior de Seguridad
+
+  // Separación de datos: Atípicos vs Inliers
+  const valoresAtipicos = sorted.filter(v => v < LIIS || v > LSIS);
+  const datosInliers = sorted.filter(v => v >= LIIS && v <= LSIS);
+
+  // Bigotes (Whisker ends): Mínimo y Máximo ADYACENTE
+  const minAdyacente = Math.min(...datosInliers);
+  const maxAdyacente = Math.max(...datosInliers);
+
+  // ==========================================
+  // 5. PREPARACIÓN EXCLUSIVA PARA GRÁFICOS
+  // ==========================================
+  
+  const dataHistograma = intervalos.map((intv, i) => {
+    const exponente = -0.5 * Math.pow((intv.xm - media) / (desvStdInd || 1), 2);
+    const curva = (1 / ((desvStdInd || 1) * Math.sqrt(2 * Math.PI))) * Math.exp(exponente);
+    return {
+      rango: `[${intv.desde.toFixed(1)}-${intv.hasta.toFixed(1)})`,
+      frecuencia: f[i],
+      curvaNormal: curva * n * amplitud
+    };
+  });
+
+  const dataDesviaciones = datos.map((val, i) => ({
+    id: i,
+    valor: val,
+    desviacion: val - media
+  }));
+
+  return { 
+    tipo: "variabilidad_y_forma", 
+    dispersion: tablaDispersion, 
     forma: tablaForma,
+    // Estadísticas Actualizadas para Boxplot Académico
     estadisticas: {
-      min: sorted[0],
-      max: sorted[n - 1],
-      q1: getP(0.25),
-      mediana: getP(0.5),
-      q3: getP(0.75),
-      media: media,
+      absoluteMin, 
+      absoluteMax, 
+      minAdyacente, // Bigote izquierdo real
+      q1: Q1, 
+      mediana: Mediana, 
+      q3: Q3, 
+      maxAdyacente, // Bigote derecho real
+      media, 
       desviacionEstandar: desvStdInd,
+      RI,
+      LIIS, // Límite de seguridad
+      LSIS, // Límite de seguridad
+      outliers: valoresAtipicos // Los que van con asterisco
     },
+    graficos: {
+      histograma: dataHistograma,
+      desviaciones: dataDesviaciones
+    }
   };
 };
 
