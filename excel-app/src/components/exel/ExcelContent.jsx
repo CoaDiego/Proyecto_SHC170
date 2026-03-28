@@ -3,6 +3,9 @@ import { DataGrid } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 
 import { api } from "../../services/api";
+import {alerta} from "../../utils/Notificaciones"
+
+import "../../styles/components/excel/ExcelContent.css";
 
 // --- FUNCIÓN PARA LETRAS DE COLUMNAS (A, B, C...) ---
 const getExcelColumnName = (colIndex) => {
@@ -21,7 +24,7 @@ const getExcelColumnName = (colIndex) => {
 function textEditor({ row, column, onRowChange, onClose }) {
   return (
     <input
-      style={{ width: '100%', border: 'none', padding: '0 5px', outline: 'none' }}
+      className="text_editor"
       autoFocus
       value={row[column.key]}
       onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
@@ -30,13 +33,16 @@ function textEditor({ row, column, onRowChange, onClose }) {
   );
 }
 
-export default function ExcelContent({ filename, onSheetChange, mostrarTabla = true }) {
+export default function ExcelContent({ filename, onSheetChange, mostrarTabla = true, permitirEdicion = true }) {
   const [sheets, setSheets] = useState([]);
   const [selectedSheet, setSelectedSheet] = useState(0);
   const [rows, setRows] = useState([]);
   const [columns, setColumns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [huboCambios, setHuboCambios] = useState(false);
+  const [cargandoGuardado, setCargandoGuardado] = useState(false);
 
   // 1. CARGAR HOJAS
   useEffect(() => {
@@ -60,8 +66,8 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
 
     fetchHojas();
 
-    // 👇 ESTA ES LA LÍNEA QUE ARREGLA EL ERROR (se borró onSheetChange)
-  }, [filename,onSheetChange]);
+    // ESTA ES LA LÍNEA QUE ARREGLA EL ERROR (se borró onSheetChange)
+  }, [filename, onSheetChange]);
 
   // 2. CARGAR DATOS DE LA HOJA
   useEffect(() => {
@@ -113,79 +119,70 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
     if (onSheetChange) onSheetChange(newIndex);
   };
 
-  const handleRowsChange = (newRows) => {
-    setRows(newRows);
-  };
 
   if (error) return (
-    <div style={{ padding: "20px", border: "1px dashed #ef4444", borderRadius: "8px", color: "#ef4444", textAlign: "center" }}>
+    <div className="text_error">
       <strong>Error:</strong> {error}
     </div>
   );
 
+  //Funciones para Poder editar el excel
+  const handleRowsChange = (newRows) => {
+    setRows(newRows);
+    setHuboCambios(true);
+  }
+  const guardarExcel = async () => {
+    setCargandoGuardado(true);
+    try {
+      await api.actualizarExcel(filename, selectedSheet, rows);
+      setHuboCambios(false);
+      alerta.success("cambios guardados");
+    } catch (err) {
+      alerta.error("error", err.message);
+    } finally {
+      setCargandoGuardado(false);
+    }
+  };
+
   return (
-    <div style={{
-      padding: "15px",
-      border: "1px solid var(--border-color)",
-      borderRadius: "10px",
-      marginBottom: "15px",
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: "var(--bg-card)",
+    <div className="container_content" style={{
       height: mostrarTabla ? '550px' : 'auto',
-      width: '100%',
-      maxWidth: '100%',
-      minWidth: 0, // 👈 Muy importante para evitar desbordes
-      overflow: 'hidden'
     }}>
 
       {/* CABECERA DEL CONTENIDO (AHORA SÍ ES RESPONSIVA) */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start", // Alinea arriba si hace salto de línea
-        flexWrap: "wrap", // 👈 ESTO ES MAGIA: Permite que los elementos bajen si no caben
-        gap: "15px", // Espacio cuando hacen salto de línea
-        borderBottom: "1px solid var(--border-color)",
-        paddingBottom: "10px",
-        marginBottom: "15px"
-      }}>
+      <div className="container_cabecera">
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "5px", flex: "1", minWidth: "150px", overflow: "hidden" }}>
-          <h5 style={{ margin: 0, color: "var(--text-main)" }}>Archivo en uso</h5>
-          <span style={{
-            color: "var(--accent-color)",
-            fontSize: "0.85em",
-            // 👇 ESTAS 3 LÍNEAS SON OBLIGATORIAS PARA EL EFECTO "..."
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "block",
-            width: "100%"
-          }}>
+        <div className="container_cabecera_info">
+          <h5 >Archivo en uso</h5>
+          <span>
             {filename}
           </span>
+          { permitirEdicion && huboCambios && <small>tiene cambios pendientes</small>}
         </div>
 
-        {sheets.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.8em", color: "#10b981", backgroundColor: "#d1fae5", padding: "3px 8px", borderRadius: "12px", fontWeight: "bold", whiteSpace: "nowrap" }}>
-              Edición Activa
-            </span>
+        {permitirEdicion && huboCambios && (
 
-            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-              <label style={{ fontWeight: "bold", color: "var(--text-main)", fontSize: "0.8em" }}>Hoja:</label>
+          <div className="container_cabecera_botones">
+            <button
+              onClick={guardarExcel}
+              disabled={cargandoGuardado}
+            >
+              {cargandoGuardado ? "Guardando..." : "Actualizar"}
+            </button>
+          </div>
+
+        )}
+
+        {sheets.length > 0 && (
+          <div className="container_edicion">
+              <span>
+                Edición Activa
+              </span>
+            <div className="container_edicion_datos">
+              <label>Hoja:</label>
               <select
                 value={selectedSheet}
                 onChange={handleSheetChange}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--border-color)",
-                  outline: "none",
-                  maxWidth: "130px", // Evita que un nombre de hoja muy largo rompa el diseño
-                  fontSize: "0.85rem"
-                }}
               >
                 {sheets.map((sheetName, index) => (
                   <option key={index} value={index}>{sheetName}</option>
@@ -199,28 +196,22 @@ export default function ExcelContent({ filename, onSheetChange, mostrarTabla = t
       {/* TABLA O ESTADO DE CARGA */}
       {mostrarTabla && (
         loading ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--accent-color)" }}>
+          <div className="container_tablas">
             <h3>Cargando datos desde el servidor...</h3>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.9em" }}>Esto puede tardar dependiendo del tamaño del archivo.</p>
+            <p>Esto puede tardar dependiendo del tamaño del archivo.</p>
           </div>
         ) : rows.length > 0 ? (
-          <div style={{ flex: 1, minWidth: 0, minHeight: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
+          <div className="container_tablas_datos">
             <DataGrid
               columns={columns}
               rows={rows}
               onRowsChange={handleRowsChange}
-              className="rdg-light"
-              style={{
-                height: '100%',
-                width: '100%',
-                borderRadius: "6px",
-                border: "1px solid var(--border-color)"
-              }}
+              className="rdg-light personalizado"
             />
           </div>
         ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <p style={{ fontStyle: "italic", color: "var(--text-muted)" }}>Hoja vacía.</p>
+          <div className="container_vacio">
+            <p>Hoja vacía.</p>
           </div>
         )
       )}

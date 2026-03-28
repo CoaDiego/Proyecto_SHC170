@@ -1,0 +1,26 @@
+.container_bivariado {
+    width: 100%;
+    height: 450;
+    background: var(--bg-card);
+    color: var(--text-main);
+    padding: 20px;
+    border-Radius: 8px;
+    border: 1px solid var(--border-color);
+    box-Shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.container_bivariado h4 {
+    text-Align: center;
+    margin-Bottom: 25px;
+    font-Family: "Times New Roman", serif;
+    font-Size: 1.1em;
+    font-Weight: bold;
+    text-Transform: uppercase;
+    color: var(--text-main);
+}
+
+.container_bivariado_label {
+    font-Family: Arial;
+    font-Size: 11px;
+    font-Weight: bold;
+}

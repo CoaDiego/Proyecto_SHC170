@@ -18,7 +18,9 @@ import { useState } from "react";
 import ExcelUploader from "../components/exel/ExcelUploader";
 
 // 1. IMPORTAMOS EL LOGO BLANCO
-import escudoAdmin from "../assets/images/escudoAdmin.png";
+import escudoAdmin from "../assets/images/Logo-Adm.png";
+
+import "../styles/components/ui/Inicio.css"
 
 export default function Inicio() {
   const [_refreshFiles, _setRefreshFiles] = useState(false);
@@ -35,14 +37,7 @@ export default function Inicio() {
       />
       
       {/* 👉 AQUÍ ESTÁ EL TEXTO QUE QUERÍAS AGREGAR */}
-      <h2 style={{ 
-        color: "var(--text-main)", 
-        fontSize: "1.6rem", 
-        letterSpacing: "3px", 
-        textTransform: "uppercase",
-        marginTop: "0px", 
-        marginBottom: "15px" 
-      }}>
+      <h2 className="titulo">
         ADMINISTRACIÓN DE EMPRESAS
       </h2>
       

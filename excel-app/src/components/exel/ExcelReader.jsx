@@ -3,6 +3,8 @@ import * as XLSX from "xlsx";
 import { DataGrid } from "react-data-grid";
 import { alerta } from '../../utils/Notificaciones';
 
+import "../../styles/components/excel/ExcelReader.css";
+
 // Función para convertir números a letras (0->A, 1->B, 26->AA) ¡Igual que Excel!
 const getExcelColumnName = (colIndex) => {
   let dividend = colIndex + 1;
@@ -171,19 +173,15 @@ export default function ExcelReader() {
   };
 
   return (
-    <div style={{ marginTop: "10px" }}>
+    <div className="container_reader">
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        className="container_reader_lectura"
         style={{
-          padding: "10px",
-          //Usamos variables dinámicas igual que en el Uploader
           border: isDragging ? "2px dashed var(--accent-color)" : "2px dashed var(--border-color)",
-          borderRadius: "5px",
           backgroundColor: isDragging ? "var(--bg-hover, transparent)" : "var(--bg-card)",
-          textAlign: "center",
-          transition: "border-color 0.3s ease, background-color 0.3s ease",
           cursor: isDragging ? "copy" : "default"
         }}
       >
@@ -196,43 +194,26 @@ export default function ExcelReader() {
           onChange={handleFile}
         />
 
-        <div style={{ marginBottom: "0px", pointerEvents: "none" }}>
-          <h6 style={{ margin: "0px", color: "var(--text-main)", fontSize: "1em" }}>
+        <div className="container_reader_campo">
+          <h6>
             {isDragging ? "¡Suelta el archivo aquí!" : "Abre tu tabla local (Solo Lectura)"}
           </h6>
-          <p style={{ margin: 0, fontSize: "0.9em", color: "var(--text-muted)" }}>Formatos soportados: .xlsx, .xls</p>
+          <p>Formatos soportados: .xlsx, .xls</p>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", flexWrap: "wrap", marginTop: "10px" }}>
+        <div className="container_reader_file">
           <label
             htmlFor="localFileInput"
-            style={{
-              cursor: "pointer",
-              padding: "5px 10px",
-              backgroundColor: "var(--bg-input, transparent)",
-              color: "var(--text-main)",
-              borderRadius: "5px",
-              border: "1px solid var(--border-color)",
-              transition: "opacity 0.2s",
-              fontSize: "0.8em",
-              fontWeight: "bold"
-            }}
             // Hover limpio con opacidad
             onMouseOver={(e) => e.target.style.opacity = "0.7"}
             onMouseOut={(e) => e.target.style.opacity = "1"}
           >
             Explorar archivos
           </label>
-
           <span style={{
             color: fileName ? "var(--accent-color)" : "var(--text-muted)",
             fontStyle: fileName ? "normal" : "italic",
             fontWeight: fileName ? "bold" : "normal",
-            maxWidth: "250px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            fontSize: "0.8em"
           }}>
             {fileName ? `${fileName}` : "Ningún archivo seleccionado"}
           </span>
@@ -240,32 +221,23 @@ export default function ExcelReader() {
       </div>
 
       {loading && (
-        <div style={{ padding: "30px", textAlign: "center", color: "var(--accent-color)" }}>
-           <h4 style={{ margin: 0 }}>⏳ Cargando y procesando datos...</h4>
-           <p style={{ fontSize: "0.8em", color: "var(--text-muted)" }}>Esto puede tardar unos segundos dependiendo del tamaño del archivo.</p>
+        <div className="container_reader_loading">
+           <h4 style={{ margin: 0 }}>Cargando y procesando datos...</h4>
+           <p>Esto puede tardar unos segundos dependiendo del tamaño del archivo.</p>
         </div>
       )}
 
       {!loading && rows.length > 0 && (
-        <div style={{ height: '450px', display: 'flex', flexDirection: 'column', marginTop: "15px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "10px" }}>
-            {/* 👇 Aplicamos text-main al título inferior */}
-            <h4 style={{ margin: 0, color: "var(--text-main)" }}>Vista Local: <span style={{ color: 'var(--accent-color)' }}>{fileName}</span></h4>
+        <div className="container_reader_vista">
+          <div className="container_reader_subvista">
+            {/*  Aplicamos text-main al título inferior */}
+            <h4>Vista Local: <span>{fileName}</span></h4>
             {sheets.length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                <label style={{ fontWeight: "bold", color: "var(--text-main)", fontSize: "0.9em" }}>Hoja:</label>
+              <div className="container_reader_vistadatos">
+                <label>Hoja:</label>
                 <select
                   value={activeSheetIndex}
                   onChange={handleSheetChange}
-                  // 👇 Hacemos el select compatible con Modo Oscuro
-                  style={{ 
-                    padding: '5px', 
-                    borderRadius: '4px',
-                    backgroundColor: "var(--bg-input, transparent)",
-                    color: "var(--text-main)",
-                    border: "1px solid var(--border-color)",
-                    outline: "none"
-                  }}
                 >
                   {sheets.map((name, index) => <option key={index} value={index}>{name}</option>)}
                 </select>

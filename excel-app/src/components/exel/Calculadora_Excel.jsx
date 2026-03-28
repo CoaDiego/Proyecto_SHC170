@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 
-
 import { api } from "../../services/api";
 
 export function useCalculadoraExcel(filename, sheet) {
@@ -22,10 +21,6 @@ export function useCalculadoraExcel(filename, sheet) {
   useEffect(() => {
     if (!filename || sheet === "" || sheet === undefined) return;
     const hojaIndex = Number(sheet);
-
-    /*fetch(`http://127.0.0.1:8000/view/${filename}?hoja=${hojaIndex}`)
-      .then((res) => res.json())
-      .then((data) => {*/
     const cargarDatos = async () => {
       try {
         const data = await api.obtenerDatosHoja(filename, hojaIndex);

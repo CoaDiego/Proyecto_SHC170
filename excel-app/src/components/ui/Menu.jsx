@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
-import escudoAdmin from "../../assets/images/escudoAdmin.png";
+import escudoAdmin from "../../assets/images/Logo-Adm.png";
 
 export default function Menu() {
   // Estado para saber si el menú del celular está abierto o cerrado

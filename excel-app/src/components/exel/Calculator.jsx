@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { api } from "../../services/api";
 
+import "../../styles/components/excel/Calculator.css"
+
 export default function Calculator() {
   // ==========================
   // ESTADOS DEL COMPONENTE
@@ -39,7 +41,6 @@ export default function Calculator() {
     setResultado(null);
 
     let bodyData = { tipo, tema };
-    //let url = "http://127.0.0.1:8000/calcular"; // URL por defecto de la API
 
     let calculoPromise;
 
@@ -50,14 +51,12 @@ export default function Calculator() {
       if (tema === "Tema6" && tipo === "regresion_multivariante") {
         // Caso multivariante → endpoint especial
         bodyData = { X: inputsX, y: inputYMulti, tipo };
-        //url = "http://127.0.0.1:8000/calcular_multivariante";
         calculoPromise = api.calcularMultivariante(bodyData);
       } else {
         // Tema5 o regresión simple de Tema6 → endpoint bivariado
         const datosX = inputX.split(",").map(Number).filter((x) => !isNaN(x));
         const datosY = inputY.split(",").map(Number).filter((x) => !isNaN(x));
         bodyData = { x: datosX, y: datosY, tipo };
-        //url = "http://127.0.0.1:8000/calcular_bivariada";
         calculoPromise = api.calcularBivariadaManual(bodyData);
       }
     } else {
@@ -81,40 +80,17 @@ export default function Calculator() {
 
       // Para cálculos agrupados del Tema3
 
-      // Para cálculos agrupados del Tema3
-
       if (tema === "Tema3" && ["media_agrupada", "mediana_agrupada", "moda_agrupada"].includes(tipo)) {
         bodyData.datos = datosArray; // enviamos datos crudos, Tema3.py se encargará de crear la tabla de clases
       } else {
         bodyData.datos = datosArray; // lista simple para los otros cálculos
       }
-
-
-
       // DEBUG: Ver qué datos se enviarán
       console.log("bodyData a enviar:", bodyData);
 
       calculoPromise = api.calcularUnivariada(bodyData);
-
-
     }
 
-    // ==========================
-    // ENVÍO DE DATOS A LA API
-    // ==========================
-    /*try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
-      });
-
-      const data = await res.json();
-      setResultado(data); // Guardamos el resultado
-    } catch (err) {
-      console.error("Error:", err);
-      setResultado({ error: "No se pudo conectar con la API" });
-    }*/
     try {
       // Ejecutamos la promesa seleccionada
       const data = await calculoPromise;
@@ -335,7 +311,7 @@ export default function Calculator() {
               )}
 
               {/* Tabla de clases: mostramos LI, LS, Marca, Frecuencia */}
-              <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+              <table border="1" cellPadding="5" className="table_resultado">
                 <thead>
                   <tr>
                     <th>LI</th>       {/* Límite inferior */}
@@ -362,7 +338,7 @@ export default function Calculator() {
             // - útil para Tema2, Tema4, etc.
             // ==========================
             : Array.isArray(resultado.resultado) ? (
-              <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+              <table border="1" cellPadding="5" className="table_resultado">
                 <thead>
                   <tr>
                     {Object.keys(resultado.resultado[0]).map((col) => (
@@ -399,7 +375,7 @@ export default function Calculator() {
                 // - útil para regresión lineal/multivariante
                 // ==========================
                 : (
-                  <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+                  <table border="1" cellPadding="5" className="table_resultado">
                     <tbody>
                       {Object.entries(resultado).map(([key, value]) => (
                         <tr key={key}>

@@ -1,8 +1,8 @@
 import React from "react";
 // 1. VOLVEMOS A USAR TU ARCHIVO ORIGINAL QUE SÍ EXISTE
-import logoUsfx from "../assets/images/logo_usfx.png";
-import logo4Siglos from "../assets/images/4_siglos.png";
-import "./Pie_pagina.css"; 
+import logoUsfx from "../../assets/images/logo_usfx.png";
+import logo4Siglos from "../../assets/images/4_siglos.png";
+import "../../styles/components/ui/Pie_pagina.css"; 
 
 export default function Pie_pagina() {
   return (

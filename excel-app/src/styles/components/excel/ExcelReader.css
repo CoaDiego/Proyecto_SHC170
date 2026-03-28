@@ -1,0 +1,118 @@
+.container_reader {
+    margin-Top: 10px;
+}
+
+.container_reader_lectura {
+    padding: 10px;
+    border-Radius: 5px;
+    text-Align: center;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.container_reader_campo {
+    margin-Bottom: 0px;
+    pointer-Events: none;
+}
+
+.container_reader_campo h6 {
+    margin: 0px;
+    color: var(--text-main);
+    font-Size: 1em;
+}
+
+.container_reader_campo p {
+    margin: 0;
+    font-Size: 0.9em;
+    color: var(--text-muted);
+}
+
+.container_reader_file {
+    display: flex;
+    justify-Content: center;
+    align-Items: center;
+    gap: 15px;
+    flex-Wrap: wrap;
+    margin-Top: 10px;
+}
+
+.container_reader_file label {
+    cursor: pointer;
+    padding: 5px 10px;
+    background-Color: var(--bg-input, transparent);
+    color: var(--text-main);
+    border-Radius: 5px;
+    border: 1px solid var(--border-color);
+    transition: opacity 0.2s;
+    font-Size: 0.8em;
+    font-Weight: bold;
+}
+
+.container_reader_file span {
+    max-Width: 250px;
+    overflow: hidden;
+    text-Overflow: ellipsis;
+    white-Space: nowrap;
+    font-Size: 0.8em;
+}
+
+.container_reader_loading {
+    padding: 30px;
+    text-Align: center;
+    color: var(--accent-color);
+}
+
+.container_reader_loading h4 {
+    margin: 0;
+}
+
+.container_reader_loading p {
+    font-Size: 0.8em;
+    color: var(--text-muted);
+}
+
+.container_reader_vista {
+    height: 450px;
+    display: flex;
+    flex-Direction: column;
+    margin-Top: 15px;
+}
+
+.container_reader_subvista {
+    display: flex;
+    justify-Content: space-between;
+    align-Items: center;
+    margin-Bottom: 10px;
+    flex-Wrap: wrap;
+    gap: 10px;
+}
+
+.container_reader_subvista h4 {
+    margin: 0;
+    color: var(--text-main);
+}
+
+.container_reader_subvista span {
+    color: var(--accent-color);
+}
+
+.container_reader_vistadatos {
+    display: flex;
+    align-Items: center;
+    gap: 5px;
+}
+
+.container_reader_vistadatos label {
+    font-Weight: bold;
+    color: var(--text-main);
+    font-Size: 0.9em;
+}
+
+.container_reader_vistadatos select {
+    padding: 5px;
+    border-Radius: 4px;
+    background-Color: var(--bg-input, transparent);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    outline: none;
+
+}

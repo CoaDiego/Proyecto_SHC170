@@ -1,0 +1,57 @@
+.boton_minimizar {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-Radius: 4px;
+    cursor: pointer;
+    padding: 6px;
+    z-Index: 10;
+    display: flex;
+    align-Items: center;
+    justify-Content: center;
+    transition: background-color 0.2s;
+}
+
+.chartContainerStyle {
+    background-Color: var(--bg-card);
+    padding: 15px;
+    border-Radius: 10px;
+    border: 1px solid var(--border-color);
+    height: 300px;
+    display: flex;
+    flex-Direction: column;
+    overflow: hidden;
+    position: relative;
+    color: var(--text-main);
+    padding-Top: 40px;
+}
+
+.titleStyle {
+    text-Align: center;
+    margin-Bottom: 10px;
+    font-Weight: bold;
+    color: var(--text-main);
+    font-Size: 1rem;
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    margin: 0;
+}
+
+.modal-grafico-header {
+    display: flex;
+    justify-Content: space-between;
+    align-Items: center;
+    margin-Bottom: 10px;
+    border-Bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.container_responsivo {
+    flex: 1;
+    width: 100%;
+    min-Height: 0;
+}

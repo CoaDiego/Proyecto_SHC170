@@ -1,0 +1,94 @@
+.editor_text {
+    width: 100%;
+    border: none;
+    padding: 0 5px;
+    outline: none;
+    background: transparent;
+    color: inherit;
+}
+
+.columnas_editor {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-Weight: bold;
+    outline: none;
+    text-Align: center;
+}
+
+.container_tablas_Dinamica {
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-Radius: 8px;
+    background: var(--bg-card);
+}
+
+.titulo_tabla {
+    margin-Top: 0;
+    color: var(--primary-color);
+    
+}
+
+.container_input {
+    margin-Bottom: 15px;
+}
+
+.container_input label {
+    display: block;
+    margin-Bottom: 5px;
+    font-Weight: bold;
+}
+
+.container_input_datos {
+    display: flex;
+    gap: 10px;
+}
+
+.container_input_datos input {
+    flex: 1;
+}
+
+.container_input_datos span {
+    align-Self: center;
+    color: var(--text-muted);
+}
+
+.container_herramientas {
+    margin-Bottom: 15px;
+    display: flex;
+    gap: 10px;
+    flex-Wrap: wrap;
+}
+
+.button_fila_columna {
+    background-Color: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.button_eliminar_fila {
+    background-Color: var(--bg-input);
+    color: red;
+    border: 1px solid var(--border-color);
+}
+
+.button_guardar {
+    background-Color: var(--accent-color);
+}
+
+.mensaje {
+    margin-Bottom: 15px;
+    font-Weight: bold;
+}
+
+.container_grilla {
+    height: 400px;
+    border: 1px solid var(--border-color);
+}
+
+.informacion_grilla {
+    margin-Top: 10px;
+    font-Size: 0.8em;
+    color: var(--text-muted);
+}
