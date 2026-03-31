@@ -15,7 +15,7 @@ export default function Inicio() {
  */
 
 import { useState } from "react";
-import ExcelUploader from "../components/exel/ExcelUploader";
+import ExcelUploader from "../components/excel/ExcelUploader";
 
 // 1. IMPORTAMOS EL LOGO BLANCO
 import escudoAdmin from "../assets/images/Logo-Adm.png";

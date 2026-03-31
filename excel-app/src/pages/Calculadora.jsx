@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Datos from "./Datos";
 import Calculos from "./Calculos";
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
-import { DataProvider } from "../components/exel/DataContext";
+import { DataProvider } from "../components/excel/DataContext";
 
 import "../styles/pages/Calculadora.css";
 

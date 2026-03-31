@@ -2,16 +2,16 @@ import { useEffect, useState } from "react";
 import { DataGrid } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 
-import Calculator from "../components/exel/Calculator";
-import ExcelContent from "../components/exel/ExcelContent";
+import Calculator from "../components/excel/Calculator";
+import ExcelContent from "../components/excel/ExcelContent";
 import GraficoEstadistico from "../components/graficos/GraficoEstadistico";
 import GraficoIntervalos from "../components/graficos/GraficoIntervalos";
-import TablaDinamica from "../components/exel/TablaDinamica";
-import Latex from "../components/exel/Latex";
+import TablaDinamica from "../components/excel/TablaDinamica";
+import Latex from "../components/excel/Latex";
 import GraficoBivariado from "../components/graficos/GraficoBivariado";
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 
-import { useData } from "../components/exel/DataContext";
+import { useData } from "../components/excel/DataContext";
 
 import { api } from "../services/api";
 
