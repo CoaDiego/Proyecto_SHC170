@@ -17,6 +17,10 @@ import { api } from "../services/api";
 
 import "../styles/pages/Calculos.css";
 
+import TablasBivariantes from "../components/resultados/TablasBivariantes";
+import TablasUnidimensionales from "../components/resultados/TablasUnidimensionales";
+import PanelGraficos from "../components/resultados/PanelGraficos";
+
 function textEditor({ row, column, onRowChange, onClose }) {
   return (
     <input
@@ -53,13 +57,26 @@ export default function Calculos() {
   const [panelAbierto, setPanelAbierto] = useState(true);
 
   const {
-    excelData, columns, selectedColumn, setSelectedColumn,
-    selectedColumnY, setSelectedColumnY, resultado, calculo,
-    tipoIntervalo, metodoK, kPersonalizado,
-    percentilK, setPercentilK,
-    setCalculo, setTipoIntervalo, setMetodoK, setKPersonalizado,
-    handleChangeDato, ejecutarCalculo,
-    errorNumerico
+    excelData,
+    columns,
+    selectedColumn,
+    setSelectedColumn,
+    selectedColumnY,
+    setSelectedColumnY,
+    resultado,
+    calculo,
+    tipoIntervalo,
+    metodoK,
+    kPersonalizado,
+    percentilK,
+    setPercentilK,
+    setCalculo,
+    setTipoIntervalo,
+    setMetodoK,
+    setKPersonalizado,
+    handleChangeDato,
+    ejecutarCalculo,
+    errorNumerico,
   } = useCalculadoraExcel(selectedFile, selectedSheet);
 
   // Helper formateo
@@ -96,15 +113,32 @@ export default function Calculos() {
   const rdgColumns = [];
   if (selectedColumn) {
     rdgColumns.push({
-      key: selectedColumn, name: `${selectedColumn} (Var X)`,
-      renderEditCell: textEditor, editable: true, resizable: true, width: '50%', cellClass: 'celda-editable'
+      key: selectedColumn,
+      name: `${selectedColumn} (Var X)`,
+      renderEditCell: textEditor,
+      editable: true,
+      resizable: true,
+      width: "50%",
+      cellClass: "celda-editable",
     });
   }
-  if (calculo === "distribucion_bivariada" && selectedColumnY) {
-    rdgColumns.push({
-      key: selectedColumnY, name: `${selectedColumnY} (Var Y)`,
-      renderEditCell: textEditor, editable: true, resizable: true, width: '50%', cellClass: 'celda-editable-y'
-    });
+
+  if (
+    (calculo === "distribucion_bivariada" ||
+      calculo === "distribucion_bivariada_avanzada") &&
+    selectedColumnY
+  ) {
+    if (selectedColumn !== selectedColumnY) {
+      rdgColumns.push({
+        key: selectedColumnY,
+        name: `${selectedColumnY} (Var Y)`,
+        renderEditCell: textEditor,
+        editable: true,
+        resizable: true,
+        width: "50%",
+        cellClass: "celda-editable-y",
+      });
+    }
   }
 
   const handleGridChange = (newRows, { indexes, column }) => {
@@ -169,14 +203,8 @@ export default function Calculos() {
               /* 👇 ESTA LÍNEA SE SIMPLIFICA PARA EVITAR EL BUCLE */
               onSheetChange={setSelectedSheet}
             />
-            <div
-              className="panel-controles-excel"
-            >
-              <h3
-                className="panel-controles-excel_h3"
-              >
-                Calculadora de Excel
-              </h3>
+            <div className="panel-controles-excel">
+              <h3 className="panel-controles-excel_h3">Calculadora de Excel</h3>
 
               {columns.length > 0 || variables.length > 0? (
                 <>
@@ -252,8 +280,20 @@ export default function Calculos() {
                   </select>
 
                   {(calculo === "distribucion_bivariada" || calculo === "distribucion_bivariada_avanzada") && (
-                    <div style={{ padding: "10px", border: "1px solid var(--border-color)", borderRadius: "4px", marginBottom: "15px", backgroundColor: "var(--bg-card)" }}>
-                      <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Variable Y (Columnas):</label>
+                    <div 
+                    style={{ 
+                      padding: "10px", 
+                      border: "1px solid var(--border-color)", 
+                      borderRadius: "4px", 
+                      marginBottom: "15px", 
+                      backgroundColor: "var(--bg-card)" }}>
+                      <label 
+                      style={{ 
+                        display: "block", 
+                        marginBottom: "5px", 
+                        fontWeight: "bold" }}>
+                          Variable Y (Columnas):
+                          </label>
                       <select
                         value={selectedColumnY}
                         onChange={(e) => setSelectedColumnY(e.target.value)}
@@ -271,18 +311,19 @@ export default function Calculos() {
                   )}
 
                   {errorNumerico && (
-                    <div style={{ marginBottom: '15px', color: '#d9534f', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                    <div 
+                    style={{ 
+                      marginBottom: '15px', 
+                      color: '#d9534f', 
+                      fontSize: '0.9rem', 
+                      fontWeight: 'bold' }}>
                       * La columna seleccionada no contiene datos numéricos.
                     </div>
                   )}
 
                   {mostrarTabla && excelData.length > 0 && (
-                    <div
-                      className=".container_dataset"
-                    >
-                      <p
-                        className="info_vista"
-                      >
+                    <div className=".container_dataset">
+                      <p className="info_vista">
                         {" "}
                         Vista Previa (Doble clic para editar):
                       </p>
@@ -342,9 +383,7 @@ export default function Calculos() {
                     )}
 
                   {calculo === "medidas_posicion" && (
-                    <div
-                      className="container_cal_percentil"
-                    >
+                    <div className="container_cal_percentil">
                       <label>
                         Calcular Percentil Específico (1 - 99):
                       </label>
@@ -430,762 +469,31 @@ export default function Calculos() {
         ) : (
           <>
             <div className="frecuencias">
-              <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
-              {resultado ? (
-                resultado.tipo === "tendencia_y_posicion" ? (
-                  <div className="contenedor-tendencia-posicion">
-                    {/* TABLA 1: TENDENCIA CENTRAL */}
-                    <h4 className="tendencias">
-                      1. Análisis de Tendencia Central
-                    </h4>
-                    <div className="container_tablas_academica">
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th>Medida</th>
-                            <th>D. Individuales</th>
-                            <th>D. Agrupados</th>
-                            <th>Error %</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resultado.tendencia.map((row, i) => (
-                            <tr key={i}>
-                              <td style={{ fontWeight: "bold" }}>
-                                {row["Medida"]}
-                              </td>
-                              <td>
-                                {formatearCelda(row["D. Individuales"])}
-                              </td>
-                              <td>{formatearCelda(row["D. Agrupados"])}</td>
-                              <td
-                                style={{
-                                  color:
-                                    parseFloat(row["Error %"]) > 5
-                                      ? "#e74c3c"
-                                      : "inherit",
-                                }}
-                              >
-                                {row["Error %"]}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* TABLA 2: MEDIDAS DE POSICIÓN CON BOTONES DE FILTRO */}
-                    <div className="container_tendencia_posicion">
-                      <h4 >
-                        2. Medidas de Posición
-                      </h4>
-                      <div className="container_subtendencia">
-                        {["Cuartil", "Decil", "Percentil"].map((tipo) => (
-                          <button
-                            key={tipo}
-                            onClick={() => setFiltroFractil(tipo)}
-                            className="button_subtendencia"
-                            style={{
-                              backgroundColor:
-                                filtroFractil === tipo
-                                  ? "var(--accent-color)"
-                                  : "var(--bg-card)",
-                              color:
-                                filtroFractil === tipo ? "#fff" : "inherit",
-                              fontWeight:
-                                filtroFractil === tipo ? "bold" : "normal",
-                            }}
-                          >
-                            {tipo}es
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div style={{ overflowX: "auto" }}>
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th>Medida</th>
-                            <th>Símbolo</th>
-                            <th>D. Individuales</th>
-                            <th>D. Agrupados</th>
-                            <th>Error %</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resultado.posicion
-                            .filter(
-                              (r) =>
-                                r.Medida === filtroFractil ||
-                                r.Tipo === filtroFractil,
-                            )
-                            .map((row, i) => (
-                              <tr key={i}>
-                                <td>{row.Medida || row.Tipo}</td>
-                                <td style={{ fontWeight: "bold" }}>
-                                  {row.Símbolo}
-                                </td>
-                                <td
-                                  style={{
-                                    fontFamily: "monospace",
-                                    fontSize: "1.1em",
-                                  }}
-                                >
-                                  {formatearCelda(row["D. Individuales"])}
-                                </td>
-                                <td
-                                  style={{
-                                    fontFamily: "monospace",
-                                    fontSize: "1.1em",
-                                  }}
-                                >
-                                  {formatearCelda(row["D. Agrupados"])}
-                                </td>
-                                <td
-                                  style={{
-                                    color:
-                                      parseFloat(row["Error %"]) > 5
-                                        ? "#e74c3c"
-                                        : "inherit",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {row["Error %"]}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : resultado &&
-                  resultado.tipo === "variabilidad_y_forma" &&
-                  resultado.dispersion ? (
-                  <div className="contenedor-variabilidad-forma">
-                    {/* TABLA 3: DISPERSIÓN */}
-                    <h4>
-                      3. Medidas de Dispersión
-                    </h4>
-                    <div style={{ overflowX: "auto", marginBottom: "30px" }}>
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th>Estadígrafo</th>
-                            <th>Sigla</th>
-                            <th>D. Individuales</th>
-                            <th>D. Agrupados</th>
-                            <th>Error %</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {/* Los signos de interrogación evitan que la pantalla se ponga blanca */}
-                          {resultado?.dispersion?.map((row, i) => (
-                            <tr key={i}>
-                              <td>{row["Estadígrafo"]}</td>
-                              <td style={{ fontWeight: "bold" }}>
-                                {row["Sigla"]}
-                              </td>
-                              <td
-                                style={{
-                                  fontFamily: "monospace",
-                                  fontSize: "1.1em",
-                                }}
-                              >
-                                {formatearCelda(row["D. Individuales"])}
-                              </td>
-                              <td
-                                style={{
-                                  fontFamily: "monospace",
-                                  fontSize: "1.1em",
-                                }}
-                              >
-                                {formatearCelda(row["D. Agrupados"])}
-                              </td>
-                              <td
-                                style={{
-                                  color:
-                                    parseFloat(row["Error %"]) > 5
-                                      ? "#e74c3c"
-                                      : "inherit",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {row["Error %"]}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* TABLA 4: FORMA */}
-                    <h4
-                      style={{
-                        color: "var(--primary-color)",
-                        borderBottom: "2px solid var(--border-color)",
-                        paddingBottom: "5px",
-                      }}
-                    >
-                      4. Medidas de Forma
-                    </h4>
-                    <div style={{ overflowX: "auto" }}>
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th>Estadígrafo</th>
-                            <th>Valor Calculado</th>
-                            <th>Interpretación</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {/* Los signos de interrogación evitan que la pantalla se ponga blanca */}
-                          {resultado?.forma?.map((row, i) => (
-                            <tr key={i}>
-                              <td style={{ fontWeight: "bold" }}>
-                                {row["Estadígrafo"]}
-                              </td>
-                              <td
-                                style={{
-                                  fontFamily: "monospace",
-                                  fontSize: "1.1em",
-                                  color: "var(--primary-color)",
-                                }}
-                              >
-                                {formatearCelda(row["Valor Calculado"])}
-                              </td>
-                              <td style={{ fontStyle: "italic" }}>
-                                {row["Interpretación"]}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : resultado && resultado.tipo === "bivariada_avanzada" ? (
-                  <div className="contenedor-bivariada-avanzada">
-                    <h4>
-                      Tema 5: Análisis Bivariante, Covarianza y Correlación
-                    </h4>
-
-                    {/* TARJETAS DE CORRELACIÓN Y COVARIANZA */}
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "15px",
-                        marginBottom: "20px",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div
-                        style={{
-                          flex: 1,
-                          minWidth: "200px",
-                          padding: "15px",
-                          backgroundColor: "var(--bg-card)",
-                          border: "1px solid var(--border-color)",
-                          borderRadius: "8px",
-                          borderLeft: "4px solid #3498db",
-                        }}
-                      >
-                        <h5
-                          style={{
-                            margin: "0 0 10px 0",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          Covarianza (Sxy)
-                        </h5>
-                        <p
-                          style={{
-                            fontSize: "1.5em",
-                            margin: 0,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {resultado.esNumerico
-                            ? formatearCelda(resultado.covarianza)
-                            : "N/A"}
-                        </p>
-                      </div>
-                      <div
-                        style={{
-                          flex: 1,
-                          minWidth: "200px",
-                          padding: "15px",
-                          backgroundColor: "var(--bg-card)",
-                          border: "1px solid var(--border-color)",
-                          borderRadius: "8px",
-                          borderLeft: "4px solid #2ecc71",
-                        }}
-                      >
-                        <h5
-                          style={{
-                            margin: "0 0 10px 0",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          Correlación (r)
-                        </h5>
-                        <p
-                          style={{
-                            fontSize: "1.5em",
-                            margin: 0,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {resultado.esNumerico
-                            ? formatearCelda(resultado.correlacion)
-                            : "N/A"}
-                        </p>
-                      </div>
-                      <div
-                        style={{
-                          flex: 2,
-                          minWidth: "250px",
-                          padding: "15px",
-                          backgroundColor: "var(--bg-card)",
-                          border: "1px solid var(--border-color)",
-                          borderRadius: "8px",
-                          borderLeft: "4px solid #9b59b6",
-                        }}
-                      >
-                        <h5
-                          style={{
-                            margin: "0 0 10px 0",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          Interpretación de la Relación
-                        </h5>
-                        <p
-                          style={{
-                            fontSize: "1.2em",
-                            margin: 0,
-                            fontWeight: "bold",
-                            color: "var(--primary-color)",
-                          }}
-                        >
-                          {resultado.interpretacion}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* TABLA DE FRECUENCIAS CONJUNTAS Y MARGINALES */}
-                    <h5
-                      style={{
-                        color: "var(--text-color)",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      Tabla de Doble Entrada (Conjuntas y Marginales)
-                    </h5>
-                    <div style={{ overflowX: "auto", paddingBottom: "20px" }}>
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th
-                              style={{
-                                backgroundColor: "var(--accent-color)",
-                                color: "#fff",
-                              }}
-                            >
-                              X \ Y
-                            </th>
-                            {resultado.columnas.map((col, idx) => (
-                              <th key={idx}>{col}</th>
-                            ))}
-                            <th
-                              style={{
-                                backgroundColor: "#2c3e50",
-                                color: "#fff",
-                              }}
-                            >
-                              Total Marginal (X)
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resultado.filas.map((fila, i) => (
-                            <tr key={i}>
-                              <td
-                                style={{
-                                  fontWeight: "bold",
-                                  backgroundColor: "var(--bg-card)",
-                                }}
-                              >
-                                {fila}
-                              </td>
-                              {resultado.columnas.map((col, j) => (
-                                <td key={j}>{resultado.datos[fila][col]}</td>
-                              ))}
-                              <td
-                                style={{
-                                  fontWeight: "bold",
-                                  backgroundColor: "#e8f6f3",
-                                  color: "#16a085",
-                                }}
-                              >
-                                {resultado.totalFilas[fila]}
-                              </td>
-                            </tr>
-                          ))}
-                          {/* FILA DE TOTALES MARGINALES DE Y */}
-                          <tr>
-                            <td
-                              style={{
-                                fontWeight: "bold",
-                                backgroundColor: "#2c3e50",
-                                color: "#fff",
-                              }}
-                            >
-                              Total Marginal (Y)
-                            </td>
-                            {resultado.columnas.map((col, idx) => (
-                              <td
-                                key={idx}
-                                style={{
-                                  fontWeight: "bold",
-                                  backgroundColor: "#e8f6f3",
-                                  color: "#16a085",
-                                }}
-                              >
-                                {resultado.totalColumnas[col]}
-                              </td>
-                            ))}
-                            <td
-                              style={{
-                                fontWeight: "bold",
-                                fontSize: "1.2em",
-                                backgroundColor: "#27ae60",
-                                color: "#fff",
-                              }}
-                            >
-                              {resultado.granTotal}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : !Array.isArray(resultado) &&
-                  resultado.tipo === "bivariada" ? (
-                  <div style={{ overflowX: "auto" }}>
-                    <table className="tabla-academica">
-                      <thead>
-                        <tr>
-                          <th
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                            }}
-                          ></th>
-                          <th colSpan={resultado.columnas.length}>
-                            VARIABLE Y: {selectedColumnY}
-                          </th>
-                          <th>Total</th>
-                        </tr>
-                        <tr>
-                          <th>
-                            VARIABLE X:
-                            <br /> {selectedColumn}
-                          </th>
-                          {resultado.columnas.map((col) => (
-                            <th key={col}>{col}</th>
-                          ))}
-                          <th>
-                            <Latex formula="f_{i \cdot}" /> / %
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {resultado.filas.map((fila) => (
-                          <tr key={fila}>
-                            <td className="celda-x">{fila}</td>
-                            {resultado.columnas.map((col) => {
-                              const f_ij = resultado.datos[fila][col];
-                              const p_ij = (
-                                (f_ij / resultado.granTotal) *
-                                100
-                              ).toFixed(1);
-                              return (
-                                <td key={col}>
-                                  <strong>{f_ij}</strong>
-                                  <br />
-                                  <small
-                                    style={{ color: "var(--text-muted)" }}
-                                  >
-                                    <Latex formula={`p_{ij}=${p_ij}\\%`} />
-                                  </small>
-                                </td>
-                              );
-                            })}
-                            <td className="celda-total">
-                              <strong>{resultado.totalFilas[fila]}</strong>
-                              <br />
-                              <small>
-                                {(
-                                  (resultado.totalFilas[fila] /
-                                    resultado.granTotal) *
-                                  100
-                                ).toFixed(1)}
-                                %
-                              </small>
-                            </td>
-                          </tr>
-                        ))}
-                        <tr>
-                          <td className="celda-total">Total</td>
-                          {resultado.columnas.map((col) => (
-                            <td key={col} className="celda-total">
-                              <strong>{resultado.totalColumnas[col]}</strong>
-                              <br />
-                              <small>
-                                {(
-                                  (resultado.totalColumnas[col] /
-                                    resultado.granTotal) *
-                                  100
-                                ).toFixed(1)}
-                                %
-                              </small>
-                            </td>
-                          ))}
-                          <td className="celda-total">
-                            n = {resultado.granTotal}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                ) : Array.isArray(resultado) ? (
-                  <div style={{ overflowX: "auto" }}>
-                    {calculo === "estadistica_descriptiva" ? (
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th style={{ textAlign: "left" }}>Categoría</th>
-                            <th style={{ textAlign: "left" }}>Estadístico</th>
-                            <th style={{ textAlign: "right" }}>Valor</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resultado.map((row, i) => {
-                            const mostrarCategoria =
-                              i === 0 ||
-                              resultado[i - 1].Categoria !== row.Categoria;
-                            return (
-                              <tr
-                                key={i}
-                                style={{
-                                  borderTop:
-                                    mostrarCategoria && i !== 0
-                                      ? "2px solid var(--border-color)"
-                                      : "none",
-                                }}
-                              >
-                                <td
-                                  style={{
-                                    fontWeight: "bold",
-                                    color: "var(--primary-color)",
-                                  }}
-                                >
-                                  {mostrarCategoria ? row.Categoria : ""}
-                                </td>
-                                <td>{row.Estadistico}</td>
-                                <td
-                                  style={{
-                                    textAlign: "right",
-                                    fontFamily: "monospace",
-                                    fontSize: "1.1em",
-                                  }}
-                                >
-                                  {typeof row.Valor === "number"
-                                    ? row.Valor.toLocaleString("es-ES", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 4,
-                                    })
-                                    : row.Valor}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    ) : calculo === "distribucion_intervalos" ? (
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th>Intervalos</th>
-                            <th>
-                              <Latex formula="f_i" />
-                            </th>
-                            <th>
-                              <Latex formula="p_i \%" />
-                            </th>
-                            <th>
-                              <Latex formula="F_i" />
-                            </th>
-                            <th>
-                              <Latex formula="P_i \%" />
-                            </th>
-                            <th>
-                              <Latex formula="F'_i" />
-                            </th>
-                            <th>
-                              <Latex formula="P'_i \%" />
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resultado.map((row, i) => (
-                            <tr key={i}>
-                              <td>
-                                {row["Haber básico"] || row["Intervalos"]}
-                              </td>
-                              <td>{formatearCelda(row["f_i"])}</td>
-                              <td>{formatearCelda(row["p_i"])}</td>
-                              <td>{formatearCelda(row["F_i"])}</td>
-                              <td>{formatearCelda(row["P_i"])}</td>
-                              <td>
-                                {formatearCelda(row["F'i"] || row["F_i_inv"])}
-                              </td>
-                              <td>
-                                {formatearCelda(row["P'i"] || row["P_i_inv"])}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : calculo === "frecuencias_completas" ? (
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            <th>
-                              <Latex formula="x_i" />
-                            </th>
-                            <th>
-                              <Latex formula="f_i" />
-                            </th>
-                            <th>
-                              <Latex formula="F_i" />
-                            </th>
-                            <th>
-                              <Latex formula="F^{\uparrow}_i" />
-                            </th>
-                            <th>
-                              <Latex formula="p_i \%" />
-                            </th>
-                            <th>
-                              <Latex formula="P_i \%" />
-                            </th>
-                            <th>
-                              <Latex formula="P^{\uparrow}_i \%" />
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resultado.map((row, i) => (
-                            <tr key={i}>
-                              <td className="celda-x">
-                                {row["x_i"] || row["Valor"]}
-                              </td>
-                              <td>
-                                {formatearCelda(row["f_i"] || row["fi"])}
-                              </td>
-                              <td>{formatearCelda(row["F_i"])}</td>
-                              <td>
-                                {formatearCelda(row["F_i_inv"] || row["F'i"])}
-                              </td>
-                              <td>{formatearCelda(row["p_i"])}</td>
-                              <td>{formatearCelda(row["P_i"])}</td>
-                              <td>
-                                {formatearCelda(
-                                  row["P_i_inv"] || row["P'i%"],
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <table className="tabla-academica">
-                        <thead>
-                          <tr>
-                            {Object.keys(resultado[0]).map((key) => (
-                              <th key={key}>
-                                {key === "f_i" ? (
-                                  <Latex formula="f_i" />
-                                ) : key === "p_i" ? (
-                                  <Latex formula="p_i \%" />
-                                ) : key === "Relativa" ? (
-                                  <Latex formula="h_i" />
-                                ) : key === "Frecuencia" ? (
-                                  <Latex formula="f_i" />
-                                ) : (
-                                  key
-                                )}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {resultado.map((row, i) => (
-                            <tr key={i}>
-                              {Object.values(row).map((val, j) => (
-                                <td key={j}>{formatearCelda(val)}</td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-                ) : (
-                  <pre>{JSON.stringify(resultado, null, 2)}</pre>
-                )
-              ) : (
-                <p style={{ color: "var(--text-muted)" }}>
-                  No hay resultados aún.
-                </p>
-              )}
-            </div>
-
-            <div className="graficos-grid">
-              {resultado &&
-                (!Array.isArray(resultado) &&
-                  resultado.tipo === "bivariada" ? (
-                  <>
-                    <div className="grafico-card">
-                      <GraficoBivariado datos={resultado} tipo="agrupadas" />
-                    </div>
-                    <div className="grafico-card">
-                      <GraficoBivariado
-                        datos={resultado}
-                        tipo="apiladas_100"
-                      />
-                    </div>
-                  </>
-                ) : Array.isArray(resultado) && esIntervalo ? (
-                  <div className="grafico-card" style={{ width: "100%" }}>
-                    <h3>Gráficos de Intervalos</h3>
-                    <GraficoIntervalos datos={resultado} />
-                  </div>
-                ) : Array.isArray(resultado) ? (
-                  <>
-                    <div className="grafico-card">
-                      <h4>Gráfico de Barras</h4>
-                      <GraficoEstadistico datos={resultado} tipo="barras" />
-                    </div>
-                    <div className="grafico-card">
-                      <h4>Gráfico Circular</h4>
-                      <GraficoEstadistico datos={resultado} tipo="pastel" />
-                    </div>
-                  </>
-                ) : null)}
-            </div>
+        <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
+        {resultado ? (
+          <>
+            {/* Si es objeto especial (Bivariada), usa este: */}
+            <TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} />
+            
+            {/* Si es array normal (Frecuencias, etc.), usa este: */}
+            <TablasUnidimensionales 
+              resultado={resultado} 
+              calculo={calculo} 
+              formatearCelda={formatearCelda}
+              /* 👇 AQUÍ ESTÁN LAS DOS LÍNEAS QUE FALTABAN 👇 */
+              filtroFractil={filtroFractil} 
+              setFiltroFractil={setFiltroFractil} 
+            />
           </>
+        ) : (
+          <p style={{ color: "var(--text-muted)" }}>No hay resultados aún.</p>
         )}
       </div>
+
+      <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
+    </>
+  )}
+</div>
     </div>
   );
 }

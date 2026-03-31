@@ -1,6 +1,6 @@
 /* 
 import { useState } from "react";
-import ExcelUploader from "../components/exel/ExcelUploader";
+import ExcelUploader from "../components/excel/ExcelUploader";
 
 export default function Inicio() {
   const [_refreshFiles, _setRefreshFiles] = useState(false);
