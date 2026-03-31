@@ -17,9 +17,9 @@ import { api } from "../services/api";
 
 import "../styles/pages/Calculos.css";
 
-import TablasBivariantes from "../components/resultados/TablasBivariantes";
-import TablasUnidimensionales from "../components/resultados/TablasUnidimensionales";
-import PanelGraficos from "../components/resultados/PanelGraficos";
+import TablasBivariantes from "../components/Resultados/TablasBivariantes";
+import TablasUnidimensionales from "../components/Resultados/TablasUnidimensionales";
+import PanelGraficos from "../components/Resultados/PanelGraficos";
 
 function textEditor({ row, column, onRowChange, onClose }) {
   return (
