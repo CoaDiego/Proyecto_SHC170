@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
+import { useData } from "../components/exel/DataContext";
 
 import { api } from "../services/api";
 
 export function useCalculadoraExcel(filename, sheet) {
   // --- Estados de Datos ---
+  const { variables } = useData();
+  const [exceldataoriginal, setExcelDataOriginal] = useState([]);
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
 
@@ -29,19 +32,12 @@ export function useCalculadoraExcel(filename, sheet) {
     const caragarDatos = async () => {
       try {
         const data = await api.obtenerDatosHoja(filename, hojaIndex);
-
-        /*fetch(`http://127.0.0.1:8000/view/${filename}?hoja=${hojaIndex}`)
-          .then((res) => res.json())
-          .then((data) => {*/
         if (Array.isArray(data) && data.length > 0) {
 
           const headerRow = Object.keys(data[0]);
           setColumns(headerRow);
-
-          //const realData = data.slice(1).map((row) =>
-          // Object.fromEntries(Object.keys(row).map((key, idx) => [headerRow[idx], row[key]]))
-          //);
           setExcelData(data);
+          setExcelDataOriginal(data);
 
           // --- AUTO-SELECCIÓN INTELIGENTE ---
           if (headerRow.length > 0) {
@@ -66,25 +62,49 @@ export function useCalculadoraExcel(filename, sheet) {
       const defaultY = columns.length > 1 ? columns[1] : columns[0];
       setSelectedColumnY(defaultY);
     }
-  }, [columns, selectedColumnY]);
+    if (columns.length === 0 && variables.length > 0 && selectedColumn === "") {
+        setSelectedColumn(variables[0].nombre);
+    }
+  }, [columns, selectedColumnY, variables]);
 
   // 3. Función para editar datos (Soporta TEXTO y NÚMEROS)
+  // Dentro de useCalculadoraExcel.js
+
   const handleChangeDato = (index, colName, value) => {
-    const newData = [...excelData];
-    // Si es número válido, guárdalo como número. Si no, como texto.
     const esNumero = !isNaN(Number(value)) && value.trim() !== "";
-    newData[index][colName] = esNumero ? Number(value) : value;
-    setExcelData(newData);
+    const nuevoValor = esNumero ? Number(value) : value;
+
+    // --- NUEVA LÓGICA DE EDICIÓN ---
+    //const vCapturada = variables.find(v => v.nombre === colName);
+
+    //if (vCapturada) {
+    // Si es una variable capturada, editamos su array de datos global
+    //const nuevosDatos = [...vCapturada.datos];
+    //nuevosDatos[index] = nuevoValor;
+
+    // Actualizamos el cerebro global (DataContext)
+    //actualizarVariable(vCapturada.id, { datos: nuevosDatos });
+    const newData = [...excelData];
+    if (newData[index]) {
+      // Si no es variable, seguimos editando el excelData local como antes
+      newData[index][colName] = nuevoValor;
+      setExcelData(newData);
+    }
   };
 
-  // 4. Obtener datos de una columna (sea texto o número)
+  // 4. Obtener datos de una columna
   const obtenerColumna = (colName) => {
     if (!colName) return [];
+    // Leemos siempre de la tabla local que se muestra en pantalla
     return excelData.map((row) => row[colName]);
   };
 
-  // 5. Obtener solo números (para cálculos matemáticos estrictos)
+  // 5. Obtener solo números
   const obtenerDatosNumericos = () => {
+    if (!selectedColumn) return [];
+
+    // IMPORTANTE: Siempre leemos de excelData, porque ahí es donde
+    // están los datos que el usuario está editando en la pantalla.
     return excelData
       .map((row) => row[selectedColumn])
       .filter((v) => typeof v === "number" && !isNaN(v));
@@ -155,8 +175,8 @@ export function useCalculadoraExcel(filename, sheet) {
     if (n === 0) return null;
 
     // 1. Escáner: ¿Son números continuos o texto categórico?
-    const esNumerico = dataX.every(v => typeof v === 'number' && !isNaN(v)) && 
-                       dataY.every(v => typeof v === 'number' && !isNaN(v));
+    const esNumerico = dataX.every(v => typeof v === 'number' && !isNaN(v)) &&
+      dataY.every(v => typeof v === 'number' && !isNaN(v));
 
     let categoriasX = [];
     let categoriasY = [];
@@ -167,15 +187,15 @@ export function useCalculadoraExcel(filename, sheet) {
     // 2. CONSTRUCCIÓN DE LA TABLA
     if (esNumerico && n > 1) {
       // --- MODO INTERVALOS (Para domar los decimales) ---
-      
+
       // Regla de Sturges para calcular cuántos intervalos (k) necesitamos
       const k = Math.round(1 + 3.322 * Math.log10(n));
-      
+
       // Min, Max y Amplitud para X
       const minX = Math.min(...dataX);
       const maxX = Math.max(...dataX);
-      const ampX = (maxX - minX) / k || 1; 
-      
+      const ampX = (maxX - minX) / k || 1;
+
       // Min, Max y Amplitud para Y
       const minY = Math.min(...dataY);
       const maxY = Math.max(...dataY);
@@ -184,7 +204,7 @@ export function useCalculadoraExcel(filename, sheet) {
       // Crear las "Cajas" (Intervalos)
       const limitesX = [];
       const limitesY = [];
-      
+
       for (let i = 0; i < k; i++) {
         const lInfX = minX + i * ampX;
         const lSupX = i === k - 1 ? maxX : minX + (i + 1) * ampX; // El último intervalo cierra exacto
@@ -213,11 +233,11 @@ export function useCalculadoraExcel(filename, sheet) {
       for (let i = 0; i < n; i++) {
         const valX = dataX[i];
         const valY = dataY[i];
-        
+
         // Buscar el intervalo correcto
         let binX = limitesX.find(b => b.isLast ? (valX >= b.min && valX <= b.max) : (valX >= b.min && valX < b.max));
         let binY = limitesY.find(b => b.isLast ? (valY >= b.min && valY <= b.max) : (valY >= b.min && valY < b.max));
-        
+
         // Salvavidas por redondeo de decimales en JS
         if (!binX) binX = limitesX[limitesX.length - 1];
         if (!binY) binY = limitesY[limitesY.length - 1];
@@ -257,7 +277,7 @@ export function useCalculadoraExcel(filename, sheet) {
     let covarianza = null;
     let correlacion = null;
     let interpretacion = "No aplicable (Variables Categóricas)";
-    
+
     if (esNumerico && n > 1) {
       const meanX = dataX.reduce((a, b) => a + b, 0) / n;
       const meanY = dataY.reduce((a, b) => a + b, 0) / n;
@@ -272,13 +292,13 @@ export function useCalculadoraExcel(filename, sheet) {
         sumSqY += dy * dy;
       }
 
-      covarianza = sumCross / (n - 1); 
+      covarianza = sumCross / (n - 1);
       const stdX = Math.sqrt(sumSqX / (n - 1));
       const stdY = Math.sqrt(sumSqY / (n - 1));
 
       if (stdX > 0 && stdY > 0) {
         correlacion = covarianza / (stdX * stdY);
-        
+
         const absR = Math.abs(correlacion);
         if (absR >= 0.9) interpretacion = correlacion > 0 ? "Correlación Positiva Muy Fuerte" : "Correlación Negativa Muy Fuerte";
         else if (absR >= 0.7) interpretacion = correlacion > 0 ? "Correlación Positiva Fuerte" : "Correlación Negativa Fuerte";
@@ -325,9 +345,9 @@ export function useCalculadoraExcel(filename, sheet) {
     // Inversas
     for (let i = 0; i < tabla.length; i++) {
       const resto = tabla.slice(i);
-      const F_inv = resto.reduce((acc, curr) => acc + curr.f_i, 0); 
+      const F_inv = resto.reduce((acc, curr) => acc + curr.f_i, 0);
       tabla[i].F_i_inv = F_inv;
-      
+
       // 2. CAMBIO: Usamos la 'N' que YA existía en tu código
       tabla[i].P_i_inv = +((F_inv / N) * 100).toFixed(2);
     }
@@ -575,7 +595,7 @@ export function useCalculadoraExcel(filename, sheet) {
     // 3. COMPARACIÓN Y RESULTADO (Error Porcentual)
     // ==========================================
     const calcError = (exacto, agrupado) => exacto === 0 ? 0 : Math.abs((exacto - agrupado) / exacto) * 100;
-    
+
     const modaExactaNum = Number(modaExactaStr);
     const errorModa = !isNaN(modaExactaNum) ? `${calcError(modaExactaNum, modaAgrupada).toFixed(2)} %` : "-";
     const formatModaEx = !isNaN(modaExactaNum) ? modaExactaNum : modaExactaStr;
@@ -604,7 +624,7 @@ export function useCalculadoraExcel(filename, sheet) {
 
     // --- 1. BASES EXACTAS ---
     const mediaEx = sorted.reduce((a, b) => a + b, 0) / n;
-    
+
     const calcFractilExacto = (p) => {
       const pos = (n - 1) * p;
       const base = Math.floor(pos);
@@ -672,7 +692,7 @@ export function useCalculadoraExcel(filename, sheet) {
     const rangoAgrup = k_int * amplitud;
     const RIC_ex = Q3_ex - Q1_ex;
     const RIC_agrup = Q3_agrup - Q1_agrup;
-    
+
     // Calculamos la Mediana exacta y agrupada (que es el Cuartil 2 o el 50%)
     const medianaEx = calcFractilExacto(0.50);
     const medianaAgrup = calcFractilAgrupado(n * 0.50);
@@ -689,12 +709,12 @@ export function useCalculadoraExcel(filename, sheet) {
     for (let i = 0; i < k_int; i++) {
       const distMedia = Math.abs(intervalos[i].xm - mediaAgrup);
       const distMediana = Math.abs(intervalos[i].xm - medianaAgrup); // <-- NUEVO
-      
+
       sumDM += f[i] * distMedia;
       sumDMe += f[i] * distMediana; // <-- NUEVO
       sumVar += f[i] * Math.pow(intervalos[i].xm - mediaAgrup, 2);
     }
-    
+
     const DM_agrup = sumDM / n;
     const DMe_agrup = sumDMe / n; // <-- NUEVO: Desviación Mediana Agrupada
     const Var_agrup = sumVar / (n - 1);
@@ -739,7 +759,7 @@ export function useCalculadoraExcel(filename, sheet) {
     return { tipo: "variabilidad_y_forma", dispersion: tablaDispersion, forma: tablaForma };
   };
 
- const calcularFractiles = (datos, kPerc) => {
+  const calcularFractiles = (datos, kPerc) => {
     const n = datos.length;
     if (n === 0) return [];
     const sorted = [...datos].sort((a, b) => a - b);
@@ -809,7 +829,7 @@ export function useCalculadoraExcel(filename, sheet) {
         if (F[i] >= posicion) { claseIdx = i; break; }
       }
       if (claseIdx === -1) return max; // Fallback de seguridad
-      
+
       const Li = intervalos[claseIdx].desde;
       const fi = f[claseIdx];
       const Fant = claseIdx > 0 ? F[claseIdx - 1] : 0;
@@ -822,12 +842,12 @@ export function useCalculadoraExcel(filename, sheet) {
     // 3. GENERAR RESULTADOS
     // ==========================================
     const resultados = [];
-    
+
     const agregarResultado = (tipo, simbolo, proporcion) => {
       const exacto = calcFractilExacto(proporcion);
       const posAgrupada = n * proporcion; // Fórmula de posición para datos agrupados
       const agrupado = calcFractilAgrupado(posAgrupada);
-      
+
       resultados.push({
         Tipo: tipo,
         Símbolo: simbolo,
@@ -838,100 +858,18 @@ export function useCalculadoraExcel(filename, sheet) {
     };
 
     // Calcular todo iterativamente
-    for(let i=1; i<=3; i++) agregarResultado("Cuartil", `Q${i}`, i/4);
-    for(let i=1; i<=9; i++) agregarResultado("Decil", `D${i}`, i/10);
-    
+    for (let i = 1; i <= 3; i++) agregarResultado("Cuartil", `Q${i}`, i / 4);
+    for (let i = 1; i <= 9; i++) agregarResultado("Decil", `D${i}`, i / 10);
+
     const k = Number(kPerc);
-    if(k > 0 && k < 100) agregarResultado("Percentil", `P${k}`, k/100);
+    if (k > 0 && k < 100) agregarResultado("Percentil", `P${k}`, k / 100);
 
     return resultados;
   };
 
 
-
-
-  // --- Ejecutar Cálculo ---
-  const ejecutarCalculo = () => {
-    
-    // 1. EL "PASE VIP": Estos dos cálculos se ejecutan directo porque SÍ aceptan TEXTO
-    if (calculo === "distribucion_bivariada") {
-      setResultado(calcularBivariada());
-      return;
-    }
-    if (calculo === "distribucion_bivariada_avanzada") {
-      setResultado(calcularTema5_Bivariante());
-      return;
-    }
-
-    // 2. LA PUERTA: Todo lo que pase de aquí para abajo exige estrictamente NÚMEROS
-    const datos = obtenerDatosNumericos();
-    if (datos.length === 0) {
-         setErrorNumerico(true); // Enciende el aviso visual
-         setResultado(null);     // Limpia la tabla
-         return;                 // Detiene el cálculo
-    }
-    setErrorNumerico(false);
-
-    // 3. LOS CÁLCULOS MATEMÁTICOS UNIDIMENSIONALES
-    let res;
-    switch (calculo) {
-      case "frecuencias_completas":
-        res = calcularFrecuencias(datos);
-        break;
-      case "distribucion_intervalos":
-        res = calcularDistribucionIntervalos(datos);
-        break;
-      case "estadistica_descriptiva":
-        res = calcularDescriptivaTotal(datos);
-        break;
-      case "tendencia_central":
-        res = calcularTendenciaCentral(datos);
-        break;
-      case "medidas_posicion":
-        res = calcularFractiles(datos, percentilK);
-        break;
-      case "tendencia_y_posicion":
-        res = {
-          tipo: "tendencia_y_posicion",
-          tendencia: calcularTendenciaCentral(datos),
-          posicion: calcularFractiles(datos, percentilK),
-        };
-        break;
-      case "variabilidad_y_forma":
-        res = calcularVariabilidadYForma(datos);
-        break;
-
-      // Dentro de ejecutarCalculo en useCalculadoraExcel.js
-
-      case "distribucion_bivariada":
-        // Extraemos los datos de ambas columnas seleccionadas
-        const datosX = excelData.map((fila) => fila[selectedColumn]);
-        const datosY = excelData.map((fila) => fila[selectedColumnY]);
-
-        if (datosX.length > 0 && datosY.length > 0) {
-          // Aquí llamamos a una función que cree la tabla de doble entrada
-          res = calcularBivariadaLocal(datosX, datosY);
-        }
-        break;
-
-      case "distribucion_bivariada_avanzada":
-        const dX = excelData.map((f) => f[selectedColumn]);
-        const dY = excelData.map((f) => f[selectedColumnY]);
-
-        if (dX.length > 0 && dY.length > 0) {
-          // Función para correlación y regresión (Tema 5)
-          res = calcularBivariadaAvanzadaLocal(dX, dY);
-        }
-        break;
-
-      default:
-        res = [];
-    }
-    setResultado(res);
-  };
-
   // --- FUNCIONES DE APOYO BIVARIANTE (Al final del archivo, fuera del hook) ---
-const calcularBivariadaLocal = (X, Y) => {
+  const calcularBivariadaLocal = (X, Y) => {
     const nivelesX = [...new Set(X)].sort();
     const nivelesY = [...new Set(Y)].sort();
 
@@ -939,40 +877,195 @@ const calcularBivariadaLocal = (X, Y) => {
     const totalFilas = {};
 
     nivelesX.forEach(x => {
-        estructuraDatos[x] = {};
-        let sumaFila = 0;
-        nivelesY.forEach(y => {
-            const freq = X.filter((val, i) => val === x && Y[i] === y).length;
-            estructuraDatos[x][y] = freq;
-            sumaFila += freq;
-        });
-        totalFilas[x] = sumaFila;
+      estructuraDatos[x] = {};
+      let sumaFila = 0;
+      nivelesY.forEach(y => {
+        const freq = X.filter((val, i) => val === x && Y[i] === y).length;
+        estructuraDatos[x][y] = freq;
+        sumaFila += freq;
+      });
+      totalFilas[x] = sumaFila;
     });
 
     return {
-        tipo: "bivariada",
-        filas: nivelesX,      // El gráfico espera 'filas'
-        columnas: nivelesY,   // El gráfico espera 'columnas'
-        datos: estructuraDatos,
-        totalFilas: totalFilas
+      tipo: "bivariada",
+      filas: nivelesX,      // El gráfico espera 'filas'
+      columnas: nivelesY,   // El gráfico espera 'columnas'
+      datos: estructuraDatos,
+      totalFilas: totalFilas
     };
+  };
+
+  // --- Agrégalo al final del archivo useCalculadoraExcel.js, fuera del export function ---
+/*
+  const calcularBivariadaAvanzadaLocal = (X, Y) => {
+    const n = X.length;
+    if (n === 0) return null;
+
+    // Convertir a números por seguridad
+    const dX = X.map(v => parseFloat(v)).filter(v => !isNaN(v));
+    const dY = Y.map(v => parseFloat(v)).filter(v => !isNaN(v));
+
+    if (dX.length !== dY.length || dX.length < 2) {
+      return { interpretacion: "Datos insuficientes o no numéricos" };
+    }
+
+    // 1. Cálculos de Medias
+    const meanX = dX.reduce((a, b) => a + b, 0) / n;
+    const meanY = dY.reduce((a, b) => a + b, 0) / n;
+
+    // 2. Covarianza y Correlación
+    let sumCross = 0, sumSqX = 0, sumSqY = 0;
+    for (let i = 0; i < n; i++) {
+      const dx = dX[i] - meanX;
+      const dy = dY[i] - meanY;
+      sumCross += dx * dy;
+      sumSqX += dx * dx;
+      sumSqY += dy * dy;
+    }
+
+    const covarianza = sumCross / (n - 1);
+    const stdX = Math.sqrt(sumSqX / (n - 1));
+    const stdY = Math.sqrt(sumSqY / (n - 1));
+    const correlacion = stdX > 0 && stdY > 0 ? covarianza / (stdX * stdY) : 0;
+
+    // 3. Interpretación
+    let interp = "";
+    const absR = Math.abs(correlacion);
+    if (absR >= 0.8) interp = "Relación Muy Fuerte";
+    else if (absR >= 0.5) interp = "Relación Moderada";
+    else interp = "Relación Débil o Nula";
+
+    // 4. Retornar estructura que espera tu componente Calculos.jsx
+    return {
+      tipo: "bivariada_avanzada",
+      esNumerico: true,
+      covarianza: covarianza,
+      correlacion: correlacion,
+      interpretacion: interp,
+      // Datos para la tabla de doble entrada básica en Tema 5
+      ...calcularBivariadaLocal(X, Y)
+    };
+  };
+*/
+  
+  // --- Ejecutar Cálculo ---
+const ejecutarCalculo = () => {
+  // 1. Logs de depuración (Míralos en consola al presionar Calcular)
+  console.log("Intentando calcular con columna:", selectedColumn);
+  console.log("Variables disponibles en el Hook:", variables);
+
+  // 2. Casos Bivariantes (Ignóralos por ahora)
+  if (calculo === "distribucion_bivariada") {
+    setResultado(calcularBivariada());
+    return;
+  }
+  if (calculo === "distribucion_bivariada_avanzada") {
+    setResultado(calcularTema5_Bivariante());
+    return;
+  }
+
+  // 3. OBTENCIÓN DE DATOS (El corazón del arreglo)
+  let datosParaOperar = [];
+
+  // Limpiamos el nombre por si trae basura o espacios
+  const nombreBuscado = selectedColumn.trim();
+
+  // Buscamos la variable comparando el nombre puro
+  const vEncontrada = variables.find(v => v.nombre === nombreBuscado);
+
+  if (vEncontrada && vEncontrada.datos) {
+    console.log("✅ ¡Variable encontrada en el contexto!", vEncontrada.datos);
+    datosParaOperar = vEncontrada.datos;
+  } else {
+    console.log("⚠️ No es variable capturada, buscando en datos de Excel...");
+    datosParaOperar = obtenerDatosNumericos();
+  }
+
+  if (excelData && excelData.length > 0) {
+    const datosDeTabla = excelData
+      .map(row => parseFloat(row[selectedColumn]))
+      .filter(v => !isNaN(v));
+
+    if (datosDeTabla.length > 0) {
+      console.log("✏️ Usando datos editados de la tabla:", datosDeTabla);
+      datosParaOperar = datosDeTabla;
+    }
+  }
+
+  // 4. VALIDACIÓN FINAL
+  if (!datosParaOperar || datosParaOperar.length === 0) {
+    console.error("❌ ERROR: No se encontraron datos para:", selectedColumn);
+    setErrorNumerico(true);
+    setResultado(null);
+    return;
+  }
+
+  setErrorNumerico(false);
+
+  // 5. SWITCH DE CÁLCULOS (Usando datosParaOperar)
+  let res;
+  switch (calculo) {
+    case "frecuencias_completas":
+      res = calcularFrecuencias(datosParaOperar);
+      break;
+    case "distribucion_intervalos":
+      res = calcularDistribucionIntervalos(datosParaOperar);
+      break;
+    case "estadistica_descriptiva":
+      res = calcularDescriptivaTotal(datosParaOperar);
+      break;
+    case "tendencia_central":
+      res = calcularTendenciaCentral(datosParaOperar);
+      break;
+    case "medidas_posicion":
+      res = calcularFractiles(datosParaOperar, percentilK);
+      break;
+    case "tendencia_y_posicion":
+      res = {
+        tipo: "tendencia_y_posicion",
+        tendencia: calcularTendenciaCentral(datosParaOperar),
+        posicion: calcularFractiles(datosParaOperar, percentilK),
+      };
+      break;
+    case "variabilidad_y_forma":
+      res = calcularVariabilidadYForma(datosParaOperar);
+      break;
+    default:
+      res = [];
+  }
+  setResultado(res);
 };
 
-  // ==========================================
-  // --- EFECTO DE AUTO-CÁLCULO INTELIGENTE ---
-  // ==========================================
+
+
   useEffect(() => {
-    // Si hay datos y una columna seleccionada, ejecutamos el cálculo automáticamente
-    if (excelData && excelData.length > 0 && selectedColumn) {
+    if (!selectedColumn) return;
+
+    // Buscamos si es una variable capturada
+    const vCapturada = variables.find(v => v.nombre === selectedColumn);
+
+    if (vCapturada) {
+      // ES VARIABLE: Cargamos su copia editable
+      const rowsParaGrid = vCapturada.datos.map(num => ({
+        [vCapturada.nombre]: num
+      }));
+      setExcelData(rowsParaGrid);
+      setErrorNumerico(false)
+    } else if (exceldataoriginal.length > 0) {
+
+      setExcelData(exceldataoriginal);
+    }
+  }, [selectedColumn, exceldataoriginal, variables]); // 👈 Asegúrate de añadir estas dependencias
+
+
+  useEffect(() => {
+    // Agregamos la condición de variables.length > 0
+    if ((excelData.length > 0 || variables.length > 0) && selectedColumn) {
       ejecutarCalculo();
     }
-    
-    // 👇 NOTA: Excluimos 'excelData' de este arreglo a propósito.
-    // De esta manera, si escribes datos a mano en la tabla, NO se recalcula solo 
-    // (para eso usarás tu botón CALCULAR).
-    // Pero si cambias los selectores (la operación, la variable X o Y), sí se actualiza de inmediato.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado, percentilK]);
+    // Agregamos 'variables' al final del array
+  }, [calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado, percentilK, excelData]);
 
   return {
     excelData, columns, selectedColumn, resultado,
@@ -981,7 +1074,7 @@ const calcularBivariadaLocal = (X, Y) => {
     percentilK, setPercentilK,
     setSelectedColumn, setCalculo, setTipoIntervalo,
     setMetodoK, setKPersonalizado, handleChangeDato, ejecutarCalculo,
- 
+
     errorNumerico
   };
 }
