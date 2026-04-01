@@ -200,7 +200,7 @@ export default function Calculos() {
             <ExcelContent
               filename={selectedFile}
               mostrarTabla={false}
-              /* 👇 ESTA LÍNEA SE SIMPLIFICA PARA EVITAR EL BUCLE */
+              /* ESTA LÍNEA SE SIMPLIFICA PARA EVITAR EL BUCLE */
               onSheetChange={setSelectedSheet}
             />
             <div className="panel-controles-excel">
@@ -212,7 +212,7 @@ export default function Calculos() {
                   <select
                     value={calculo}
                     onChange={(e) => setCalculo(e.target.value)}
-                    className="container_operaciones "
+                    className="container_operaciones"
                   >
                     {/* TEMA 2: DISTRIBUCIÓN DE FRECUENCIAS */}
                     <optgroup label="Tema 2: Distribución de Frecuencias">
@@ -472,15 +472,11 @@ export default function Calculos() {
         <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
         {resultado ? (
           <>
-            {/* Si es objeto especial (Bivariada), usa este: */}
             <TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} />
-            
-            {/* Si es array normal (Frecuencias, etc.), usa este: */}
             <TablasUnidimensionales 
               resultado={resultado} 
               calculo={calculo} 
               formatearCelda={formatearCelda}
-              /* 👇 AQUÍ ESTÁN LAS DOS LÍNEAS QUE FALTABAN 👇 */
               filtroFractil={filtroFractil} 
               setFiltroFractil={setFiltroFractil} 
             />
