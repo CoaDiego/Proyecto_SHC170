@@ -526,38 +526,49 @@ export function useCalculadoraExcel(filename, sheet) {
       case "frecuencias_completas":
         res = UniMath.calcularFrecuencias(datos);
         break;
+        
       case "distribucion_intervalos":
         res = UniMath.calcularDistribucionIntervalos(datos, configData);
         break;
+        
       case "estadistica_descriptiva":
         res = UniMath.calcularDescriptivaTotal(datos);
         break;
+        
       case "tendencia_central":
-        // 👇 SOLUCIÓN 2: Nos aseguramos de usar UniMath.
-        res = UniMath.calcularTendenciaCentral(datos, configData);
+        // 1. Calculamos la tendencia central completa (que trae gráficos ocultos al final)
+        const tendenciaSimple = UniMath.calcularTendenciaCentral(datos, configData);
+        // 2. 🛡️ ELIMINAMOS LA ÚLTIMA FILA (los gráficos) usando .pop() 🛡️
+        // Esto evita que la tabla simple explote al intentar leerla.
+        if (tendenciaSimple.length > 0) tendenciaSimple.pop();
+        // 3. Enviamos el arreglo limpio a la vista
+        res = tendenciaSimple;
         break;
+        
       case "medidas_posicion":
         res = UniMath.calcularFractiles(datos, percentilK, configData);
         break;
+        
       case "tendencia_y_posicion":
-        const tendenciaData = UniMath.calcularTendenciaCentral(
-          datos,
-          configData,
-        );
-        // Extraemos los datos del gráfico que pusimos al final de calcularTendenciaCentral
-        const graficosData = tendenciaData.pop();
+        const tendenciaData = UniMath.calcularTendenciaCentral(datos, configData);
+        // Aquí SÍ necesitamos los gráficos, así que los guardamos antes de que se borren
+        const graficosData = tendenciaData.length > 0 ? tendenciaData.pop() : null;
 
         res = {
           tipo: "tendencia_y_posicion",
           tendencia: tendenciaData,
           posicion: UniMath.calcularFractiles(datos, percentilK, configData),
-          // Pasamos los datos en bruto para que el Boxplot se dibuje
           datosPuros: [...datos].sort((a, b) => a - b),
           graficosTema3: graficosData,
         };
         break;
+        
+      case "variabilidad_y_forma":
+        // Llamamos directamente a la nueva función que armamos
+        res = UniMath.calcularVariabilidadYForma(datos, configData);
+        break;
 
-      // --- CASOS BIVARIADOS (Se mantienen igual por ahora) ---
+      // --- CASOS BIVARIADOS (Se mantienen igual) ---
       case "distribucion_bivariada":
         const datosX = excelData.map((fila) => fila[selectedColumn]);
         const datosY = excelData.map((fila) => fila[selectedColumnY]);
