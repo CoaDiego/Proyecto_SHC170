@@ -67,12 +67,16 @@ export default function Calculadora() {
     kPersonalizado,
     percentilK,
     setPercentilK,
-    
+
     // 👇 IMPORTAMOS ESTADOS TEMA 7
-    metodoSeries, setMetodoSeries,
-    periodosK, setPeriodosK,
-    pesos, setPesos,
-    alfa, setAlfa,
+    metodoSeries,
+    setMetodoSeries,
+    periodosK,
+    setPeriodosK,
+    pesos,
+    setPesos,
+    alfa,
+    setAlfa,
 
     setCalculo,
     setTipoIntervalo,
@@ -112,38 +116,60 @@ export default function Calculadora() {
 
   const esIntervalo = calculo === "distribucion_intervalos";
 
-  const esUnidimensional = ["frecuencias_completas", "distribucion_intervalos", "estadistica_descriptiva", "tendencia_central", "medidas_posicion", "tendencia_y_posicion", "variabilidad_y_forma"].includes(calculo);
-  const esBivariada = ["distribucion_bivariada", "distribucion_bivariada_avanzada"].includes(calculo);
+  const esUnidimensional = [
+    "frecuencias_completas",
+    "distribucion_intervalos",
+    "estadistica_descriptiva",
+    "tendencia_central",
+    "medidas_posicion",
+    "tendencia_y_posicion",
+    "variabilidad_y_forma",
+  ].includes(calculo);
+  const esBivariada = [
+    "distribucion_bivariada",
+    "distribucion_bivariada_avanzada",
+  ].includes(calculo);
 
   const rdgColumns = [];
-  if (selectedColumn) {
-    rdgColumns.push({
-      key: selectedColumn,
-      name: `${selectedColumn} (Var X)`,
-      renderEditCell: textEditor,
-      editable: true,
-      resizable: true,
-      width: "50%",
-      cellClass: "celda-editable",
-    });
-  }
-  if (
-    (calculo === "distribucion_bivariada" ||
-      calculo === "distribucion_bivariada_avanzada" ||
-      calculo === "regresion_simple" ||
-      calculo === "series_tiempo") && // <-- Añadido series_tiempo
-    selectedColumnY
-  ) {
-    if (selectedColumn !== selectedColumnY) {
+
+  // 1. Configuramos la columna X (Si existe y no es AUTO_INDEX)
+  if (selectedColumn && selectedColumn !== "AUTO_INDEX") {
+    // Verificamos que la columna realmente exista en los datos del Excel
+    if (columns.includes(selectedColumn)) {
       rdgColumns.push({
-        key: selectedColumnY,
-        name: `${selectedColumnY} (Var Y)`,
+        key: selectedColumn,
+        name: `${selectedColumn} (Var X)`,
         renderEditCell: textEditor,
         editable: true,
         resizable: true,
         width: "50%",
-        cellClass: "celda-editable-y",
+        cellClass: "celda-editable",
       });
+    }
+  }
+
+  // 2. Configuramos la columna Y (Para temas bivariantes/regresión/series)
+  const usaDosVariables = [
+    "distribucion_bivariada",
+    "distribucion_bivariada_avanzada",
+    "regresion_simple",
+    "series_tiempo",
+  ].includes(calculo);
+
+  if (usaDosVariables && selectedColumnY) {
+    // Si X es distinto de Y (o si X es AUTO_INDEX, solo dibujamos Y)
+    if (selectedColumn !== selectedColumnY || selectedColumn === "AUTO_INDEX") {
+      if (columns.includes(selectedColumnY)) {
+        rdgColumns.push({
+          key: selectedColumnY,
+          name: `${selectedColumnY} (Var Y)`,
+          renderEditCell: textEditor,
+          editable: true,
+          resizable: true,
+          width: "50%",
+          cellClass: "celda-editable-y",
+        });
+      }
     }
   }
 
@@ -267,23 +293,27 @@ export default function Calculadora() {
                     {calculo === "series_tiempo"
                       ? "Eje de Tiempo X (Periodos/Meses):"
                       : calculo === "distribucion_bivariada" ||
-                        calculo === "distribucion_bivariada_avanzada" ||
-                        calculo === "regresion_simple"
-                      ? "Variable X (Independiente):"
-                      : "Columna Seleccionada:"}
+                          calculo === "distribucion_bivariada_avanzada" ||
+                          calculo === "regresion_simple"
+                        ? "Variable X (Independiente):"
+                        : "Columna Seleccionada:"}
                   </label>
                   <select
                     value={selectedColumn}
                     onChange={(e) => setSelectedColumn(e.target.value)}
                     style={{ width: "100%", marginBottom: "10px" }}
                   >
+                    {calculo === "series_tiempo" && (
+                      <option value="AUTO_INDEX">
+                        -- Generar Automáticamente (1, 2, 3...) --
+                      </option>
+                    )}
                     {columns.map((col) => (
                       <option key={col} value={col}>
                         {col}
                       </option>
                     ))}
                   </select>
-
                   {/* Etiquetas dinámicas para Eje Y */}
                   {(calculo === "distribucion_bivariada" ||
                     calculo === "distribucion_bivariada_avanzada" ||
@@ -326,34 +356,99 @@ export default function Calculadora() {
 
                   {/* 👇 CONTROLES TEMA 7 👇 */}
                   {calculo === "series_tiempo" && (
-                    <div className="container_intervalos" style={{ padding: '10px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '15px' }}>
-                      <label style={{fontWeight: 'bold', color: 'var(--primary-color)'}}>Método de Pronóstico:</label>
-                      <select value={metodoSeries} onChange={(e) => setMetodoSeries(e.target.value)} className="container_select" style={{marginBottom: '10px'}}>
-                        <option value="movil_simple">Promedios Móviles Simples</option>
-                        <option value="movil_ponderado">Promedios Móviles Ponderados</option>
-                        <option value="suavizamiento_exponencial">Suavizamiento Exponencial</option>
+                    <div
+                      className="container_intervalos"
+                      style={{
+                        padding: "10px",
+                        backgroundColor: "var(--bg-card)",
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "4px",
+                        marginBottom: "15px",
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontWeight: "bold",
+                          color: "var(--primary-color)",
+                        }}
+                      >
+                        Método de Pronóstico:
+                      </label>
+                      <select
+                        value={metodoSeries}
+                        onChange={(e) => setMetodoSeries(e.target.value)}
+                        className="container_select"
+                        style={{ marginBottom: "10px" }}
+                      >
+                        <option value="movil_simple">
+                          Promedios Móviles Simples
+                        </option>
+                        <option value="movil_ponderado">
+                          Promedios Móviles Ponderados
+                        </option>
+                        <option value="suavizamiento_exponencial">
+                          Suavizamiento Exponencial
+                        </option>
                       </select>
 
                       {metodoSeries === "movil_simple" && (
                         <div>
                           <label>Periodos a evaluar (k):</label>
-                          <input type="number" min="2" value={periodosK} onChange={(e) => setPeriodosK(e.target.value)} className="container_cal_input" />
+                          <input
+                            type="number"
+                            min="2"
+                            value={periodosK}
+                            onChange={(e) => setPeriodosK(e.target.value)}
+                            className="container_cal_input"
+                          />
                         </div>
                       )}
 
                       {metodoSeries === "movil_ponderado" && (
                         <div>
                           <label>Pesos (separados por coma):</label>
-                          <input type="text" value={pesos} onChange={(e) => setPesos(e.target.value)} className="container_cal_input" placeholder="Ej: 0.5, 0.3, 0.2" />
-                          <small style={{display: 'block', color: 'var(--text-muted)', fontSize: '0.8em', marginTop: '4px'}}>El primer peso es para el dato más antiguo.</small>
+                          <input
+                            type="text"
+                            value={pesos}
+                            onChange={(e) => setPesos(e.target.value)}
+                            className="container_cal_input"
+                            placeholder="Ej: 0.5, 0.3, 0.2"
+                          />
+                          <small
+                            style={{
+                              display: "block",
+                              color: "var(--text-muted)",
+                              fontSize: "0.8em",
+                              marginTop: "4px",
+                            }}
+                          >
+                            El primer peso es para el dato más antiguo.
+                          </small>
                         </div>
                       )}
 
                       {metodoSeries === "suavizamiento_exponencial" && (
                         <div>
                           <label>Constante de Suavización (Alfa α):</label>
-                          <input type="number" step="0.01" min="0" max="1" value={alfa} onChange={(e) => setAlfa(e.target.value)} className="container_cal_input" />
-                          <small style={{display: 'block', color: 'var(--text-muted)', fontSize: '0.8em', marginTop: '4px'}}>Debe ser un valor entre 0 y 1.</small>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="1"
+                            value={alfa}
+                            onChange={(e) => setAlfa(e.target.value)}
+                            className="container_cal_input"
+                          />
+                          <small
+                            style={{
+                              display: "block",
+                              color: "var(--text-muted)",
+                              fontSize: "0.8em",
+                              marginTop: "4px",
+                            }}
+                          >
+                            Debe ser un valor entre 0 y 1.
+                          </small>
                         </div>
                       )}
                     </div>
@@ -490,10 +585,14 @@ export default function Calculadora() {
       </div>
 
       {/* ================= DERECHA: RESULTADOS O CREADOR ================= */}
-      {/* ================= DERECHA: RESULTADOS O CREADOR ================= */}
       <div className="calculadora-resultados">
         {modoCreacion ? (
-          <TablaDinamica onTablaCreada={() => { cargarArchivos(); setModoCreacion(false); }} />
+          <TablaDinamica
+            onTablaCreada={() => {
+              cargarArchivos();
+              setModoCreacion(false);
+            }}
+          />
         ) : (
           <>
             <div className="frecuencias">
@@ -501,41 +600,26 @@ export default function Calculadora() {
 
               {resultado ? (
                 <>
-                  {/* Tema 6: Regresión */}
-                  {calculo === "regresion_simple" && resultado.tipo === "regresion" && (
+                  {/* Tema 6: Regresión (La tabla comparativa y las manuales) */}
+                  {calculo === "regresion_simple" && (
                     <TablaRegresion resultado={resultado} />
                   )}
-                  {calculo === "regresion_simple" && resultado.tipo !== "regresion" && (
-                    <div style={{ padding: "20px", color: "var(--text-muted)", textAlign: "center", border: "1px dashed var(--border-color)", borderRadius: "8px", margin: "10px 0" }}>
-                      <p style={{ margin: "0" }}>⚙️ <b>Esperando datos válidos...</b></p>
-                      <small>Para la Regresión, necesitas seleccionar Variable X e Variable Y numéricas.</small>
-                    </div>
-                  )}
 
-                  {/* Tema 7: Series de Tiempo */}
-                  {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && (
+                  {/* Tema 7: Series de Tiempo (La tabla con pronósticos y errores) */}
+                  {calculo === "series_tiempo" && (
                     <TablaSeriesTiempo resultado={resultado} />
-                  )}
-                  {calculo === "series_tiempo" && resultado.tipo !== "series_tiempo" && (
-                    <div style={{ padding: "20px", color: "var(--text-muted)", textAlign: "center", border: "1px dashed var(--border-color)", borderRadius: "8px", margin: "10px 0" }}>
-                      <p style={{ margin: "0" }}>⚙️ <b>Esperando datos válidos...</b></p>
-                      <small>Asegúrate de seleccionar la Variable Y (Demanda/Ventas).</small>
-                    </div>
                   )}
 
                   {/* Tema 5: Tablas Bivariantes */}
                   {esBivariada && resultado.tipo === "bivariada" && (
-                    <TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} />
+                    <TablasBivariantes
+                      resultado={resultado}
+                      formatearCelda={formatearCelda}
+                    />
                   )}
-                  {esBivariada && resultado.tipo !== "bivariada" && (
-                    <div style={{ padding: "20px", color: "var(--text-muted)", textAlign: "center", border: "1px dashed var(--border-color)", borderRadius: "8px", margin: "10px 0" }}>
-                      <p style={{ margin: "0" }}>⚙️ <b>Esperando datos válidos...</b></p>
-                      <small>Selecciona Variable X e Variable Y para ver la distribución bivariante.</small>
-                    </div>
-                  )}
-                  
+
                   {/* Temas 2 al 4: Tablas Unidimensionales */}
-                  {esUnidimensional && (!resultado.tipo || resultado.tipo === "tendencia_y_posicion") && (
+                  {esUnidimensional && (
                     <TablasUnidimensionales
                       resultado={resultado}
                       calculo={calculo}
@@ -546,13 +630,9 @@ export default function Calculadora() {
                   )}
                 </>
               ) : (
-                <div style={{ padding: "20px", textAlign: "center", color: errorNumerico ? "#d9534f" : "var(--text-muted)", backgroundColor: errorNumerico ? "rgba(217, 83, 79, 0.1)" : "transparent", borderRadius: "8px", border: "1px solid transparent", borderColor: errorNumerico ? "#d9534f" : "transparent" }}>
-                  <p style={{ margin: "0" }}>
-                    {errorNumerico 
-                      ? "⚠️ Error: Las columnas seleccionadas no contienen datos compatibles (se esperaban números)." 
-                      : "No hay resultados aún. Configura los parámetros a la izquierda."}
-                  </p>
-                </div>
+                <p style={{ color: "var(--text-muted)" }}>
+                  No hay resultados aún.
+                </p>
               )}
             </div>
 

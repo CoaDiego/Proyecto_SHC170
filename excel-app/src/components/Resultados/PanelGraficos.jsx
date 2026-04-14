@@ -5,12 +5,19 @@ import GraficoIntervalos from "../graficos/GraficoIntervalos";
 import GraficoBivariado from "../graficos/GraficoBivariado";
 import GraficoDispersionForma from "../graficos/GraficoDispersionForma";
 import GraficoTendenciaPosicion from "../graficos/GraficoTendenciaPosicion";
+import GraficoRegresion from "../graficos/GraficoRegresion";
+
+import GraficoSeriesTiempo from "../graficos/GraficoSeriesTiempo";
 
 export default function PanelGraficos({ resultado, esIntervalo }) {
   if (!resultado) return null;
 
   const esBivariada = !Array.isArray(resultado) && 
     (resultado.tipo === "bivariada" || resultado.tipo === "bivariada_avanzada");
+
+    if (resultado.tipo === "regresion") {
+    return <GraficoRegresion resultado={resultado} />;
+  }
 
   // =======================================================
   // GRÁFICOS TEMA 4: VARIABILIDAD Y FORMA
