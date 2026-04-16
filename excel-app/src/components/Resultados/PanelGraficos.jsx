@@ -6,8 +6,8 @@ import GraficoBivariado from "../graficos/GraficoBivariado";
 import GraficoDispersionForma from "../graficos/GraficoDispersionForma";
 import GraficoTendenciaPosicion from "../graficos/GraficoTendenciaPosicion";
 import GraficoRegresion from "../graficos/GraficoRegresion";
-
 import GraficoSeriesTiempo from "../graficos/GraficoSeriesTiempo";
+import GraficoIndices from "../graficos/GraficoIndices"; // 👈 IMPORTADO CORRECTAMENTE
 
 export default function PanelGraficos({ resultado, esIntervalo }) {
   if (!resultado) return null;
@@ -15,9 +15,27 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
   const esBivariada = !Array.isArray(resultado) && 
     (resultado.tipo === "bivariada" || resultado.tipo === "bivariada_avanzada");
 
-    if (resultado.tipo === "regresion") {
+  // =======================================================
+  // GRÁFICOS TEMA 6: REGRESIÓN
+  // =======================================================
+  if (resultado.tipo === "regresion") {
     return <GraficoRegresion resultado={resultado} />;
   }
+
+  // =======================================================
+  // GRÁFICOS TEMA 7: SERIES DE TIEMPO
+  // =======================================================
+  if (resultado.tipo === "series_tiempo") {
+    return <GraficoSeriesTiempo resultado={resultado} />;
+  }
+
+  // 👇 =======================================================
+  // GRÁFICOS TEMA 8: NÚMEROS ÍNDICES Y DEFLACIÓN
+  // ======================================================= 👇
+  if (["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo)) {
+    return <GraficoIndices resultado={resultado} />;
+  }
+  // ☝️ =======================================================
 
   // =======================================================
   // GRÁFICOS TEMA 4: VARIABILIDAD Y FORMA

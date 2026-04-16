@@ -4,6 +4,7 @@ import * as UniMath from "../utils/estadisticaUnidimensional";
 import * as MultiMath from "../utils/estadisticaMultivariante";
 import * as RegMath from "../utils/estadisticaRegresion";
 import * as SeriesMath from "../utils/estadisticaSeriesTiempo";
+import * as IndicesMath from "../utils/estadisticaIndices"; // 👈 El nuevo motor
 
 import { api } from "../services/api";
 
@@ -25,6 +26,14 @@ export function useCalculadoraExcel(filename, sheet) {
   const [pesos, setPesos] = useState("0.5, 0.3, 0.2");
   const [alfa, setAlfa] = useState(0.2);
 
+  // 👇 ESTADOS TEMA 8: NÚMEROS ÍNDICES 👇
+  const [subTemaIndices, setSubTemaIndices] = useState("compuestos");
+  const [colPrecioBase, setColPrecioBase] = useState("");
+  const [colCantidadBase, setColCantidadBase] = useState("");
+  const [colPrecioActual, setColPrecioActual] = useState("");
+  const [colCantidadActual, setColCantidadActual] = useState("");
+  const [nuevoIndiceBase, setNuevoIndiceBase] = useState(100);
+
   const [errorNumerico, setErrorNumerico] = useState(false);
   const [resultado, setResultado] = useState(null);
 
@@ -42,9 +51,7 @@ export function useCalculadoraExcel(filename, sheet) {
 
           if (headerRow.length > 0) {
             setSelectedColumn(headerRow[0]);
-            setSelectedColumnY(
-              headerRow.length > 1 ? headerRow[1] : headerRow[0],
-            );
+            setSelectedColumnY(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
           }
         } else {
           setExcelData([]);
@@ -57,12 +64,17 @@ export function useCalculadoraExcel(filename, sheet) {
     caragarDatos();
   }, [filename, sheet]);
 
+  // Autoselección inteligente de columnas para los temas avanzados
   useEffect(() => {
-    if (columns.length > 0 && selectedColumnY === "") {
-      const defaultY = columns.length > 1 ? columns[1] : columns[0];
-      setSelectedColumnY(defaultY);
+    if (columns.length > 0) {
+      if (selectedColumnY === "") setSelectedColumnY(columns.length > 1 ? columns[1] : columns[0]);
+      if (colPrecioBase === "") setColPrecioBase(columns[0]);
+      if (colCantidadBase === "") setColCantidadBase(columns.length > 1 ? columns[1] : columns[0]);
+      if (colPrecioActual === "") setColPrecioActual(columns.length > 2 ? columns[2] : columns[0]);
+      if (colCantidadActual === "") setColCantidadActual(columns.length > 3 ? columns[3] : columns[0]);
     }
-  }, [columns, selectedColumnY]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columns]);
 
   const handleChangeDato = (index, colName, value) => {
     const newData = [...excelData];
@@ -112,32 +124,23 @@ export function useCalculadoraExcel(filename, sheet) {
 
   const ejecutarCalculo = () => {
     // 1. PASE VIP 1: MULTIVARIANTE
-    if (
-      calculo === "distribucion_bivariada" ||
-      calculo === "distribucion_bivariada_avanzada"
-    ) {
+    if (calculo === "distribucion_bivariada" || calculo === "distribucion_bivariada_avanzada") {
       if (!selectedColumn || !selectedColumnY) return;
       const rawDataX = obtenerColumna(selectedColumn);
       const rawDataY = obtenerColumna(selectedColumnY);
 
       let resMultivariable = null;
       if (calculo === "distribucion_bivariada") {
-        resMultivariable = MultiMath.calcularDistribucionBivariada(
-          rawDataX,
-          rawDataY,
-        );
+        resMultivariable = MultiMath.calcularDistribucionBivariada(rawDataX, rawDataY);
       } else {
-        resMultivariable = MultiMath.calcularBivarianteAvanzada(
-          rawDataX,
-          rawDataY,
-        );
+        resMultivariable = MultiMath.calcularBivarianteAvanzada(rawDataX, rawDataY);
       }
       setResultado(resMultivariable);
       setErrorNumerico(false);
       return;
     }
 
-    // 👇 2. PASE VIP 2: REGRESIÓN (¡Este era el bloque perdido!)
+    // 2. PASE VIP 2: REGRESIÓN
     if (calculo === "regresion_simple") {
       if (!selectedColumn || !selectedColumnY) return;
       const dataX = []; const dataY = [];
@@ -187,9 +190,7 @@ export function useCalculadoraExcel(filename, sheet) {
       }
       
       if (dataY.length === 0) {
-        setErrorNumerico(true);
-        setResultado(null);
-        return;
+        setErrorNumerico(true); setResultado(null); return;
       }
       
       const configSeries = { k: periodosK, pesos: pesos, alfa: alfa };
@@ -200,12 +201,59 @@ export function useCalculadoraExcel(filename, sheet) {
       return;
     }
 
-    // 4. TEMAS UNIDIMENSIONALES
+    // 👇 4. PASE VIP 4: NÚMEROS ÍNDICES 👇
+    if (calculo === "numeros_indices") {
+      let resIndices = null;
+
+      if (subTemaIndices === "compuestos") {
+        if (!colPrecioBase || !colCantidadBase || !colPrecioActual || !colCantidadActual) return;
+        
+        const p0 = obtenerColumna(colPrecioBase).map(Number);
+        const q0 = obtenerColumna(colCantidadBase).map(Number);
+        const pt = obtenerColumna(colPrecioActual).map(Number);
+        const qt = obtenerColumna(colCantidadActual).map(Number);
+
+        if (p0.some(isNaN) || q0.some(isNaN) || pt.some(isNaN) || qt.some(isNaN)) {
+          setErrorNumerico(true); setResultado(null); return;
+        }
+        resIndices = IndicesMath.calcularIndicesCompuestos(p0, q0, pt, qt);
+
+      } else if (subTemaIndices === "empalme") {
+        if (!selectedColumn || !selectedColumnY) return;
+        
+        const arrT = obtenerColumna(selectedColumn).map(String);
+        const arrI = obtenerColumna(selectedColumnY).map(Number);
+        
+        if (arrI.some(isNaN) || arrI.length === 0) {
+          setErrorNumerico(true); setResultado(null); return;
+        }
+        resIndices = IndicesMath.calcularOperacionesSerieIndices(arrT, arrI, Number(nuevoIndiceBase));
+
+      } else if (subTemaIndices === "deflacion") {
+        if (!selectedColumn || !selectedColumnY || !colPrecioBase) return;
+        
+        const arrT = obtenerColumna(selectedColumn).map(String);
+        const arrNominal = obtenerColumna(selectedColumnY).map(Number);
+        const arrIPC = obtenerColumna(colPrecioBase).map(Number);
+        
+        if (arrNominal.some(isNaN) || arrIPC.some(isNaN) || arrNominal.length === 0) {
+          setErrorNumerico(true); setResultado(null); return;
+        }
+        resIndices = IndicesMath.calcularDeflacionSalarial(arrT, arrNominal, arrIPC);
+      }
+
+      if (!resIndices) {
+        setErrorNumerico(true); setResultado(null);
+      } else {
+        setErrorNumerico(false); setResultado(resIndices);
+      }
+      return;
+    }
+
+    // 5. TEMAS UNIDIMENSIONALES
     const datos = obtenerDatosNumericos();
     if (datos.length === 0) {
-      setErrorNumerico(true);
-      setResultado(null);
-      return;
+      setErrorNumerico(true); setResultado(null); return;
     }
     setErrorNumerico(false);
 
@@ -223,10 +271,7 @@ export function useCalculadoraExcel(filename, sheet) {
         res = UniMath.calcularDescriptivaTotal(datos);
         break;
       case "tendencia_central":
-        const tendenciaSimple = UniMath.calcularTendenciaCentral(
-          datos,
-          configData,
-        );
+        const tendenciaSimple = UniMath.calcularTendenciaCentral(datos, configData);
         if (tendenciaSimple.length > 0) tendenciaSimple.pop();
         res = tendenciaSimple;
         break;
@@ -234,12 +279,8 @@ export function useCalculadoraExcel(filename, sheet) {
         res = UniMath.calcularFractiles(datos, percentilK, configData);
         break;
       case "tendencia_y_posicion":
-        const tendenciaData = UniMath.calcularTendenciaCentral(
-          datos,
-          configData,
-        );
-        const graficosData =
-          tendenciaData.length > 0 ? tendenciaData.pop() : null;
+        const tendenciaData = UniMath.calcularTendenciaCentral(datos, configData);
+        const graficosData = tendenciaData.length > 0 ? tendenciaData.pop() : null;
         res = {
           tipo: "tendencia_y_posicion",
           tendencia: tendenciaData,
@@ -261,47 +302,36 @@ export function useCalculadoraExcel(filename, sheet) {
     if (excelData && excelData.length > 0 && selectedColumn) ejecutarCalculo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    calculo,
-    selectedColumn,
-    selectedColumnY,
-    tipoIntervalo,
-    metodoK,
-    kPersonalizado,
-    percentilK,
-    metodoSeries,
-    periodosK,
-    pesos,
-    alfa,
+    calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado, percentilK,
+    metodoSeries, periodosK, pesos, alfa,
+    subTemaIndices, colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual, nuevoIndiceBase // 👈 Se añadieron aquí para evitar errores
   ]);
 
   return {
     excelData,
     columns,
-    selectedColumn,
+    selectedColumn, setSelectedColumn,
+    selectedColumnY, setSelectedColumnY,
     resultado,
-    calculo,
-    tipoIntervalo,
-    metodoK,
-    kPersonalizado,
-    selectedColumnY,
-    setSelectedColumnY,
-    percentilK,
-    setPercentilK,
-    setSelectedColumn,
-    setCalculo,
-    setTipoIntervalo,
-    setMetodoK,
-    setKPersonalizado,
+    calculo, setCalculo,
+    tipoIntervalo, setTipoIntervalo,
+    metodoK, setMetodoK,
+    kPersonalizado, setKPersonalizado,
+    percentilK, setPercentilK,
     handleChangeDato,
     ejecutarCalculo,
     errorNumerico,
-    metodoSeries,
-    setMetodoSeries,
-    periodosK,
-    setPeriodosK,
-    pesos,
-    setPesos,
-    alfa,
-    setAlfa,
+    metodoSeries, setMetodoSeries,
+    periodosK, setPeriodosK,
+    pesos, setPesos,
+    alfa, setAlfa,
+    
+    // 👇 EXPORTANDO TEMA 8 👇
+    subTemaIndices, setSubTemaIndices,
+    colPrecioBase, setColPrecioBase,
+    colCantidadBase, setColCantidadBase,
+    colPrecioActual, setColPrecioActual,
+    colCantidadActual, setColCantidadActual,
+    nuevoIndiceBase, setNuevoIndiceBase
   };
 }

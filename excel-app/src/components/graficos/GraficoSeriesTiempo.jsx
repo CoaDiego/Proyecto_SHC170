@@ -1,71 +1,83 @@
 import React from 'react';
 import {
-  ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area
+  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 
 export default function GraficoSeriesTiempo({ resultado }) {
-  // Los datos ya vienen listos desde el motor (resultado.datos)
-  const datosGrafico = resultado.datos;
+  if (!resultado || resultado.tipo !== "series_tiempo") return null;
+
+  // Extraemos los datos calculados de nuestro motor
+  const datos = resultado.datos;
 
   return (
-    <div style={{ padding: '20px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)', marginTop: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h4 style={{ textAlign: 'center', color: 'var(--text-color)', marginBottom: '15px' }}>
-        Comparativa: Datos Reales vs Pronóstico ({resultado.metodo.replace('_', ' ')})
-      </h4>
-
-      <div style={{ width: '100%', height: 400 }}>
-        <ResponsiveContainer>
-          <ComposedChart data={datosGrafico} margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
-            {/* Cuadrícula adaptativa */}
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.2)" vertical={false} />
-            
-            {/* Eje X: Mostramos las etiquetas de tiempo (Meses/Años) */}
-            <XAxis dataKey="xLabel" tick={{fill: 'var(--text-muted)'}} />
-            
-            {/* Eje Y: Valores numéricos */}
-            <YAxis tick={{fill: 'var(--text-muted)'}} />
-            
-            <Tooltip 
-              contentStyle={{backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}
-              formatter={(value, name) => [value.toFixed(2), name === 'yReal' ? 'Valor Real' : 'Pronóstico']}
-              labelStyle={{fontWeight: 'bold', color: 'var(--primary-color)'}}
-            />
-            
-            <Legend wrapperStyle={{ paddingTop: '10px' }} />
-
-            {/* 1. Línea de Datos Reales (Sólida) */}
-            <Line 
-              type="monotone" 
-              dataKey="yReal" 
-              name="Valor Real" 
-              stroke="#1976d2" // Azul
-              strokeWidth={3} 
-              dot={{ r: 4, strokeWidth: 2 }} 
-              activeDot={{ r: 6 }} 
-            />
-
-            {/* 2. Línea de Pronóstico (Punteada o de otro color) */}
-            <Line 
-              type="monotone" 
-              dataKey="yPronostico" 
-              name="Pronóstico" 
-              stroke="#ff9800" // Naranja
-              strokeWidth={3} 
-              strokeDasharray="5 5" // Línea punteada para diferenciar que es una estimación
-              dot={{ r: 4, strokeWidth: 2 }} 
-              activeDot={{ r: 6 }}
-              connectNulls={true} // Importante: para que la línea no se corte si los primeros meses no tienen pronóstico
-            />
-
-            {/* Opcional: Un área suave debajo de la línea real para darle mejor aspecto */}
-            <Area type="monotone" dataKey="yReal" fill="#1976d2" fillOpacity={0.1} stroke="none" />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
+    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
-      <p style={{marginTop: '10px', fontSize: '0.85em', color: 'var(--text-muted)', textAlign: 'center'}}>
-        Nota: La línea punteada naranja representa la predicción del modelo seleccionado. Cuanto más se superponga a la línea azul, mejor es el ajuste.
-      </p>
+      {/* 📊 GRÁFICO 1: LÍNEA DE TENDENCIA (Real vs Pronóstico) */}
+      <div style={{ padding: '20px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <h4 style={{ textAlign: 'center', marginBottom: '15px', color: 'var(--text-color)' }}>
+          Tendencia Histórica vs. Modelo de {resultado.metodo.replace('_', ' ')}
+        </h4>
+        <div style={{ width: '100%', height: 350 }}>
+          <ResponsiveContainer>
+            <ComposedChart data={datos} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.2)" vertical={false} />
+              <XAxis dataKey="xLabel" tick={{fill: 'var(--text-muted)'}} />
+              <YAxis tick={{fill: 'var(--text-muted)'}} />
+              <Tooltip 
+                contentStyle={{backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}
+                formatter={(value) => value !== null ? value.toFixed(2) : 'N/A'}
+              />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} />
+              
+              {/* Línea Sólida: Datos Reales */}
+              <Line 
+                type="monotone" dataKey="yReal" name="Dato Real (Y)" 
+                stroke="#1976d2" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} 
+              />
+              {/* Línea Punteada: Pronóstico */}
+              <Line 
+                type="monotone" dataKey="yPronostico" name="Pronóstico (F)" 
+                stroke="#ff9800" strokeWidth={3} strokeDasharray="5 5" 
+                dot={{ r: 4 }} activeDot={{ r: 6 }} connectNulls={true} 
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        <p style={{textAlign: 'center', fontSize: '0.85em', color: 'var(--text-muted)', marginTop: '10px'}}>
+          La línea naranja representa la predicción. Cuanto más se superponga a la azul, más exacto es el modelo.
+        </p>
+      </div>
+
+      {/* 📊 GRÁFICO 2: BARRAS DE ERROR (Residuos) */}
+      <div style={{ padding: '20px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <h4 style={{ textAlign: 'center', marginBottom: '15px', color: 'var(--text-color)' }}>
+          Análisis de Errores (Residuos)
+        </h4>
+        <div style={{ width: '100%', height: 250 }}>
+          <ResponsiveContainer>
+            <ComposedChart data={datos} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.2)" vertical={false} />
+              <XAxis dataKey="xLabel" tick={{fill: 'var(--text-muted)'}} />
+              <YAxis tick={{fill: 'var(--text-muted)'}} />
+              <Tooltip 
+                contentStyle={{backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}
+                formatter={(value) => value !== null ? value.toFixed(4) : 'N/A'}
+              />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} />
+              
+              {/* Línea Cero (Eje central) */}
+              <ReferenceLine y={0} stroke="var(--text-muted)" strokeWidth={2} />
+              
+              {/* Barras de Error */}
+              <Bar 
+                dataKey="error" name="Error (Real - Pronóstico)" 
+                fill="#f44336" radius={[4, 4, 0, 0]} 
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
     </div>
   );
 }

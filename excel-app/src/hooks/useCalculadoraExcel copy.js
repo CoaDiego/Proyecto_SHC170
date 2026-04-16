@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import * as UniMath from "../utils/estadisticaUnidimensional";
 import * as MultiMath from "../utils/estadisticaMultivariante";
 import * as RegMath from "../utils/estadisticaRegresion";
-
 import * as SeriesMath from "../utils/estadisticaSeriesTiempo";
+import * as IndicesMath from "../utils/estadisticaIndices";
 
 import { api } from "../services/api";
 
@@ -25,6 +25,15 @@ export function useCalculadoraExcel(filename, sheet) {
   const [periodosK, setPeriodosK] = useState(3);
   const [pesos, setPesos] = useState("0.5, 0.3, 0.2");
   const [alfa, setAlfa] = useState(0.2);
+
+  // Para Índices Compuestos (Módulo 1)
+  const [colPrecioBase, setColPrecioBase] = useState("");
+  const [colCantidadBase, setColCantidadBase] = useState("");
+  const [colPrecioActual, setColPrecioActual] = useState("");
+  const [colCantidadActual, setColCantidadActual] = useState("");
+
+  // Para Empalme/Cambio de Base (Módulo 2)
+  const [nuevoIndiceBase, setNuevoIndiceBase] = useState(100);
 
   const [errorNumerico, setErrorNumerico] = useState(false);
   const [resultado, setResultado] = useState(null);
@@ -58,12 +67,28 @@ export function useCalculadoraExcel(filename, sheet) {
     caragarDatos();
   }, [filename, sheet]);
 
-  useEffect(() => {
+  /*  useEffect(() => {
     if (columns.length > 0 && selectedColumnY === "") {
       const defaultY = columns.length > 1 ? columns[1] : columns[0];
       setSelectedColumnY(defaultY);
     }
-  }, [columns, selectedColumnY]);
+  }, [columns, selectedColumnY]); */
+
+  useEffect(() => {
+    if (columns.length > 0) {
+      if (selectedColumnY === "")
+        setSelectedColumnY(columns.length > 1 ? columns[1] : columns[0]);
+
+      // 👇 Auto-seleccionar las 4 columnas de índices si hay suficientes
+      if (colPrecioBase === "") setColPrecioBase(columns[0]);
+      if (colCantidadBase === "")
+        setColCantidadBase(columns.length > 1 ? columns[1] : columns[0]);
+      if (colPrecioActual === "")
+        setColPrecioActual(columns.length > 2 ? columns[2] : columns[0]);
+      if (colCantidadActual === "")
+        setColCantidadActual(columns.length > 3 ? columns[3] : columns[0]);
+    }
+  }, [columns]); // <- Quitamos selectedColumnY de las dependencias para evitar ciclos infinitos
 
   const handleChangeDato = (index, colName, value) => {
     const newData = [...excelData];
@@ -112,6 +137,7 @@ export function useCalculadoraExcel(filename, sheet) {
   };
 
   const ejecutarCalculo = () => {
+    // 1. PASE VIP 1: MULTIVARIANTE
     if (
       calculo === "distribucion_bivariada" ||
       calculo === "distribucion_bivariada_avanzada"
@@ -137,38 +163,172 @@ export function useCalculadoraExcel(filename, sheet) {
       return;
     }
 
-    /// 👇 C) PASE VIP 3: SERIES DE TIEMPO (Tema 7) - VERSIÓN ESTABLE
-    if (calculo === "series_tiempo") {
+    // 👇 2. PASE VIP 2: REGRESIÓN (¡Este era el bloque perdido!)
+    if (calculo === "regresion_simple") {
       if (!selectedColumn || !selectedColumnY) return;
-      
-      const rawX = obtenerColumna(selectedColumn); 
-      const rawY = obtenerColumna(selectedColumnY); 
-      
       const dataX = [];
       const dataY = [];
-      
-      for(let i = 0; i < rawX.length; i++){
+      const rawX = obtenerColumna(selectedColumn);
+      const rawY = obtenerColumna(selectedColumnY);
+
+      for (let i = 0; i < rawX.length; i++) {
+        const nx = Number(rawX[i]);
         const ny = Number(rawY[i]);
-        if(!isNaN(ny) && rawY[i] !== "" && rawX[i] !== undefined && rawX[i] !== null){
-          dataX.push(String(rawX[i])); 
+        if (!isNaN(nx) && !isNaN(ny) && rawX[i] !== "" && rawY[i] !== "") {
+          dataX.push(nx);
           dataY.push(ny);
         }
       }
-      
+
+      const tipos = [
+        "lineal",
+        "exponencial",
+        "logaritmica",
+        "potencial",
+        "reciproco",
+      ];
+      const comparativa = [];
+
+      tipos.forEach((tipo) => {
+        const res = RegMath.calcularRegresionSimple(dataX, dataY, tipo);
+        if (res) comparativa.push(res);
+      });
+
+      if (comparativa.length === 0) {
+        setErrorNumerico(true);
+        setResultado(null);
+      } else {
+        setErrorNumerico(false);
+        comparativa.sort((a, b) => b.indicadores.r2 - a.indicadores.r2);
+        setResultado({ tipo: "regresion", comparativa: comparativa });
+      }
+      return;
+    }
+
+    // 3. PASE VIP 3: SERIES DE TIEMPO
+    if (calculo === "series_tiempo") {
+      if (!selectedColumn || !selectedColumnY) return;
+
+      const rawX = obtenerColumna(selectedColumn);
+      const rawY = obtenerColumna(selectedColumnY);
+
+      const dataX = [];
+      const dataY = [];
+
+      for (let i = 0; i < rawX.length; i++) {
+        const ny = Number(rawY[i]);
+        if (
+          !isNaN(ny) &&
+          rawY[i] !== "" &&
+          rawX[i] !== undefined &&
+          rawX[i] !== null
+        ) {
+          dataX.push(String(rawX[i]));
+          dataY.push(ny);
+        }
+      }
+
       if (dataY.length === 0) {
         setErrorNumerico(true);
         setResultado(null);
         return;
       }
-      
+
       const configSeries = { k: periodosK, pesos: pesos, alfa: alfa };
-      const resSeries = SeriesMath.calcularSeriesTiempo(dataX, dataY, metodoSeries, configSeries);
-      
+      const resSeries = SeriesMath.calcularSeriesTiempo(
+        dataX,
+        dataY,
+        metodoSeries,
+        configSeries,
+      );
+
       setErrorNumerico(false);
       setResultado(resSeries);
       return;
     }
 
+    // 👇 4. PASE VIP 4: NÚMEROS ÍNDICES (Tema 8) 👇
+    if (calculo === "numeros_indices") {
+      let resIndices = null;
+
+      if (subTemaIndices === "compuestos") {
+        if (
+          !colPrecioBase ||
+          !colCantidadBase ||
+          !colPrecioActual ||
+          !colCantidadActual
+        )
+          return;
+
+        const p0 = obtenerColumna(colPrecioBase).map(Number);
+        const q0 = obtenerColumna(colCantidadBase).map(Number);
+        const pt = obtenerColumna(colPrecioActual).map(Number);
+        const qt = obtenerColumna(colCantidadActual).map(Number);
+
+        if (
+          p0.some(isNaN) ||
+          q0.some(isNaN) ||
+          pt.some(isNaN) ||
+          qt.some(isNaN)
+        ) {
+          setErrorNumerico(true);
+          setResultado(null);
+          return;
+        }
+
+        resIndices = IndicesMath.calcularIndicesCompuestos(p0, q0, pt, qt);
+      } else if (subTemaIndices === "empalme") {
+        if (!selectedColumn || !selectedColumnY) return; // X: Tiempo, Y: Índice original
+
+        const arrT = obtenerColumna(selectedColumn).map(String);
+        const arrI = obtenerColumna(selectedColumnY).map(Number);
+
+        if (arrI.some(isNaN) || arrI.length === 0) {
+          setErrorNumerico(true);
+          setResultado(null);
+          return;
+        }
+
+        resIndices = IndicesMath.calcularOperacionesSerieIndices(
+          arrT,
+          arrI,
+          Number(nuevoIndiceBase),
+        );
+      } else if (subTemaIndices === "deflacion") {
+        if (!selectedColumn || !selectedColumnY || !colPrecioBase) return; // X: Tiempo, Y: Sueldo, colPrecioBase: IPC
+
+        const arrT = obtenerColumna(selectedColumn).map(String);
+        const arrNominal = obtenerColumna(selectedColumnY).map(Number);
+        const arrIPC = obtenerColumna(colPrecioBase).map(Number); // Reutilizamos este selector para el IPC
+
+        if (
+          arrNominal.some(isNaN) ||
+          arrIPC.some(isNaN) ||
+          arrNominal.length === 0
+        ) {
+          setErrorNumerico(true);
+          setResultado(null);
+          return;
+        }
+
+        resIndices = IndicesMath.calcularDeflacionSalarial(
+          arrT,
+          arrNominal,
+          arrIPC,
+        );
+      }
+
+      if (!resIndices) {
+        setErrorNumerico(true);
+        setResultado(null);
+      } else {
+        setErrorNumerico(false);
+        setResultado(resIndices);
+      }
+      return;
+    }
+
+    // 4. TEMAS UNIDIMENSIONALES
     const datos = obtenerDatosNumericos();
     if (datos.length === 0) {
       setErrorNumerico(true);
@@ -218,18 +378,6 @@ export function useCalculadoraExcel(filename, sheet) {
         break;
       case "variabilidad_y_forma":
         res = UniMath.calcularVariabilidadYForma(datos, configData);
-        break;
-      case "distribucion_bivariada":
-        const datosX = excelData.map((f) => f[selectedColumn]);
-        const datosY = excelData.map((f) => f[selectedColumnY]);
-        if (datosX.length > 0 && datosY.length > 0)
-          res = calcularBivariadaLocal(datosX, datosY);
-        break;
-      case "distribucion_bivariada_avanzada":
-        const dX = excelData.map((f) => f[selectedColumn]);
-        const dY = excelData.map((f) => f[selectedColumnY]);
-        if (dX.length > 0 && dY.length > 0)
-          res = calcularBivariadaAvanzadaLocal(dX, dY);
         break;
       default:
         res = [];
@@ -283,5 +431,17 @@ export function useCalculadoraExcel(filename, sheet) {
     setPesos,
     alfa,
     setAlfa,
+    subTemaIndices,
+    setSubTemaIndices,
+    colPrecioBase,
+    setColPrecioBase,
+    colCantidadBase,
+    setColCantidadBase,
+    colPrecioActual,
+    setColPrecioActual,
+    colCantidadActual,
+    setColCantidadActual,
+    nuevoIndiceBase,
+    setNuevoIndiceBase,
   };
 }
