@@ -9,10 +9,10 @@ import GraficoTendenciaPosicion from "../graficos/GraficoTendenciaPosicion";
 export default function PanelGraficos({ resultado, esIntervalo }) {
   if (!resultado) return null;
 
-  const esBivariada = !Array.isArray(resultado) && 
+  const esBivariada = !Array.isArray(resultado) &&
     (resultado.tipo === "bivariada" || resultado.tipo === "bivariada_avanzada");
 
-    if (resultado.tipo === "variabilidad_y_forma") {
+  if (resultado.tipo === "variabilidad_y_forma") {
     return (
       <div className="graficos-grid">
         <div className="grafico-card" style={{ width: "100%", height: "350px" }}>
@@ -29,8 +29,9 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
         </div>
       </div>
     );
+  }
 
-    // 👇 AGREGAR ESTO PARA EL TEMA 3 👇
+  // 👇 AGREGAR ESTO PARA EL TEMA 3 👇
   if (resultado.tipo === "tendencia_y_posicion") {
     const graficosTema3 = resultado.graficosTema3?.graficoData;
     const indicadores = resultado.graficosTema3?.indicadores;
@@ -41,7 +42,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
           <h4>Histograma de Tendencia Central</h4>
           <GraficoTendenciaPosicion tipo="histograma_tendencia" graficos={graficosTema3} indicadores={indicadores} />
         </div>
-        
+
         <div className="grafico-card" style={{ width: "100%", height: "350px" }}>
           <h4>Gráfico de Ojiva (Fractiles)</h4>
           <GraficoTendenciaPosicion tipo="ojiva" graficos={graficosTema3} />
@@ -51,7 +52,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
         {resultado.datosPuros && (
           <div className="grafico-card" style={{ width: "100%", height: "350px", gridColumn: "1 / -1" }}>
             <h4>Diagrama de Caja y Bigotes (Medidas de Posición)</h4>
-            <p style={{textAlign: "center", color: "var(--text-muted)", fontSize: "0.9em"}}>
+            <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.9em" }}>
               Visualización de la distribución basada en los Cuartiles calculados.
             </p>
             {/* Como necesitamos calcular los cuartiles de Tukey para el gráfico, importaremos la función matemática pura aquí mismo */}
@@ -59,7 +60,6 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
         )}
       </div>
     );
-  }
   }
 
   return (
@@ -77,7 +77,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
         </>
       ) : Array.isArray(resultado) && esIntervalo ? (
         // 👇 AQUÍ LE AGREGAMOS EL minHeight
-        <div className="grafico-card" style={{ width: "100%", minHeight: "400px" }}> 
+        <div className="grafico-card" style={{ width: "100%", minHeight: "400px" }}>
           <h3>Gráficos de Intervalos</h3>
           <GraficoIntervalos datos={resultado} />
         </div>

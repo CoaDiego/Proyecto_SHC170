@@ -274,7 +274,7 @@ export default function Calculos() {
                     {/* Luego mostramos las capturadas */}
                     <optgroup label="Variables Capturadas">
                       {variables.map((v) => (
-                        <option key={v.id} value={v.nombre}>{v.nombre} ({v.datos.length} datos)</option>
+                        <option key={v.id} value={v.nombre}>{v.nombre}</option>
                       ))}
                     </optgroup>
                   </select>
@@ -335,6 +335,8 @@ export default function Calculos() {
                         style={{
                           blockSize: "100%",
                           border: "1px solid var(--border-color)",
+                          height:"400px",
+                          textAlign: "center",
                         }}
                       />
                     </div>

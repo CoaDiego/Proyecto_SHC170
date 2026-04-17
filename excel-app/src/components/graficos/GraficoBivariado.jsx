@@ -8,7 +8,6 @@ import "../../styles/components/graficos/GraficoBivariado.css";
 export default function GraficoBivariado({ datos, tipo }) {
   if (!datos || datos.tipo !== "bivariada") return null;
 
-  // 1. PREPARAR DATOS
   const dataGrafico = datos.filas.map(catX => {
     const filaObj = { name: catX };
     datos.columnas.forEach(catY => {
@@ -23,11 +22,7 @@ export default function GraficoBivariado({ datos, tipo }) {
     return filaObj;
   });
 
-  // 2. PALETA DE COLORES (Adaptada para Modo Oscuro/Claro)
-  // Usamos colores que contrasten bien en ambos fondos.
   const colores = ["#374151", "#9ca3af", "#6b7280", "#d1d5db"];
-  // Nota: Si quieres que el "negro" cambie a "blanco" en modo oscuro, podrías usar CSS variables para el fill,
-  // pero Recharts prefiere hex. Estos grises medios funcionan decentemente en ambos.
 
   const isStacked = tipo === "apiladas_100";
   const titulo = isStacked ? "Figura 2.14: Gráfico de Barras Apiladas (%)" : "Figura 2.13: Gráfico de Barras Agrupadas";

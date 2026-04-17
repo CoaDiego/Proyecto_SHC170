@@ -23,7 +23,14 @@ export const excelToCoords = (cellStr) => {
   return { r: row, c: col - 1 };
 };
 
-export const PALETA_COLORES = [
+/*export const PALETA_COLORES = [
   'rgba(34, 197, 94, 0.4)', 'rgba(59, 130, 246, 0.4)',
   'rgba(245, 158, 11, 0.4)', 'rgba(168, 85, 247, 0.4)',
-];
+];*/
+
+export const generarColorAleatorio = (index) => {
+  // Cada nueva variable salta 137.5 grados (el Ángulo de Oro)
+  // Esto garantiza la máxima separación visual entre colores consecutivos
+  const hue = (index * 137.5) % 360; 
+  return `hsla(${hue}, 75%, 60%, 0.4)`;
+};

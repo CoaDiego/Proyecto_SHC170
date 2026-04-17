@@ -36,11 +36,6 @@ export default function Inicio() {
         className="logo-inicio" 
       />
       
-      {/* 👉 AQUÍ ESTÁ EL TEXTO QUE QUERÍAS AGREGAR */}
-      <h2 className="titulo">
-        ADMINISTRACIÓN DE EMPRESAS
-      </h2>
-      
     {/*   <h1 style={{ color: "var(--text-main)", fontWeight: "500" }}>
         Página en proceso...
       </h1> */}

@@ -1,0 +1,615 @@
+.tema1-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.area-trabajo-cuadriculada {
+    flex: 1;
+    width: 100%;
+    background-color: var(--bg-body);
+    position: relative;
+    overflow-y: auto;
+}
+
+.contenedor-flotante-menu {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 500;
+}
+
+.btn-hamburguesa-simple {
+    width: 28px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    transition: all 0.4s ease;
+}
+
+.btn-hamburguesa-simple span {
+    display: block;
+    width: 100%;      
+    height: 4px;      
+    border: 2px solid var(--text-variable);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hamburguesa-simple span:nth-child(1) {
+    transform-origin: left center;
+}
+
+.btn-hamburguesa-simple span:nth-child(2) {
+    transform-origin: right center;
+}
+
+.btn-hamburguesa-simple span:nth-child(3) {
+    transform-origin: right center;
+}
+
+.btn-hamburguesa-simple span:nth-child(4) {
+    transform-origin: left center;
+}
+
+.btn-hamburguesa-simple.abierto {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0px;
+    width: 24px;
+    height: 24px;
+}
+.btn-hamburguesa-simple.abierto span {
+    width: 10px;     
+    height: 10px;
+}
+
+.btn-hamburguesa-simple.abierto span:nth-child(1) { grid-area: 1 / 1; }
+.btn-hamburguesa-simple.abierto span:nth-child(2) { grid-area: 1 / 2; }
+.btn-hamburguesa-simple.abierto span:nth-child(3) { grid-area: 2 / 2; }
+.btn-hamburguesa-simple.abierto span:nth-child(4) { grid-area: 2 / 1; }
+  
+.menu-desplegable-pro {
+    position: absolute;
+    top: 0px;
+    left: 30px;
+    background: var(--bg-body);
+    border: 2px solid var(--text-muted);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    width: 200px;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.btn-off {
+    background-color: #cbd5e1 !important;
+    cursor: not-allowed !important;
+}
+
+.contenido-real {
+    padding: 70px 40px 40px 40px; 
+}
+
+.vacio-mensaje {
+    text-align: center;
+    margin-top: 100px;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+
+
+
+
+.panel-inputs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.panel-inputs input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid var(--text-muted);
+    border-radius: 4px;
+}
+
+.pizarra-resultado {
+    margin-top: 30px;
+    padding: 15px;
+    background: var(--bg-body);
+    text-align: center;
+}
+
+/* KaTeX usa clases específicas, podemos darles estilo si queremos */
+.katex-display {
+    margin: 1em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+
+/* DISEÑO DE LA INTERFAZ DE ENTRADA */
+.interfaz-conteo {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra todo el bloque */
+    gap: 25px;
+    margin: 20px 0;
+}
+
+.fila-controles {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+}
+
+.control-numero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.control-numero label {
+    font-weight: bold;
+    color: var(--text-variable);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+/* EL SELECTOR CON +/- */
+.selector-numerico {
+    display: flex;
+    align-items: center;
+    background: var(--bg-body);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.selector-numerico button {
+    background: #e2e8f0;
+    border: none;
+    padding: 10px 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #1e293b;
+    transition: background 0.2s;
+}
+
+.selector-numerico button:hover {
+    background: #cbd5e1;
+}
+
+.selector-numerico input {
+    width: 60px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--text-variable);
+}
+
+/* Quitar flechas por defecto del input number */
+.selector-numerico input::-webkit-inner-spin-button,
+.selector-numerico input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* BOTONES ABAJO EN EL MEDIO */
+.acciones-principales {
+    display: flex;
+    gap: 15px;
+}
+
+.acciones-principales button {
+    padding: 8px 20px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.acciones-principales button:active {
+    transform: scale(0.95);
+}
+
+
+
+
+.interfaz-probabilidad {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Manda todo a la izquierda */
+    gap: 25px;
+    width: 100%; /* Toma el ancho disponible */
+    margin: 0 auto 30px auto;
+}
+
+.grupo-entrada {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Asegura que la etiqueta y el input empiecen desde la izquierda */
+    gap: 10px;
+    width: 100%; /* Hace que el grupo ocupe todo el ancho disponible del contenedor */
+}
+
+.grupo-entrada textarea, .grupo-entrada input {
+    width: 100%; /* Expande los campos de texto de lado a lado */
+    box-sizing: border-box; /* Evita que el padding rompa el ancho total */
+    padding: 12px;
+    border: 2px solid var(--text-muted);
+    border-radius: 8px;
+    background: var(--bg-body);
+    color: var(--text-variable);
+    font-family: inherit;
+    font-size: 0.8rem;
+}
+
+.grupo-entrada textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.detalles-probabilidad {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    text-align: center;
+    border-top: 1px solid var(--text-muted);
+    padding-top: 15px;
+}
+
+.selector-tarjetas {
+    padding: 12px;
+    border: 2px solid #2563eb; /* Borde azul para destacar que es importante */
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--text-variable);
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.selector-tarjetas:hover {
+    border-color: #1d4ed8;
+    background: #eff6ff;
+}
+
+
+/*modal*/
+
+/* --- NUEVOS ESTILOS PARA LA SELECCIÓN DE VARIABLES --- */
+
+.panel-seleccion-variable {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap; /* Por si la pantalla es pequeña */
+}
+
+.btn-abrir-modal {
+    padding: 8px 15px;
+    background-color: var(--bg-body);
+    color: #2563eb;
+    border: 2px solid #2563eb;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-abrir-modal:hover {
+    background-color: #eff6ff;
+}
+
+.info-variable-seleccionada {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 2px dashed var(--text-muted);
+    gap: 2px;
+}
+
+.info-titulo {
+    font-size: 0.8rem;
+    color: var(--text-variable);
+    padding-right: 5px;
+}
+
+.info-detalle {
+    font-size: 0.8rem;
+    color: var(--text-variable);
+}
+
+/* --- ESTILOS DEL MODAL --- */
+
+.overlay-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+.contenido-modal {
+    background: var(--bg-body, #ffffff);
+    padding: 25px;
+    border-radius: 12px;
+    width: 450px;
+    max-width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.lista-variables-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 15px 0;
+    padding-right: 5px;
+}
+
+.tarjeta-variable-modal {
+    padding: 15px;
+    border: 1px solid var(--text-muted, #cbd5e1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.tarjeta-variable-modal h4 {
+    margin: 0 0 5px 0;
+    color: #2563eb;
+}
+
+.tarjeta-variable-modal p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.tarjeta-variable-modal:hover {
+    border-color: #2563eb;
+    background-color: #f8fafc;
+}
+
+.btn-cerrar-modal {
+    padding: 8px 15px;
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-cerrar-modal:hover {
+    background: #fef2f2;
+}
+
+/* --- CONTENEDOR DE 2 COLUMNAS PARA LOS DATOS --- */
+.contenedor-datos-doble {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 30px; 
+    width: 100%;
+    background: var(--bg-body); 
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--text-muted);
+}
+
+@media (max-width: 800px) {
+    .contenedor-datos-doble {
+        grid-template-columns: 1fr; 
+    }
+}
+
+.columna-variable, .columna-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.etiqueta-paso {
+    font-weight: bold;
+    color: var(--text-variable);
+    font-size: 1rem;
+}
+
+/* --- ESTILOS DEL EDITOR MANUAL --- */
+.cabecera-editor {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-limpiar {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.btn-limpiar:hover {
+    color: #b91c1c;
+}
+
+.editor-datos {
+    flex: 1;
+    min-height: 120px;
+    padding: 15px;
+    border: 2px solid var(--text-muted);
+    border-radius: 8px;
+    resize: vertical;
+    font-family: 'Courier New', Courier, monospace; 
+    font-size: 0.95rem;
+    background: #ffffff;
+    color: var(--text-variable);
+    transition: border-color 0.3s ease;
+}
+
+.editor-datos:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+
+
+
+
+/* --- ESTILOS PARA LA COLUMNA EDITOR Y BOTONES --- */
+.panel-entrada-datos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-datos-principal {
+    padding: 12px;
+    border: 2px solid var(--text-muted);
+    border-radius: 8px;
+    background: var(--bg-body);
+    color: var(--text-variable);
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.acciones-editor {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-abrir-excel {
+    padding: 8px 15px;
+    background-color: #10b981; /* Verde tipo Excel */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.9rem;
+}
+
+.btn-abrir-excel:hover {
+    background-color: #059669;
+}
+
+/* --- ESTILOS ESPECÍFICOS DEL MODAL EXCEL --- */
+.modal-ancho {
+    width: 600px !important; /* Más ancho para que el grid se vea bien */
+    max-width: 95% !important;
+}
+
+.cabecera-modal-excel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--text-muted);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.cabecera-modal-excel h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.contador-datos-excel {
+    background: #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #475569;
+}
+
+.contenedor-grid {
+    height: 350px; /* Altura fija para que haga scroll interno si hay muchos datos */
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.acciones-modal-excel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.btn-secundario {
+    padding: 8px 15px;
+    background: transparent;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.btn-secundario:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.btn-guardar-excel {
+    padding: 8px 20px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-guardar-excel:hover {
+    background-color: #1d4ed8;
+}
+
+/* Ajuste rápido para react-data-grid dentro del modal */
+.rdg {
+    height: 100% !important;
+    border: none !important;
+}

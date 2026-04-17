@@ -6,7 +6,7 @@ import { DataProvider } from "../components/excel/DataContext";
 
 import "../styles/pages/Calculadora.css";
 
-export default function Calculadora() {
+export default function Calculadora() { 
     const [pestanaActiva, setPestanaActiva] = useState("datos");
     const [selectedFile, setSelectedFile] = useState("");
     const [selectedSheet, setSelectedSheet] = useState(0);

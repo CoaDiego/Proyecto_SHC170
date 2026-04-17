@@ -1,5 +1,6 @@
 import { sileo, Toaster } from "sileo";
 
+
 const estilosBase = { title: "texto-blanco", description: "texto-gris" };
 export const alerta = {
   exito: (titulo, descripcion) => {

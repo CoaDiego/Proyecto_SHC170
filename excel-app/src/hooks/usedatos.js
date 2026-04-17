@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
 import * as XLSX from 'xlsx';
-import { PALETA_COLORES } from '../utils/excelHelpers';
+import { generarColorAleatorio } from '../utils/excelHelpers';
+
+import {alerta} from "../utils/Notificaciones";
+
 
 export const useSimuladorLogic = () => {
   const [workbook, setWorkbook] = useState(null);
@@ -24,7 +27,7 @@ export const useSimuladorLogic = () => {
     // Si viene de un drop manual (mockEvent), lo sacamos de target.files
     // Si es un evento nativo de input, también está ahí.
     const file = e.target?.files ? e.target.files[0] : null;
-    
+
     if (!file) return;
 
     const reader = new FileReader();
@@ -35,32 +38,39 @@ export const useSimuladorLogic = () => {
         setSheetNames(wb.SheetNames);
         setVariables([]); // Limpiamos variables al cargar nuevo archivo
         cargarHoja(wb, wb.SheetNames[0], 50);
+        alerta.exito("Archivo cargado", `Se ha cargado el archivo "${file.name}" con éxito.`);
       } catch (error) {
         console.error("Error al leer el archivo Excel:", error);
-        alert("Error al procesar el archivo Excel.");
+        alerta.error("Error de lectura", "No se pudo procesar el archivo Excel.");
       }
     };
     reader.readAsBinaryString(file);
   };
 
-  
+
 
   const agregarVariable = () => {
-    setVariables(prev => [...prev, {
-      id: Date.now(), 
-      nombre: `Variable ${prev.length + 1}`,
-      datos: [], 
-      rangoLabel: "", 
-      coords: null, 
-      sheet: "",
-      color: PALETA_COLORES[prev.length % PALETA_COLORES.length]
-    }]);
+    setVariables(prev => {
+      const nuevocolor = generarColorAleatorio(prev.length)
+
+      return [...prev, {
+        id: Date.now(),
+        nombre: `Variable ${prev.length + 1}`,
+        color: nuevocolor,
+        datos: [],
+        rangoLabel: "",
+        coords: null,
+        sheet: ""
+      }];
+    });
   };
 
   const eliminarVariable = (id) => {
-    if (window.confirm("¿Seguro que quieres eliminar esta variable?")) {
-      setVariables(prev => prev.filter(v => v.id !== id));
-    }
+    setVariables(prev => {
+        const variableAEliminar = prev.find(v => v.id === id);
+        alerta.advertencia("Variable eliminada", `Se borró "${variableAEliminar?.nombre}"`);
+        return prev.filter(v => v.id !== id);
+    });
   };
 
   const actualizarVariable = (id, data) => {
@@ -68,18 +78,18 @@ export const useSimuladorLogic = () => {
   };
 
   return {
-    workbook, 
-    sheetNames, 
-    currentSheet, 
-    rowData, 
-    variables, 
+    workbook,
+    sheetNames,
+    currentSheet,
+    rowData,
+    variables,
     limiteFilas,
-    setVariables, 
-    setLimiteFilas, 
-    handleFileUpload, 
-    cargarHoja, 
-    agregarVariable, 
-    eliminarVariable, 
+    setVariables,
+    setLimiteFilas,
+    handleFileUpload,
+    cargarHoja,
+    agregarVariable,
+    eliminarVariable,
     actualizarVariable
   };
 };

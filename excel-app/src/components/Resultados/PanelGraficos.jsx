@@ -1,5 +1,5 @@
 // src/components/resultados/PanelGraficos.jsx
-import React from "react";
+import React, { useState } from "react";
 import GraficoEstadistico from "../graficos/GraficoEstadistico";
 import GraficoIntervalos from "../graficos/GraficoIntervalos";
 import GraficoBivariado from "../graficos/GraficoBivariado";
@@ -7,6 +7,7 @@ import GraficoDispersionForma from "../graficos/GraficoDispersionForma";
 import GraficoTendenciaPosicion from "../graficos/GraficoTendenciaPosicion";
 
 export default function PanelGraficos({ resultado, esIntervalo }) {
+
   if (!resultado) return null;
 
   const esBivariada = !Array.isArray(resultado) && 
@@ -126,15 +127,29 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
         </div>
       ) : Array.isArray(resultado) ? (
         <>
-          <div className="grafico-card">
-            <h4>Gráfico de Barras</h4>
+          <div className="grafico-card" >
+            <h4
+            style={
+            {
+              fontSize: "1.1em",
+              padding: "5px",
+            }
+            }
+            >Gráfico de Barras</h4> 
             <GraficoEstadistico datos={resultado} tipo="barras" />
           </div>
           <div className="grafico-card">
-            <h4>Gráfico Circular</h4>
+            <h4
+            style={
+            {
+              fontSize: "1.1em",
+              padding: "5px",
+            }
+            }
+            >Gráfico Circular</h4>
             <GraficoEstadistico datos={resultado} tipo="pastel" />
           </div>
-        </>
+        </> 
       ) : null}
     </div>
   );

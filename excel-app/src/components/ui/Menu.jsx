@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
 import escudoAdmin from "../../assets/images/Logo-Adm.png";
 
+
 export default function Menu() {
   // Estado para saber si el menú del celular está abierto o cerrado
   const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +48,11 @@ export default function Menu() {
           <li>
             <NavLink to="/calculadora" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
               Calculadora
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/MAT251" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
+              MAT-251
             </NavLink>
           </li>
           <li>

@@ -8,12 +8,13 @@ import { useState } from "react";
 
 import { sileo, Toaster } from "sileo";
 
-import Mat251 from "./pages/MAT251/Mat251";
 import Inicio from "./pages/Inicio";
 import Archivos from "./pages/Archivos";
 import Calculadora from "./pages/Calculadora";
 import About from "./pages/About";
 import Login from "./pages/Login";
+
+import MAT251 from "./pages/MAT251/Pantalla"
 
 import "./App.css"; 
 
@@ -51,15 +52,14 @@ function App() {
                 <Route path="/" element={<Inicio />} />
                 <Route path="/archivos" element={<Archivos />} />
                 <Route path="/calculadora" element={<Calculadora />} />
-                <Route path="/MAT251" element={<Mat251 />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Navigate to="/" />} />
+                <Route path="/MAT251" element={<MAT251 />} />
               </>
             )}
           </Routes>
         </div>
-
-        {/* 👇 3. AGREGAMOS EL PIE DE PÁGINA AL FINAL */}
+        
         {isAuth && <Pie_pagina />}
 
       </div>

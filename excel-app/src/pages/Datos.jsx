@@ -11,9 +11,13 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import "../styles/pages/Datos.css";
 import * as XLSX from 'xlsx'; // <--- ESTA ES LA QUE FALTA
 
+import api from '../services/api';
+
+
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const SimuladorMAT251 = () => {
+
     const gridRef = useRef();
     const {
         workbook, sheetNames, currentSheet, rowData, variables, limiteFilas,
@@ -23,6 +27,70 @@ const SimuladorMAT251 = () => {
     const [selection, setSelection] = useState({ start: null, end: null, isDragging: false });
     // Estado para el efecto visual de arrastrar archivo
     const [isDraggingFile, setIsDraggingFile] = useState(false);
+
+
+
+    // 🌟 ESTADOS PARA LA API 🌟
+    const [archivosApi, setArchivosApi] = useState([]); // Guarda la lista de archivos
+    const [cargandoApi, setCargandoApi] = useState(false); // Efecto de carga
+    const [archivoActivo, setArchivoActivo] = useState(null); // ESTO FALTABA
+    const [_selectedApiFile, setSelectedApiFile] = useState("");
+
+    // 🌟 USE-EFFECT: Cargar lista de archivos de FastAPI 🌟
+    useEffect(() => {
+        const cargarListaArchivos = async () => {
+            try {
+                const data = await api.obtenerArchivos();
+                // Tu API devuelve: { "files": [ {"filename": "...", "author": "..."}, ... ] }
+                if (data && data.files) {
+                    setArchivosApi(data.files);
+                }
+            } catch (error) {
+                console.error("Error al cargar la lista de archivos de la API", error);
+            }
+        };
+        cargarListaArchivos();
+    }, []);
+
+    const manejarSubidaLocal = (e) => {
+        const files = e.target?.files || e.dataTransfer?.files;
+        if (files && files.length > 0) {
+            setArchivoActivo({ nombre: files[0].name, origen: 'LOCAL' });
+            setSelectedApiFile("");
+            handleFileUpload(e);
+        }
+    };
+
+    // 🌟 FUNCIÓN: Descargar de FastAPI y simular en PC 🌟
+    const cargarDesdeAPI = async (filename) => {
+        if (!filename) return;
+        try {
+            setCargandoApi(true);
+
+            // Usamos tu BASE_URL (http://127.0.0.1:8000) que tienes en api.js
+            // Y llamamos al endpoint de descarga: /files/{filename}
+            const BASE_URL = "http://127.0.0.1:8000";
+            const urlDescarga = `${BASE_URL}/files/${encodeURIComponent(filename)}`;
+
+            const response = await fetch(urlDescarga);
+            if (!response.ok) throw new Error("No se pudo descargar el archivo del servidor.");
+
+            const dataBuffer = await response.arrayBuffer();
+
+            // Creamos el archivo virtual para engañar al sistema
+            const fileVirtual = new File([dataBuffer], filename, {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            });
+
+            setArchivoActivo({ nombre: filename, origen: 'API' });
+            handleFileUpload({ target: { files: [fileVirtual] } });
+        } catch (error) {
+            alert("Error al cargar dataset: " + error.message);
+        } finally {
+            setCargandoApi(false);
+        }
+    };
+
 
     useEffect(() => {
         if (gridRef.current?.api) {
@@ -58,16 +126,9 @@ const SimuladorMAT251 = () => {
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDraggingFile(false);
-
         const files = e.dataTransfer.files;
         if (files && files.length > 0) {
-            // Creamos un objeto similar al que genera el input file para reutilizar handleFileUpload
-            const mockEvent = {
-                target: {
-                    files: files
-                }
-            };
-            handleFileUpload(mockEvent);
+            manejarSubidaLocal({ target: { files: files } });
         }
     };
 
@@ -80,6 +141,18 @@ const SimuladorMAT251 = () => {
             const val = rowData[selection.start?.row]?.[getExcelChar(selection.start?.col)];
             if (val) actualizarVariable(id, { nombre: String(val) });
         },
+
+        clear: (id) => {
+            if (window.confirm("¿Estás seguro de limpiar los datos de esta variable?")) {
+                actualizarVariable(id, {
+                    rangoLabel: '',
+                    coords: null,
+                    datos: [],
+                    sheet: null
+                });
+            }
+        },
+
         capture: (id) => {
             const { start, end } = selection;
             if (!start || !end) return alert("⚠️ Selecciona un rango en el Excel primero.");
@@ -102,35 +175,119 @@ const SimuladorMAT251 = () => {
                 return alert(`⚠️ Error: El rango choca con la variable "${solapada.nombre}".`);
             }
 
+            // ... (código anterior: validación de solapadas) ...
+
+            // 🌟 LA RED DE CAPTURA CORREGIDA 🌟
             const datosValidos = [];
+            let contadorNumeros = 0;
+            let contadorTextos = 0;
+
             for (let r = rMin; r <= rMax; r++) {
                 for (let c = cMin; c <= cMax; c++) {
-                    const val = parseFloat(rowData[r]?.[getExcelChar(c)]);
-                    if (!isNaN(val)) datosValidos.push(val);
+
+                    // 1. Obtenemos el dato en bruto. ¡NADA de parseFloat aquí!
+                    const columnaLetra = getExcelChar(c);
+                    const rawVal = rowData[r]?.[columnaLetra];
+
+                    // 2. Si la celda NO está vacía, NO es nula, y NO es undefined
+                    if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
+
+                        // 3. Lo guardamos INMEDIATAMENTE en el array (sea lo que sea)
+                        datosValidos.push(rawVal);
+
+                        // 4. Ahora sí, clasificamos qué fue lo que acabamos de guardar
+                        // Usamos Number() solo para comprobar, no para transformar el dato original
+                        if (isNaN(Number(rawVal))) {
+                            contadorTextos++;
+                        } else {
+                            contadorNumeros++;
+                        }
+                    }
                 }
             }
 
+            // Decisión por mayoría
+            let tipoDetectado = "Sin datos";
+            if (datosValidos.length > 0) {
+                if (contadorNumeros > 0 && contadorTextos > 0) {
+                    tipoDetectado = "Mixta (Error)";
+                } else if (contadorNumeros > 0 && contadorTextos === 0) {
+                    tipoDetectado = "Cuantitativa (Número)";
+                } else {
+                    tipoDetectado = "Cualitativa (Texto)";
+                }
+            }
+
+            // Actualizamos la variable inyectando los datos y el tipo
             actualizarVariable(id, {
                 rangoLabel: `${getExcelChar(cMin)}${rMin + 1}:${getExcelChar(cMax)}${rMax + 1}`,
                 coords: { rMin, rMax, cMin, cMax },
-                datos: datosValidos,
-                sheet: currentSheet
+                datos: datosValidos, // 👈 Ahora esto ya no estará vacío
+                sheet: currentSheet,
+                tipo: tipoDetectado
             });
+
             setSelection({ start: null, end: null, isDragging: false });
         },
         manualRange: (id, texto) => {
-            const nuevoTexto = texto.toUpperCase(), partes = nuevoTexto.split(':');
-            const inicio = excelToCoords(partes[0]), fin = partes[1] ? excelToCoords(partes[1]) : inicio;
+            const nuevoTexto = texto.toUpperCase();
+            const partes = nuevoTexto.split(':');
+            const inicio = excelToCoords(partes[0]);
+            const fin = partes[1] ? excelToCoords(partes[1]) : inicio;
+
             if (inicio && fin) {
-                const coords = { rMin: Math.min(inicio.r, fin.r), rMax: Math.max(inicio.r, fin.r), cMin: Math.min(inicio.c, fin.c), cMax: Math.max(inicio.c, fin.c) };
-                const datos = [];
+                const coords = {
+                    rMin: Math.min(inicio.r, fin.r),
+                    rMax: Math.max(inicio.r, fin.r),
+                    cMin: Math.min(inicio.c, fin.c),
+                    cMax: Math.max(inicio.c, fin.c)
+                };
+
+                // 🌟 LA MISMA RED DE CAPTURA QUE USAMOS EN EL BOTÓN 🌟
+                const datosValidos = [];
+                let contadorNumeros = 0;
+                let contadorTextos = 0;
+
                 for (let r = coords.rMin; r <= coords.rMax; r++) {
                     for (let c = coords.cMin; c <= coords.cMax; c++) {
-                        const val = parseFloat(rowData[r]?.[getExcelChar(c)]);
-                        if (!isNaN(val)) datos.push(val);
+                        const rawVal = rowData[r]?.[getExcelChar(c)];
+                        if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
+                            datosValidos.push(rawVal);
+
+                            if (isNaN(Number(rawVal))) {
+                                contadorTextos++;
+                            } else {
+                                contadorNumeros++;
+                            }
+                        }
                     }
                 }
-                actualizarVariable(id, { rangoLabel: nuevoTexto, coords, datos, sheet: currentSheet });
+
+                // Decisión de tipo
+                let tipoDetectado = "Sin datos";
+
+                if (datosValidos.length > 0) {
+                    // Si hay por lo menos 1 número Y por lo menos 1 texto en la misma selección:
+                    if (contadorNumeros > 0 && contadorTextos > 0) {
+                        tipoDetectado = "Mixta (Error)";
+                    }
+                    // Si SOLO hay números:
+                    else if (contadorNumeros > 0 && contadorTextos === 0) {
+                        tipoDetectado = "Cuantitativa (Número)";
+                    }
+                    // Si SOLO hay textos:
+                    else {
+                        tipoDetectado = "Cualitativa (Texto)";
+                    }
+                }
+
+                actualizarVariable(id, {
+                    rangoLabel: nuevoTexto,
+                    coords,
+                    datos: datosValidos,
+                    sheet: currentSheet,
+                    tipo: tipoDetectado // Inyectamos el tipo también aquí
+                });
             } else {
                 actualizarVariable(id, { rangoLabel: nuevoTexto });
             }
@@ -171,6 +328,28 @@ const SimuladorMAT251 = () => {
             <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)', minHeight: '100vh', fontFamily: 'sans-serif', marginTop: '5px' }}>
                 <header>
                     <div className="upload-container">
+                        <div className="upload-column">
+                            <p className="upload-title">Archivos subidos</p>
+                            <select
+                                className="select-hoja"
+                                style={{ width: '60%', cursor: 'pointer' }}
+                                disabled={cargandoApi || archivosApi.length === 0}
+                                onChange={(e) => cargarDesdeAPI(e.target.value)}
+                            >
+                                <option value="">
+                                    {archivosApi.length === 0 ? "Buscando archivos..." : "Seleccionar Archivo"}
+                                </option>
+                                {archivosApi.map((archivo, index) => (
+                                    <option key={index} value={archivo.filename}>
+                                        {archivo.filename}
+                                    </option>
+                                ))}
+                            </select>
+                            <p style={{ fontSize: '11px', marginTop: '5px', color: 'var(--text-muted)' }}>
+                                {cargandoApi ? "⏳ Descargando y procesando..." : "Click para cargar"}
+                            </p>
+                        </div>
+                        <div className="column-divider"></div>
                         <div
                             className={`upload-box ${isDraggingFile ? 'drag-over' : ''}`}
                             onDragOver={handleDragOver}
@@ -185,7 +364,7 @@ const SimuladorMAT251 = () => {
                                     Explorar archivos
                                     <input
                                         type="file"
-                                        onChange={handleFileUpload}
+                                        onChange={manejarSubidaLocal}
                                         accept=".xlsx, .xls"
                                         style={{ display: 'none' }}
                                     />
@@ -195,9 +374,36 @@ const SimuladorMAT251 = () => {
                                 </span>
                             </div>
                         </div>
+                    </div >
+                    {sheetNames.length > 0 && (
+                        <div style={{
+                            margin: '5px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            padding: '10px 20px',
+                            backgroundColor: 'var(--bg-card)',
+                            borderRadius: '5px',
+                            border: '1px solid var(--border-color)'
+                        }}>
 
-                        {sheetNames.length > 0 && (
-                            <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                                <strong>Archivo: </strong>
+                                <span style={{ color: '#3b82f6', marginRight: '8px' }}>
+                                    {archivoActivo ? archivoActivo.nombre : (workbook ? "Documento cargado" : "Sin archivo")}
+                                </span>
+                                {archivoActivo && (
+                                    <span style={{ color: 'var(--text-muted)' }}>
+                                        {archivoActivo.origen === 'API' ? '(Servidor)' : '(Local)'}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div>
+                                <span style={{ marginRight: '10px', fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.8rem' }}>
+                                    Hoja activa del Excel:
+                                </span>
                                 <select
                                     value={currentSheet}
                                     onChange={(e) => cargarHoja(workbook, e.target.value)}
@@ -206,8 +412,10 @@ const SimuladorMAT251 = () => {
                                     {sheetNames.map(name => <option key={name} value={name}>{name}</option>)}
                                 </select>
                             </div>
-                        )}
-                    </div>
+
+                        </div>
+                    )}
+
                 </header>
 
                 <div className='main-layout-flex'>
