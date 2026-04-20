@@ -102,7 +102,7 @@ export default function GraficoDispersionForma({ tipo, resultado }) {
           <YAxis label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft' }} />
           <Tooltip formatter={(value, name) => [value.toFixed(2), name]} />
           <Bar dataKey="frecuencia" fill="#3498db" name="Frecuencia Observada" barSize={50} />
-          <Line type="monotone" dataKey="curvaNormal" stroke="#e74c3c" strokeWidth={3} dot={false} name="Curva Normal Teórica" />
+          <Line type="linear" dataKey="curvaNormal" stroke="#e74c3c" strokeWidth={3} dot={false} name="Curva Normal Teórica" />
         </ComposedChart>
       </ResponsiveContainer>
     );

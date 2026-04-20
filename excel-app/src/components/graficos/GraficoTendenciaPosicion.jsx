@@ -59,7 +59,7 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores }
           <Tooltip formatter={(value) => [`${value.toFixed(2)}%`, 'Acumulado']} />
           
           {/* La línea de la Ojiva */}
-          <Line type="monotone" dataKey="P_i" stroke="#e67e22" strokeWidth={3} dot={{ r: 5 }} activeDot={{ r: 8 }} name="Ojiva Porcentual" />
+          <Line type="linear" dataKey="P_i" stroke="#e67e22" strokeWidth={3} dot={{ r: 5 }} activeDot={{ r: 8 }} name="Ojiva Porcentual" />
         </LineChart>
       </ResponsiveContainer>
     );
