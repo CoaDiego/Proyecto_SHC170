@@ -11,7 +11,7 @@ export default function Pantalla() {
 
   const _stats = useCalculadoraExcel(selectedFile, selectedSheet);
 
-  const nombresVentanas = [
+  /*const nombresVentanas = [
     "Gestión de Datos",
     "Tema 1",
     "Tema 2",
@@ -19,8 +19,11 @@ export default function Pantalla() {
     "Tema 4",
     "Tema 5",
     "Tema 6"
-  ];
+  ];*/
 
+  const nombresVentanas = [
+    "Gestión de Datos"
+  ];
   return (
     <DataProvider>
       <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)', minHeight: '100vh', fontFamily: 'sans-serif', marginTop: '5px' }}>
