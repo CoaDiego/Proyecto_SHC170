@@ -1,0 +1,108 @@
+.variable-card {
+    padding: 8px;
+    margin-Bottom: 10px;
+    overflow: hidden;
+    border-Radius: 5px;
+}
+
+.cabecera {
+    display: flex;
+    justify-Content: space-between;
+    align-Items: center;
+    margin-Bottom: 5px;
+}
+
+.cabecera_input {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    align-Items: center;
+}
+
+.cabecera_input input {
+    font-Size: 10px;
+    width: 65%;
+    background: transparent;
+    color: #60a5fa;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    font-Weight: bold;
+    height: 15px;
+}
+
+.cabecera_input button {
+    padding: 4px 8px;
+    font-Size: 10px;
+    background: var(--header-bg);
+    color: var(--text-variable);
+    border: 1px solid var(--border-color);
+    border-Radius: 4px;
+    cursor: pointer;
+}
+
+.btn-delete {
+    background: none;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.info_hoja {
+    font-Size: 11px;
+    color: var(--text-variable);
+    margin-Bottom: 12px;
+}
+
+.container_acciones {
+    display: flex;
+    align-Items: center;
+    gap: 5px;
+    margin-Bottom: 10px;
+}
+
+.container_acciones_span {
+    font-Size: 11px;
+    color: var(--text-variable);
+}
+
+.container_acciones_input {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-Radius: 6px;
+    padding: 5px;
+    font-Size: 10px;
+    width: 55px;
+}
+
+.button_limpiar {
+    padding: 6px;
+    background: var(--header-bg);
+    border: 1px solid var(--border-color);
+    border-Radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-Items: center;
+    justify-Content: center;
+}
+
+.button_capturar {
+    flex: 1;
+    font-Size: 11px;
+    padding: 6px;
+    background-Color: var(--primary-color);
+    border: none;
+    border-Radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-Weight: bold;
+}
+
+.container_muestras {
+    display: flex;
+    justify-Content: space-between;
+    font-Size: 10px;
+    color: var(--text-variable);
+    border-Top: 1px solid var(--border-color);
+    padding-Top: 5px;
+}

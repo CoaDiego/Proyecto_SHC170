@@ -1,0 +1,435 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.main-layout {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  /* Permite scroll interno */
+}
+
+/* Contenedor del Excel */
+.spreadsheet-container {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+  overflow: auto;
+}
+
+/* Panel Lateral */
+.sidebar {
+  width: 280px;
+  /* Ancho suficiente para la tarjeta de 250px + scroll */
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.contenedor-tarjetas {
+  display: flex;
+  flex-direction: column;
+  /* Tarjetas una debajo de otra en el panel de 280px */
+  gap: 15px;
+  padding-top: 10px;
+}
+
+/* TU TARJETA DE 250PX */
+.variable-card {
+  width: 100%;
+  background-color: #1e293b;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #000000;
+  position: relative;
+  min-width: 250px;
+  max-width: 250px;
+  ;
+  box-sizing: border-box;
+}
+
+/* TU BOTÓN DE ELIMINAR (Corregido para que no se deforme) */
+.btn-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.btn-delete:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Ajustes Spreadsheet */
+.Spreadsheet__cell {
+  min-width: 120px !important;
+  /* Cambia 120px al ancho que prefieras */
+  width: 120px !important;
+  max-width: 120px !important;
+  overflow: hidden;
+  /* Corta el texto si es muy largo */
+  text-overflow: ellipsis;
+  /* Pone "..." si el texto no cabe */
+  white-space: nowrap;
+  /* Evita que el texto salte de línea */
+  border: 0.5px solid #cbd5e1 !important;
+  padding: 0 !important;
+}
+
+/* Opcional: Ajusta el encabezado (letras A, B, C...) para que coincida */
+/* Esto ajusta los números (1, 2, 3...) y las letras (A, B, C...) */
+.Spreadsheet__header {
+  font-size: 10px !important;
+  /* Reduce el tamaño de la fuente */
+  padding: 2px 4px !important;
+  /* Reduce el espacio interno (el grosor) */
+  color: #64748b !important;
+  /* Un color gris más suave para que no resalten tanto */
+  background-color: #f8fafc !important;
+  text-align: center !important;
+  font-weight: normal !important;
+  /* Quita la negrita si los sientes muy pesados */
+}
+
+/* Si quieres que la columna de los números sea más angosta */
+.Spreadsheet__header:first-child {
+  min-width: 35px !important;
+  /* Ajusta este valor según tu gusto */
+  width: 35px !important;
+}
+
+/* Esto ayudará a que el texto largo de la celda principal 
+   pueda fluir mejor si lo deseas, o simplemente que se corte limpio */
+.Spreadsheet__cell {
+  border: 0.5px solid #cbd5e1 !important;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.bloque-variables {
+  width: 285px;
+  min-width: 285px;
+  max-width: 285px;
+  flex-shrink: 0;
+  background-color: #0f172a;
+  padding: 0 10px;
+  height: 650px;
+  /* Altura total fija del bloque */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* ESTA ES LA CLAVE: Solo esta parte tiene scroll */
+.seccion-scroll-variables {
+  flex: 1;
+  /* Ocupa todo el espacio disponible entre el título y el botón */
+  overflow-y: auto;
+  /* Activa el scroll solo aquí */
+  overflow-x: hidden;
+  padding-right: 5px;
+  /* Espacio para que el scrollbar no tape las tarjetas */
+}
+
+.celda-azul-seleccion {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+  border: 1px solid #3b82f6 !important;
+  z-index: 10;
+}
+
+/* App.css */
+
+/* 1. Dibuja la línea vertical entre los números y la columna A en el encabezado */
+.ag-pinned-left-header {
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+/* 2. Dibuja la línea vertical entre los números y la columna A en las celdas */
+.ag-pinned-left-cols-container {
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+/* 3. Asegura que todas las celdas tengan bordes visibles (Efecto Excel total) */
+.ag-theme-alpine .ag-cell {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* 4. Estilo extra para que los números se vean como una barra lateral sólida */
+.ag-header-cell[col-id="0"] {
+  background-color: #f8fafc !important;
+}
+
+.ag-center-header .ag-header-cell-label {
+  justify-content: center;
+}
+
+.ag-header-cell-label {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Asegura que el contenedor ocupe todo el ancho para que el centrado sea real */
+.ag-header-cell-comp-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+/* Opcional: Centrar también la cabecera de la columna de números si tiene texto */
+.ag-header-cell {
+  text-align: center;
+}
+
+/* Responsividad para laptops pequeñas */
+/* Esto hace que en pantallas pequeñas los elementos se pongan uno debajo del otro */
+
+
+.main-layout-flex {
+  display: flex;
+  gap: 10px;
+  padding: 0 10px;
+  align-items: flex-start;
+  /* Evita que los hijos se estiren raro */
+}
+
+/* El bloque de variables (izquierda) */
+.bloque-variables {
+  width: 290px;
+  min-width: 290px;
+  background-color: var(--bg-card);
+  /* Usa tus variables de color */
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 10px;
+  height: 650px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.header-variables {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 3px solid var(--border-color);
+}
+
+/* El bloque del Excel (derecha) */
+.contenedor-excel {
+  flex: 1;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* Importante para que el Excel no rompa el layout */
+}
+
+.grid-wrapper {
+  height: 600px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .main-layout-flex {
+    flex-direction: column !important;
+  }
+
+  /* Ajusta el ancho para que ocupen todo el espacio en el celular */
+  .main-layout-flex>div {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  .bloque-variables {
+    width: 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    max-height: 400px;
+  }
+
+  .seccion-scroll-variables {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+  }
+
+  /* Ajustamos las tarjetas para que no se vean gigantes */
+  .contenedor-tarjetas {
+    flex-direction: row;
+    /* En móvil, que se pongan de lado si quieres */
+    flex-wrap: wrap;
+  }
+
+  .variable-card {
+    min-width: 250px;
+    /* Mantiene el tamaño de la tarjeta */
+  }
+
+  .seccion-scroll-variables {
+    max-height: 300px;
+  }
+
+  .contenedor-excel {
+    width: 100%;
+    height: 500px;
+    /* Ajusta la altura del Excel en móvil */
+  }
+}
+
+@media (max-width: 500px) {
+
+  /* En celulares muy angostos, que vuelvan a ser 1 sola columna */
+  .variable-card {
+    flex: 0.5 0.5 60%;
+  }
+
+  .bloque-variables {
+    max-height: 300px !important;
+    /* Más pequeño aún para dejar ver el Excel abajo */
+  }
+
+  .contenedor-tarjetas {
+    justify-content: center;
+  }
+
+    .upload-container {
+    flex-direction: column; /* Se ponen uno debajo del otro */
+  }
+
+  .column-divider {
+    display: none; /* Ocultamos la línea vertical */
+    height: 1px;
+    width: 100%;
+    margin: 5px 0;
+    background-color: var(--border-color);
+  }
+
+  .upload-column {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+
+
+.upload-container {
+  display: flex;
+  flex-direction: row;
+  background: var(--bg-card);
+  border-radius: 5px;
+  margin-bottom: 5px;
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box; 
+}
+
+.upload-box {
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+  padding: 5px;
+  text-align: center;
+  flex: 1;
+}
+
+.upload-title {
+  font-weight: bold;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.upload-subtitle {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-bottom: 5px;
+}
+
+.upload-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn-upload {
+  background: white;
+  border: 1px solid #cbd5e1;
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: #1e293b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-upload:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.file-status {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.7rem;
+}
+
+.select-hoja {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  color: #334155;
+  cursor: pointer;
+}
+
+.upload-box.drag-over {
+  border: 2px dashed #3b82f6 !important;
+  background-color: #f0f7ff !important;
+  transition: all 0.3s ease;
+}
+
+.upload-column {
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 2px dashed var(--border-color);
+  border-radius: 5px;
+  min-width: 0;
+}
+
+.column-divider {
+    width: 1px;
+    margin: 10px 0;
+    flex-shrink: 0;
+    display: block;
+}

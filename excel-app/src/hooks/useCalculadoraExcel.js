@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
+import { useData } from "../components/excel/DataContext";
 
 import * as UniMath from "../utils/estadisticaUnidimensional";
 import * as MultiMath from "../utils/estadisticaMultivariante";
 import * as RegMath from "../utils/estadisticaRegresion";
 import * as SeriesMath from "../utils/estadisticaSeriesTiempo";
-import * as IndicesMath from "../utils/estadisticaIndices"; // 👈 El nuevo motor
+import * as IndicesMath from "../utils/estadisticaIndices";
 
 import { api } from "../services/api";
 
 export function useCalculadoraExcel(filename, sheet) {
+  const { variables } = useData();
+  const [exceldataoriginal, setExcelDataOriginal] = useState([]);
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
 
@@ -26,7 +29,6 @@ export function useCalculadoraExcel(filename, sheet) {
   const [pesos, setPesos] = useState("0.5, 0.3, 0.2");
   const [alfa, setAlfa] = useState(0.2);
 
-  // 👇 ESTADOS TEMA 8: NÚMEROS ÍNDICES 👇
   const [subTemaIndices, setSubTemaIndices] = useState("compuestos");
   const [colPrecioBase, setColPrecioBase] = useState("");
   const [colCantidadBase, setColCantidadBase] = useState("");
@@ -37,6 +39,7 @@ export function useCalculadoraExcel(filename, sheet) {
   const [errorNumerico, setErrorNumerico] = useState(false);
   const [resultado, setResultado] = useState(null);
 
+  // 1. CARGA DESDE EL BACKEND
   useEffect(() => {
     if (!filename || sheet === "" || sheet === undefined) return;
     const hojaIndex = Number(sheet);
@@ -48,10 +51,15 @@ export function useCalculadoraExcel(filename, sheet) {
           const headerRow = Object.keys(data[0]);
           setColumns(headerRow);
           setExcelData(data);
+          setExcelDataOriginal(data);
 
           if (headerRow.length > 0) {
             setSelectedColumn(headerRow[0]);
             setSelectedColumnY(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
+            setColPrecioBase(headerRow[0]);
+            setColCantidadBase(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
+            setColPrecioActual(headerRow.length > 2 ? headerRow[2] : headerRow[0]);
+            setColCantidadActual(headerRow.length > 3 ? headerRow[3] : headerRow[0]);
           }
         } else {
           setExcelData([]);
@@ -64,66 +72,92 @@ export function useCalculadoraExcel(filename, sheet) {
     caragarDatos();
   }, [filename, sheet]);
 
-  // Autoselección inteligente de columnas para los temas avanzados
   useEffect(() => {
-    if (columns.length > 0) {
-      if (selectedColumnY === "") setSelectedColumnY(columns.length > 1 ? columns[1] : columns[0]);
-      if (colPrecioBase === "") setColPrecioBase(columns[0]);
-      if (colCantidadBase === "") setColCantidadBase(columns.length > 1 ? columns[1] : columns[0]);
-      if (colPrecioActual === "") setColPrecioActual(columns.length > 2 ? columns[2] : columns[0]);
-      if (colCantidadActual === "") setColCantidadActual(columns.length > 3 ? columns[3] : columns[0]);
+    if (columns.length > 0 && selectedColumnY === "") {
+      setSelectedColumnY(columns.length > 1 ? columns[1] : columns[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
+    if (columns.length === 0 && variables.length > 0 && selectedColumn === "") {
+        setSelectedColumn(variables[0].nombre);
+    }
+  }, [columns, selectedColumnY, variables]);
+
+  // =========================================================================
+  // 2. EL SÚPER CEREBRO DE VARIABLES (Arregla la tabla visual)
+  // =========================================================================
+  useEffect(() => {
+    const selecciones = [
+      selectedColumn, selectedColumnY, 
+      colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual
+    ].filter(Boolean);
+
+    const varsActivas = variables.filter(v => selecciones.includes(v.nombre));
+    const colsOriginalesActivas = columns.filter(c => selecciones.includes(c));
+
+    if (selecciones.length > 0) {
+      // Calculamos hasta dónde llega la columna más larga para no cortar datos
+      const maxLength = Math.max(
+        ...varsActivas.map(v => v.datos ? v.datos.length : 0),
+        colsOriginalesActivas.length > 0 ? exceldataoriginal.length : 0
+      );
+
+      const rowsParaGrid = [];
+      for (let i = 0; i < maxLength; i++) {
+        const row = {};
+        varsActivas.forEach(v => {
+          row[v.nombre] = (v.datos && v.datos[i] !== undefined) ? v.datos[i] : "";
+        });
+        colsOriginalesActivas.forEach(c => {
+          row[c] = (exceldataoriginal[i] && exceldataoriginal[i][c] !== undefined) ? exceldataoriginal[i][c] : "";
+        });
+        rowsParaGrid.push(row);
+      }
+      setExcelData(rowsParaGrid);
+    } else {
+      setExcelData(exceldataoriginal);
+    }
+  }, [
+    selectedColumn, selectedColumnY, colPrecioBase, colCantidadBase, 
+    colPrecioActual, colCantidadActual, exceldataoriginal, variables, columns
+  ]);
 
   const handleChangeDato = (index, colName, value) => {
-    const newData = [...excelData];
     const esNumero = !isNaN(Number(value)) && value.trim() !== "";
-    newData[index][colName] = esNumero ? Number(value) : value;
-    setExcelData(newData);
+    const nuevoValor = esNumero ? Number(value) : value;
+
+    const newData = [...excelData];
+    if (newData[index]) {
+      newData[index][colName] = nuevoValor;
+      setExcelData(newData);
+    }
   };
 
+  // =========================================================================
+  // 3. EXTRACCIÓN A PRUEBA DE BALAS (Arregla el error de cálculo nulo)
+  // =========================================================================
   const obtenerColumna = (colName) => {
     if (!colName) return [];
-    return excelData.map((row) => row[colName]);
-  };
 
-  const obtenerDatosNumericos = () => {
-    return excelData
-      .map((row) => row[selectedColumn])
-      .filter((v) => v !== null && v !== undefined && v !== "")
-      .map((v) => Number(v))
-      .filter((v) => !isNaN(v));
-  };
+    // Prioridad 1: Leer de la tabla en pantalla (si el usuario editó a mano)
+    if (excelData.length > 0 && excelData[0][colName] !== undefined) {
+      return excelData.map(row => row[colName]);
+    }
 
-  const calcularBivariadaLocal = (X, Y) => {
-    const nivelesX = [...new Set(X)].sort();
-    const nivelesY = [...new Set(Y)].sort();
-    const estructuraDatos = {};
-    const totalFilas = {};
+    // Prioridad 2: Si la tabla tiene lag, sacar los datos directo de la Variable Capturada
+    const vCapturada = variables.find(v => v.nombre === colName);
+    if (vCapturada && vCapturada.datos) {
+      return vCapturada.datos;
+    }
 
-    nivelesX.forEach((x) => {
-      estructuraDatos[x] = {};
-      let sumaFila = 0;
-      nivelesY.forEach((y) => {
-        const freq = X.filter((val, i) => val === x && Y[i] === y).length;
-        estructuraDatos[x][y] = freq;
-        sumaFila += freq;
-      });
-      totalFilas[x] = sumaFila;
-    });
+    // Prioridad 3: Sacarlo del Excel crudo de la API
+    if (exceldataoriginal.length > 0 && exceldataoriginal[0][colName] !== undefined) {
+      return exceldataoriginal.map(row => row[colName]);
+    }
 
-    return {
-      tipo: "bivariada",
-      filas: nivelesX,
-      columnas: nivelesY,
-      datos: estructuraDatos,
-      totalFilas: totalFilas,
-    };
+    return [];
   };
 
   const ejecutarCalculo = () => {
-    // 1. PASE VIP 1: MULTIVARIANTE
+    // === MULTIVARIANTE ===
     if (calculo === "distribucion_bivariada" || calculo === "distribucion_bivariada_avanzada") {
       if (!selectedColumn || !selectedColumnY) return;
       const rawDataX = obtenerColumna(selectedColumn);
@@ -140,7 +174,7 @@ export function useCalculadoraExcel(filename, sheet) {
       return;
     }
 
-    // 2. PASE VIP 2: REGRESIÓN
+    // === REGRESIÓN ===
     if (calculo === "regresion_simple") {
       if (!selectedColumn || !selectedColumnY) return;
       const dataX = []; const dataY = [];
@@ -171,15 +205,13 @@ export function useCalculadoraExcel(filename, sheet) {
       return;
     }
 
-    // 3. PASE VIP 3: SERIES DE TIEMPO
+    // === SERIES DE TIEMPO ===
     if (calculo === "series_tiempo") {
       if (!selectedColumn || !selectedColumnY) return;
       
       const rawX = obtenerColumna(selectedColumn); 
       const rawY = obtenerColumna(selectedColumnY); 
-      
-      const dataX = [];
-      const dataY = [];
+      const dataX = []; const dataY = [];
       
       for(let i = 0; i < rawX.length; i++){
         const ny = Number(rawY[i]);
@@ -201,7 +233,7 @@ export function useCalculadoraExcel(filename, sheet) {
       return;
     }
 
-    // 👇 4. PASE VIP 4: NÚMEROS ÍNDICES 👇
+    // === NÚMEROS ÍNDICES ===
     if (calculo === "numeros_indices") {
       let resIndices = null;
 
@@ -250,8 +282,9 @@ export function useCalculadoraExcel(filename, sheet) {
       return;
     }
 
-    // 5. TEMAS UNIDIMENSIONALES
-    const datos = obtenerDatosNumericos();
+    // === UNIDIMENSIONALES ===
+    const datos = obtenerColumna(selectedColumn).map(Number).filter(v => !isNaN(v));
+
     if (datos.length === 0) {
       setErrorNumerico(true); setResultado(null); return;
     }
@@ -261,77 +294,49 @@ export function useCalculadoraExcel(filename, sheet) {
     const configData = { metodoK, kPersonalizado, tipoIntervalo };
 
     switch (calculo) {
-      case "frecuencias_completas":
-        res = UniMath.calcularFrecuencias(datos);
-        break;
-      case "distribucion_intervalos":
-        res = UniMath.calcularDistribucionIntervalos(datos, configData);
-        break;
-      case "estadistica_descriptiva":
-        res = UniMath.calcularDescriptivaTotal(datos);
-        break;
-      case "tendencia_central":
-        const tendenciaSimple = UniMath.calcularTendenciaCentral(datos, configData);
-        if (tendenciaSimple.length > 0) tendenciaSimple.pop();
-        res = tendenciaSimple;
-        break;
-      case "medidas_posicion":
-        res = UniMath.calcularFractiles(datos, percentilK, configData);
-        break;
-      case "tendencia_y_posicion":
+      case "frecuencias_completas": res = UniMath.calcularFrecuencias(datos); break;
+      case "distribucion_intervalos": res = UniMath.calcularDistribucionIntervalos(datos, configData); break;
+      case "estadistica_descriptiva": res = UniMath.calcularDescriptivaTotal(datos); break;
+      case "tendencia_central":{
+        const tend = UniMath.calcularTendenciaCentral(datos, configData);
+        if (Array.isArray(tend) && tend.length > 0) tend.pop();
+        res = tend; break;
+      }
+      case "medidas_posicion": res = UniMath.calcularFractiles(datos, percentilK, configData); break;
+      case "tendencia_y_posicion":{
         const tendenciaData = UniMath.calcularTendenciaCentral(datos, configData);
-        const graficosData = tendenciaData.length > 0 ? tendenciaData.pop() : null;
+        const graficosData = Array.isArray(tendenciaData) ? tendenciaData.pop() : null;
         res = {
           tipo: "tendencia_y_posicion",
           tendencia: tendenciaData,
           posicion: UniMath.calcularFractiles(datos, percentilK, configData),
           datosPuros: [...datos].sort((a, b) => a - b),
           graficosTema3: graficosData,
-        };
-        break;
-      case "variabilidad_y_forma":
-        res = UniMath.calcularVariabilidadYForma(datos, configData);
-        break;
-      default:
-        res = [];
+        }; break;}
+      case "variabilidad_y_forma": res = UniMath.calcularVariabilidadYForma(datos); break;
+      default: res = [];
     }
     setResultado(res);
   };
 
   useEffect(() => {
-    if (excelData && excelData.length > 0 && selectedColumn) ejecutarCalculo();
+    if (selectedColumn) {
+      ejecutarCalculo();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado, percentilK,
     metodoSeries, periodosK, pesos, alfa,
-    subTemaIndices, colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual, nuevoIndiceBase // 👈 Se añadieron aquí para evitar errores
+    subTemaIndices, colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual, nuevoIndiceBase,
+    excelData // 👈 CLAVE: Agregado para que escuche las ediciones manuales y la sincronización
   ]);
 
   return {
-    excelData,
-    columns,
-    selectedColumn, setSelectedColumn,
-    selectedColumnY, setSelectedColumnY,
-    resultado,
-    calculo, setCalculo,
-    tipoIntervalo, setTipoIntervalo,
-    metodoK, setMetodoK,
-    kPersonalizado, setKPersonalizado,
-    percentilK, setPercentilK,
-    handleChangeDato,
-    ejecutarCalculo,
-    errorNumerico,
-    metodoSeries, setMetodoSeries,
-    periodosK, setPeriodosK,
-    pesos, setPesos,
-    alfa, setAlfa,
-    
-    // 👇 EXPORTANDO TEMA 8 👇
-    subTemaIndices, setSubTemaIndices,
-    colPrecioBase, setColPrecioBase,
-    colCantidadBase, setColCantidadBase,
-    colPrecioActual, setColPrecioActual,
-    colCantidadActual, setColCantidadActual,
-    nuevoIndiceBase, setNuevoIndiceBase
+    excelData, columns, selectedColumn, setSelectedColumn, selectedColumnY, setSelectedColumnY,
+    resultado, calculo, setCalculo, tipoIntervalo, setTipoIntervalo, metodoK, setMetodoK,
+    kPersonalizado, setKPersonalizado, percentilK, setPercentilK, handleChangeDato, ejecutarCalculo, errorNumerico,
+    metodoSeries, setMetodoSeries, periodosK, setPeriodosK, pesos, setPesos, alfa, setAlfa,
+    subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
+    colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase
   };
 }

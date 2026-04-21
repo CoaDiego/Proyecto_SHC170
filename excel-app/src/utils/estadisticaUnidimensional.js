@@ -686,3 +686,5 @@ export const calcularFractiles = (datos, kPerc, config) => {
 
   return resultados;
 };
+
+

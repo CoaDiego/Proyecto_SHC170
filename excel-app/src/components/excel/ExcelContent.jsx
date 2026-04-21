@@ -7,6 +7,7 @@ import {alerta} from "../../utils/Notificaciones"
 
 import "../../styles/components/excel/ExcelContent.css";
 
+
 // --- FUNCIÓN PARA LETRAS DE COLUMNAS (A, B, C...) ---
 const getExcelColumnName = (colIndex) => {
   let dividend = colIndex + 1;

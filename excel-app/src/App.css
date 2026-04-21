@@ -24,6 +24,7 @@
   --primary-color2: #1d315c;
   --header-bg: #f3f4f6;
   --accent-color: #d97706;
+  --text-variable: black;
 }
 
 html.dark {
@@ -42,6 +43,7 @@ html.dark {
   --primary-color: #3b82f6;
   --header-bg: #333333;
   --accent-color: #f59e0b;
+    --text-variable: white;
 }
 
 /* Esto obliga a la página entera a tener el carril siempre visible */
@@ -618,7 +620,7 @@ html.dark .rdg {
 }
 
 /* ========================================= */
-/* 9. FIX PARA GRÁFICOS (RECHARTS)           */
+/* 9. FIX PARA GRÁFICOS (RECHARTS)           */ 
 /* ========================================= */
 
 /* Texto de ejes (X, Y) y etiquetas */
