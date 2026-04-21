@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { DataGrid } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 
+// --- IMPORTS ---
+
 import Calculator from "../components/excel/Calculator";
 import ExcelContent from "../components/excel/ExcelContent";
 import TablaDinamica from "../components/excel/TablaDinamica";
@@ -11,7 +13,6 @@ import { api } from "../services/api";
 
 import "../styles/pages/Calculos.css";
 
-// --- IMPORTS DE RESULTADOS (Ibarra + Diego) ---
 import TablasBivariantes from "../components/Resultados/TablasBivariantes";
 import TablasUnidimensionales from "../components/Resultados/TablasUnidimensionales";
 import PanelGraficos from "../components/Resultados/PanelGraficos";
@@ -49,14 +50,12 @@ export default function Calculos() {
   const [filtroFractil, setFiltroFractil] = useState("Cuartil");
   const [panelAbierto, setPanelAbierto] = useState(true);
 
-  // --- HOOK UNIFICADO ---
   const {
     excelData, columns, selectedColumn, setSelectedColumn, selectedColumnY, setSelectedColumnY,
     resultado, calculo, setCalculo, tipoIntervalo, setTipoIntervalo, metodoK, setMetodoK,
     kPersonalizado, setKPersonalizado, percentilK, setPercentilK,
     handleChangeDato, ejecutarCalculo, errorNumerico,
-    
-    // Estados de Diego
+
     metodoSeries, setMetodoSeries, periodosK, setPeriodosK, pesos, setPesos, alfa, setAlfa,
     subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase
@@ -91,7 +90,6 @@ export default function Calculos() {
   const esUnidimensional = ["frecuencias_completas", "distribucion_intervalos", "estadistica_descriptiva", "tendencia_central", "medidas_posicion", "tendencia_y_posicion", "variabilidad_y_forma"].includes(calculo);
   const esBivariada = ["distribucion_bivariada", "distribucion_bivariada_avanzada"].includes(calculo);
 
-  // --- CONFIGURACIÓN DINÁMICA DE LA TABLA (Integración Diego -> Ibarra) ---
   const rdgColumns = [];
   const addCol = (colKey, name, cssClass) => {
     if (colKey && !rdgColumns.some((c) => c.key === colKey)) {
@@ -113,7 +111,9 @@ export default function Calculos() {
   } else {
     addCol(selectedColumn, `${selectedColumn} (Var X)`, "celda-editable");
     if ((esBivariada || calculo === "regresion_simple" || calculo === "series_tiempo" || calculo === "numeros_indices") && selectedColumnY) {
-      if (selectedColumn !== selectedColumnY) addCol(selectedColumnY, `${selectedColumnY} (Var Y)`, "celda-editable-y");
+      if (selectedColumn !== selectedColumnY) {
+        addCol(selectedColumnY, `${selectedColumnY} (Var Y)`, "celda-editable-y");
+      }
     }
   }
 
@@ -123,7 +123,7 @@ export default function Calculos() {
     });
   };
 
-  // --- RENDERIZADOR DE OPCIONES CON VARIABLES (Ibarra) ---
+  // --- RENDERIZADOR DE OPCIONES CON VARIABLES ---
   const renderOpcionesColumnas = () => (
     <>
       <optgroup label="Columnas del Excel">
@@ -155,7 +155,7 @@ export default function Calculos() {
             </select>
 
             <ExcelContent filename={selectedFile} mostrarTabla={false} onSheetChange={setSelectedSheet} />
-            
+
             <div className="panel-controles-excel">
               <h3 className="panel-controles-excel_h3">Calculadora de Excel</h3>
 
@@ -220,7 +220,15 @@ export default function Calculos() {
                           <label>Serie de Índices (Original):</label>
                           <select value={selectedColumnY} onChange={(e) => setSelectedColumnY(e.target.value)} style={{ width: "100%", marginBottom: "15px" }}>{renderOpcionesColumnas()}</select>
                           <label>Valor para la Nueva Base:</label>
-                          <input type="number" step="0.1" value={nuevoIndiceBase} onChange={(e) => setNuevoIndiceBase(e.target.value)} className="container_cal_input" placeholder="Ej: 100" />
+                          <input type="number" step="0.1" value={nuevoIndiceBase} onChange={(e) => setNuevoIndiceBase(e.target.value)} className="container_cal_input" placeholder="Ej: 105.4" />
+                          <small
+                            style={{
+                              display: "block",
+                              color: "var(--text-muted)",
+                            }}
+                          >
+                            Ingresa el índice del año que será la nueva base.
+                          </small>
                         </>
                       )}
                       {subTemaIndices === "deflacion" && (
@@ -235,7 +243,9 @@ export default function Calculos() {
                       )}
                     </div>
                   ) : (
-                    /* ================= CONTROLES TEMAS ANTERIORES ================= */
+                    /* ==============================================
+                       CONTROLES TEMAS ANTERIORES (Regresión, Series, etc)
+                       ============================================== */
                     <>
                       <label>
                         {calculo === "series_tiempo" ? "Eje de Tiempo X:" : esBivariada || calculo === "regresion_simple" ? "Variable X:" : "Columna Seleccionada:"}
@@ -286,11 +296,16 @@ export default function Calculos() {
                         <>
                           <label>Tipo Intervalo:</label>
                           <select value={tipoIntervalo} onChange={(e) => setTipoIntervalo(e.target.value)} className="container_select">
-                            <option value="semiabierto">[a, b)</option><option value="cerrado">[a, b]</option><option value="abierto">(a, b)</option>
+                            <option value="semiabierto">[a, b)</option>
+                            <option value="cerrado">[a, b]</option>
+                            <option value="abierto">(a, b)</option>
                           </select>
                           <label>Método K:</label>
                           <select value={metodoK} onChange={(e) => setMetodoK(e.target.value)} className="container_select">
-                            <option value="sturges">Sturges</option><option value="cuadratica">Cuadrática</option><option value="logaritmica">Logarítmica</option><option value="personalizada">Manual</option>
+                            <option value="sturges">Sturges</option>
+                            <option value="cuadratica">Cuadrática</option>
+                            <option value="logaritmica">Logarítmica</option>
+                            <option value="personalizada">Manual</option>
                           </select>
                           {metodoK === "personalizada" && <input type="number" value={kPersonalizado} onChange={(e) => setKPersonalizado(e.target.value)} placeholder="Valor k" className="container_cal_input" />}
                         </>
@@ -349,10 +364,10 @@ export default function Calculos() {
                 <>
                   {/* Tema 6: Regresión */}
                   {calculo === "regresion_simple" && resultado.tipo === "regresion" && <TablaRegresion resultado={resultado} />}
-                  
+
                   {/* Tema 7: Series de Tiempo */}
                   {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && <TablaSeriesTiempo resultado={resultado} />}
-                  
+
                   {/* Tema 8: Números Índices */}
                   {calculo === "numeros_indices" && ["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo) && (
                     <TablaIndices resultado={resultado} />
@@ -365,11 +380,19 @@ export default function Calculos() {
 
                   {/* Temas 2, 3 y 4: Unidimensionales */}
                   {esUnidimensional && (!resultado.tipo || ["tendencia_y_posicion", "variabilidad_y_forma", "estadistica_descriptiva"].includes(resultado.tipo)) && (
-                    <TablasUnidimensionales resultado={resultado} calculo={calculo} formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil} />
+                    <TablasUnidimensionales
+                      resultado={resultado}
+                      calculo={calculo}
+                      formatearCelda={formatearCelda}
+                      filtroFractil={filtroFractil}
+                      setFiltroFractil={setFiltroFractil} />
                   )}
                 </>
               ) : (
-                !errorNumerico && <p style={{ color: "var(--text-muted)" }}>Configura los parámetros a la izquierda y presiona Calcular.</p>
+                !errorNumerico &&
+                <p style={{ color: "var(--text-muted)" }}>
+                  Configura los parámetros a la izquierda y presiona Calcular.
+                </p>
               )}
             </div>
             <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />

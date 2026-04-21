@@ -9,7 +9,7 @@ import VariableCard from '../components/excel/VariableCard';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import "../styles/pages/Datos.css";
-import * as XLSX from 'xlsx'; // <--- ESTA ES LA QUE FALTA
+import * as XLSX from 'xlsx'; 
 
 import api from '../services/api';
 
@@ -25,23 +25,21 @@ const SimuladorMAT251 = () => {
     } = useData();
 
     const [selection, setSelection] = useState({ start: null, end: null, isDragging: false });
-    // Estado para el efecto visual de arrastrar archivo
     const [isDraggingFile, setIsDraggingFile] = useState(false);
 
 
 
-    // 🌟 ESTADOS PARA LA API 🌟
-    const [archivosApi, setArchivosApi] = useState([]); // Guarda la lista de archivos
-    const [cargandoApi, setCargandoApi] = useState(false); // Efecto de carga
-    const [archivoActivo, setArchivoActivo] = useState(null); // ESTO FALTABA
+    // ESTADOS PARA LA API
+    const [archivosApi, setArchivosApi] = useState([]); 
+    const [cargandoApi, setCargandoApi] = useState(false); 
+    const [archivoActivo, setArchivoActivo] = useState(null); 
     const [_selectedApiFile, setSelectedApiFile] = useState("");
 
-    // 🌟 USE-EFFECT: Cargar lista de archivos de FastAPI 🌟
+    // USE-EFFECT: Cargar lista de archivos de FastAPI 
     useEffect(() => {
         const cargarListaArchivos = async () => {
             try {
                 const data = await api.obtenerArchivos();
-                // Tu API devuelve: { "files": [ {"filename": "...", "author": "..."}, ... ] }
                 if (data && data.files) {
                     setArchivosApi(data.files);
                 }
@@ -61,7 +59,7 @@ const SimuladorMAT251 = () => {
         }
     };
 
-    // 🌟 FUNCIÓN: Descargar de FastAPI y simular en PC 🌟
+    // FUNCIÓN: Descargar de FastAPI y simular en PC
     const cargarDesdeAPI = async (filename) => {
         if (!filename) return;
         try {
@@ -175,7 +173,6 @@ const SimuladorMAT251 = () => {
                 return alert(`⚠️ Error: El rango choca con la variable "${solapada.nombre}".`);
             }
 
-            // ... (código anterior: validación de solapadas) ...
 
             // 🌟 LA RED DE CAPTURA CORREGIDA 🌟
             const datosValidos = [];
