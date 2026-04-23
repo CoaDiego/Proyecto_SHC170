@@ -6,8 +6,8 @@ import { useData } from '../components/excel/DataContext';
 import { keyToNum, getExcelChar, excelToCoords } from '../utils/excelHelpers';
 import VariableCard from '../components/excel/VariableCard';
 
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
+/* import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css'; */
 import "../styles/pages/Datos.css";
 import * as XLSX from 'xlsx'; 
 
