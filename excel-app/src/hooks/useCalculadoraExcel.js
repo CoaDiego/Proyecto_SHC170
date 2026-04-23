@@ -187,7 +187,7 @@ export function useCalculadoraExcel(filename, sheet) {
         }
       }
 
-      const tipos = ["lineal", "exponencial", "logaritmica", "potencial", "reciproco"];
+      const tipos = ["lineal", "exponencial", "logaritmica", "potencial", "reciproco", "cuadratica", "cubica"];
       const comparativa = [];
 
       tipos.forEach(tipo => {

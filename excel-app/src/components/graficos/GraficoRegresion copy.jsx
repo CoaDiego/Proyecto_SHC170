@@ -6,15 +6,12 @@ import {
 export default function GraficoRegresion({ resultado }) {
   const mejorModelo = resultado.comparativa[0].tipoModelo;
   
-  // 1. Agregamos cuadratica y cubica al estado inicial
   const [lineasVisibles, setLineasVisibles] = useState({
     lineal: mejorModelo === 'lineal',
     exponencial: mejorModelo === 'exponencial',
     logaritmica: mejorModelo === 'logaritmica',
     potencial: mejorModelo === 'potencial',
-    reciproco: mejorModelo === 'reciproco',
-    cuadratica: mejorModelo === 'cuadratica',
-    cubica: mejorModelo === 'cubica'
+    reciproco: mejorModelo === 'reciproco'
   });
 
   const toggleLinea = (tipo) => setLineasVisibles(prev => ({ ...prev, [tipo]: !prev[tipo] }));
@@ -38,18 +35,13 @@ export default function GraficoRegresion({ resultado }) {
     datosCurvas.push(punto);
   }
 
-  // 2. Definimos la lista completa de modelos
-  const listaModelos = ['lineal', 'exponencial', 'logaritmica', 'potencial', 'reciproco', 'cuadratica', 'cubica'];
-
-  // 3. Asignamos colores nuevos para las polinomiales
+  // Colores vibrantes que se ven bien en modo claro y oscuro
   const colores = {
     lineal: "#8884d8",
     exponencial: "#82ca9d",
     logaritmica: "#ffc658",
     potencial: "#ff7300",
-    reciproco: "#e91e63",
-    cuadratica: "#9c27b0", // Púrpura
-    cubica: "#00bcd4"      // Cian
+    reciproco: "#e91e63"
   };
 
   return (
@@ -59,7 +51,7 @@ export default function GraficoRegresion({ resultado }) {
       </h4>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {listaModelos.map(tipo => {
+        {['lineal', 'exponencial', 'logaritmica', 'potencial', 'reciproco'].map(tipo => {
           const existe = resultado.comparativa.some(m => m.tipoModelo === tipo);
           if (!existe) return null;
 
@@ -107,8 +99,7 @@ export default function GraficoRegresion({ resultado }) {
 
             <Scatter name="Datos Observados" data={datosReales} dataKey="yReal" fill="#ff0000" shape="circle" />
 
-            {/* 4. Usamos la lista completa para renderizar las líneas condicionalmente */}
-            {listaModelos.map(tipo => {
+            {['lineal', 'exponencial', 'logaritmica', 'potencial', 'reciproco'].map(tipo => {
               if (lineasVisibles[tipo]) {
                 return (
                   <React.Fragment key={tipo}>

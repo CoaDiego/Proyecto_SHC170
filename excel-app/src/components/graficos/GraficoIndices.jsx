@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area
-} from 'recharts';
+  BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell
+} from 'recharts'; // Añadimos 'Cell' aquí
 
 export default function GraficoIndices({ resultado }) {
   if (!resultado) return null;
@@ -10,9 +10,11 @@ export default function GraficoIndices({ resultado }) {
   // GRÁFICO 1: ÍNDICES COMPUESTOS
   // ==========================================
   if (resultado.tipo === "indices_compuestos") {
+    // Agregamos Edgeworth a la lista de datos del gráfico con su color morado
     const dataGrafico = [
       { nombre: 'Laspeyres', valor: resultado.resultados.laspeyres, fill: '#1976d2' },
       { nombre: 'Fisher (Ideal)', valor: resultado.resultados.fisher, fill: '#f57c00' },
+      { nombre: 'Edgeworth', valor: resultado.resultados.edgeworth, fill: '#9c27b0' },
       { nombre: 'Paasche', valor: resultado.resultados.paasche, fill: '#388e3c' }
     ];
 
@@ -30,7 +32,7 @@ export default function GraficoIndices({ resultado }) {
             <Tooltip cursor={{ fill: 'rgba(128,128,128,0.1)' }} contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-color)' }} formatter={(value) => `${value.toFixed(2)}%`} />
             <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
               {dataGrafico.map((entry, index) => (
-                <cell key={`cell-${index}`} fill={entry.fill} />
+                <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Bar>
           </BarChart>

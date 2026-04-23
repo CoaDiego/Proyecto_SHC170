@@ -1,12 +1,12 @@
 // src/utils/estadisticaIndices.js
 
 /**
- * MÓDULO 1: ÍNDICES COMPUESTOS (Laspeyres, Paasche, Fisher, Edgeworth)
+ * MÓDULO 1: ÍNDICES COMPUESTOS (Laspeyres, Paasche, Fisher)
  * @param {Array} preciosBase - [P_0] Precios en el periodo base
  * @param {Array} cantidadesBase - [Q_0] Cantidades en el periodo base
  * @param {Array} preciosActuales - [P_t] Precios en el periodo actual
  * @param {Array} cantidadesActuales - [Q_t] Cantidades en el periodo actual
- * @returns {Object} Los 4 índices y sus sumatorias
+ * @returns {Object} Los 3 índices y sus interpretaciones
  */
 export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosActuales, cantidadesActuales) => {
   const n = preciosBase.length;
@@ -40,7 +40,7 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
     sum_P0_Qt += P0_Qt;
 
     detallesCalculo.push({
-      item: `Fila ${i + 1}`, P0, Q0, Pt, Qt, Pt_Q0, P0_Q0, Pt_Qt, P0_Qt
+      item: i + 1, P0, Q0, Pt, Qt, Pt_Q0, P0_Q0, Pt_Qt, P0_Qt
     });
   }
 
@@ -51,11 +51,8 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
   const P = sum_P0_Qt === 0 ? 0 : (sum_Pt_Qt / sum_P0_Qt) * 100;
   
   // 3. Índice de Fisher (F) - Raíz cuadrada de L * P
+  // (Nota: Se divide entre 100 y se vuelve a multiplicar para mantener el formato porcentual)
   const F = Math.sqrt((L / 100) * (P / 100)) * 100;
-
-  // 4. NUEVO: Índice de Marshall-Edgeworth (E)
-  // Fórmula adaptada a las sumatorias precalculadas
-  const E = (sum_P0_Q0 + sum_P0_Qt) === 0 ? 0 : ((sum_Pt_Q0 + sum_Pt_Qt) / (sum_P0_Q0 + sum_P0_Qt)) * 100;
 
   return {
     tipo: "indices_compuestos",
@@ -64,8 +61,7 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
     resultados: {
       laspeyres: L,
       paasche: P,
-      fisher: F,
-      edgeworth: E // <-- Aquí se exporta el nuevo cálculo
+      fisher: F
     }
   };
 };

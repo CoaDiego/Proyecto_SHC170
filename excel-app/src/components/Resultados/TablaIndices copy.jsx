@@ -12,33 +12,23 @@ export default function TablaIndices({ resultado }) {
     return (
       <div style={{ padding: '15px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)', marginTop: '15px' }}>
         
-        {/* Tarjetas de Resultados (Ahora son 4) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-          
+        {/* Tarjetas de Resultados */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
           <div style={{ padding: '15px', backgroundColor: 'rgba(25, 118, 210, 0.1)', border: '1px solid #1976d2', borderRadius: '8px', textAlign: 'center' }}>
-            <h4 style={{ margin: '0 0 5px 0', color: '#1976d2' }}>Índice Laspeyres</h4>
+            <h4 style={{ margin: '0 0 5px 0', color: '#1976d2' }}>Índice de Laspeyres</h4>
             <span style={{ fontSize: '1.8em', fontWeight: 'bold' }}>{resultado.resultados.laspeyres.toFixed(2)}%</span>
             <p style={{ margin: '5px 0 0 0', fontSize: '0.8em', color: 'var(--text-muted)' }}>(Cantidades Base)</p>
           </div>
-          
           <div style={{ padding: '15px', backgroundColor: 'rgba(56, 142, 60, 0.1)', border: '1px solid #388e3c', borderRadius: '8px', textAlign: 'center' }}>
-            <h4 style={{ margin: '0 0 5px 0', color: '#388e3c' }}>Índice Paasche</h4>
+            <h4 style={{ margin: '0 0 5px 0', color: '#388e3c' }}>Índice de Paasche</h4>
             <span style={{ fontSize: '1.8em', fontWeight: 'bold' }}>{resultado.resultados.paasche.toFixed(2)}%</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '0.8em', color: 'var(--text-muted)' }}>(Cants. Actuales)</p>
+            <p style={{ margin: '5px 0 0 0', fontSize: '0.8em', color: 'var(--text-muted)' }}>(Cantidades Actuales)</p>
           </div>
-          
           <div style={{ padding: '15px', backgroundColor: 'rgba(245, 124, 0, 0.1)', border: '1px solid #f57c00', borderRadius: '8px', textAlign: 'center' }}>
-            <h4 style={{ margin: '0 0 5px 0', color: '#f57c00' }}>Índice Fisher</h4>
+            <h4 style={{ margin: '0 0 5px 0', color: '#f57c00' }}>Índice de Fisher</h4>
             <span style={{ fontSize: '1.8em', fontWeight: 'bold' }}>{resultado.resultados.fisher.toFixed(2)}%</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '0.8em', color: 'var(--text-muted)' }}>(Promedio Geométrico)</p>
+            <p style={{ margin: '5px 0 0 0', fontSize: '0.8em', color: 'var(--text-muted)' }}>(Índice Ideal)</p>
           </div>
-
-          <div style={{ padding: '15px', backgroundColor: 'rgba(156, 39, 176, 0.1)', border: '1px solid #9c27b0', borderRadius: '8px', textAlign: 'center' }}>
-            <h4 style={{ margin: '0 0 5px 0', color: '#9c27b0' }}>Índice Edgeworth</h4>
-            <span style={{ fontSize: '1.8em', fontWeight: 'bold' }}>{resultado.resultados.edgeworth.toFixed(2)}%</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '0.8em', color: 'var(--text-muted)' }}>(Suma de Cantidades)</p>
-          </div>
-
         </div>
 
         {/* Botón Detalles */}
