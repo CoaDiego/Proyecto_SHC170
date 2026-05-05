@@ -10,7 +10,7 @@ import Calculadora from "./pages/Calculadora";
 import About from "./pages/About";
 import Login from "./pages/Login";
 import MAT251 from "./pages/MAT251/Pantalla";
-import Registro from "./pages/Registro";
+
 
 // 👇 1. IMPORTAMOS EL DATAPROVIDER DE LA CARPETA EXCEL
 import { DataProvider } from "./components/excel/DataContext"; 
@@ -20,11 +20,7 @@ import LtiTester from "./pages/LtiTester";
 import "./App.css"; 
 
 function App() {
-  // 🆕 1. Cambiamos el estado para que guarde los datos del usuario (null = nadie logueado)
-  const [usuario, setUsuario] = useState(null);
-
-  // 🆕 2. Variable derivada: Si usuario no es nulo, significa que alguien inició sesión
-  const isAuth = usuario !== null;
+  const [isAuth, setIsAuth] = useState(false);
 
   return (
     // 👇 2. ENVOLVEMOS TODA LA APLICACIÓN CON EL DATAPROVIDER
@@ -40,34 +36,17 @@ function App() {
           {isAuth && (
             <header className="flex justify-between items-center p-4 shadow-md">
               <Menu /> 
-              
-              {/* 🆕 Añadimos este pequeño panel para comprobar quién entró */}
-              <div style={{ 
-                backgroundColor: 'var(--accent-color, #4A90E2)', 
-                color: 'white', 
-                padding: '8px 15px', 
-                borderRadius: '20px',
-                fontSize: '0.9rem',
-                fontWeight: 'bold'
-              }}>
-                👤 {usuario.nombre} | {usuario.rol}
-              </div>
-
             </header>
           )}
 
-         {/* Contenido que cambia según la ruta */}
+          {/* Contenido que cambia según la ruta */}
           <div className="content">
             <Routes>
               {!isAuth ? (
                 <>
-                  {/* 🆕 3. Pasamos setUsuario a tus puertas de acceso en lugar de setIsAuth */}
-                  <Route path="/login" element={<Login onLogin={setUsuario} />} />
-                  
-                  {/* 🆕 NUEVO: Añadimos la ruta del Registro aquí */}
-                  <Route path="/registro" element={<Registro />} />
-                  
-                  <Route path="/lti-tester" element={<LtiTester onLogin={setUsuario} />} />
+                  <Route path="/login" element={<Login onLogin={setIsAuth} />} />
+
+                  <Route path="/lti-tester" element={<LtiTester onLogin={setIsAuth} />} />
                   
                   <Route path="*" element={<Navigate to="/login" />} />
                 </>
@@ -79,11 +58,8 @@ function App() {
                   <Route path="/about" element={<About />} />
 
                   <Route path="/lti-tester" element={<Navigate to="/" />} />
+
                   <Route path="/login" element={<Navigate to="/" />} />
-                  
-                  {/* 🆕 NUEVO: Si ya inició sesión y trata de registrarse, lo mandamos al inicio */}
-                  <Route path="/registro" element={<Navigate to="/" />} />
-                  
                   <Route path="/MAT251" element={<MAT251 />} />
                 </>
               )}

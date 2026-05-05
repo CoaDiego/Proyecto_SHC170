@@ -1,7 +1,7 @@
 import pandas as pd
-from fastapi import FastAPI, File, UploadFile, Form, Query, Body
+from fastapi import FastAPI, File, UploadFile, Form, Query, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 from MAT151 import tema2, tema3, tema4, tema5, tema6
 from MAT151.tema2 import tabla_por_clases
@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from typing import Optional, List
 import os, shutil
 import json
+
+import urllib.parse # 🆕 Nuevo import estándar de Python
 
 app = FastAPI()
 
@@ -38,6 +40,118 @@ async def favicon():
     return {}
 
 
+# =======================
+# 🆕 SIMULADOR DE INGRESO LTI (Integración Moodle)
+# =======================
+@app.post("/lti/launch")
+async def lti_launch(request: Request):
+    """
+    Recibe la petición POST desde la plataforma educativa (ej. Moodle)
+    y redirige al frontend de React con los datos del usuario.
+    """
+    try:
+        # 1. Extraemos los datos del formulario que envía la plataforma
+        form_data = await request.form()
+        
+        # 2. Obtenemos los campos clave (con valores por defecto por si acaso)
+        user_id = form_data.get("user_id", "ID_USFX_001")
+        full_name = form_data.get("lis_person_name_full", "Estudiante de Prueba")
+        roles = form_data.get("roles", "Learner")
+        
+        # 3. Limpiamos los textos para pasarlos seguros por la URL (evita errores con espacios/tildes)
+        safe_name = urllib.parse.quote(full_name)
+        safe_role = urllib.parse.quote(roles)
+        
+        # 4. Construimos la URL hacia tu frontend (Vite corre por defecto en 5173)
+        # Asegúrate de que el path coincida con el que pusimos en App.jsx ("/lti-tester")
+        target_url = f"http://localhost:5173/lti-tester?name={safe_name}&role={safe_role}&id={user_id}"
+        
+        # 5. Redirigimos usando un código 303 (See Other) para que el navegador haga GET
+        return RedirectResponse(url=target_url, status_code=303)
+        
+    except Exception as e:
+        return {"error": f"Fallo en la conexión LTI: {str(e)}"}
+    
+
+# =======================
+# 🆕 SISTEMA DE USUARIOS LOCALES (Híbrido)
+# =======================
+USUARIOS_FILE = "usuarios.json"
+
+# Modelos de datos esperados
+# 1. Actualizamos el modelo para que sea más universal
+class UsuarioRegistro(BaseModel):
+    nombre: str
+    usuario: str
+    email: str
+    perfil: str         # 🆕 Ej: Empresa, Investigador, Estudiante
+    institucion: str    # 🆕 Reemplaza a "carrera"
+    password: str
+
+class UsuarioLogin(BaseModel):
+    usuario: str
+    password: str
+
+# Función auxiliar para leer o crear el archivo JSON
+def cargar_usuarios():
+    if not os.path.exists(USUARIOS_FILE):
+        # Si no existe, lo creamos e insertamos a tu usuario Admin por defecto
+        default_users = {
+            "admin": {
+                "nombre": "Diego (Administrador)",
+                "password": "123",
+                "rol": "Administrador"
+            }
+        }
+        with open(USUARIOS_FILE, "w") as f:
+            json.dump(default_users, f)
+        return default_users
+    
+    with open(USUARIOS_FILE, "r") as f:
+        return json.load(f)
+
+def guardar_usuarios(usuarios_dict):
+    with open(USUARIOS_FILE, "w") as f:
+        json.dump(usuarios_dict, f)
+
+# Endpoint 1: Registrar nuevo usuario
+# 2. Actualizamos cómo se guarda en el diccionario
+@app.post("/registrar_usuario")
+async def registrar_usuario(user_data: UsuarioRegistro):
+    usuarios = cargar_usuarios()
+    
+    if user_data.usuario in usuarios:
+        return JSONResponse(status_code=400, content={"error": "El nombre de usuario ya está en uso"})
+    
+    usuarios[user_data.usuario] = {
+        "nombre": user_data.nombre,
+        "email": user_data.email,
+        "perfil": user_data.perfil,           # Nuevo
+        "institucion": user_data.institucion, # Nuevo
+        "password": user_data.password, 
+        "rol": "Usuario Externo" 
+    }
+    guardar_usuarios(usuarios)
+    return {"message": "Usuario registrado con éxito"}
+
+# Endpoint 2: Iniciar sesión manualmente
+@app.post("/login_local")
+async def login_local(credentials: UsuarioLogin):
+    usuarios = cargar_usuarios()
+    
+    user_info = usuarios.get(credentials.usuario)
+    
+    if not user_info or user_info["password"] != credentials.password:
+        return JSONResponse(status_code=401, content={"error": "Credenciales incorrectas"})
+    
+    # Si todo está bien, devolvemos el perfil para React
+    return {
+        "id": credentials.usuario,
+        "nombre": user_info["nombre"],
+        "rol": user_info["rol"]
+    }
+
+    
 # =======================
 # Carpeta para Excel
 # =======================

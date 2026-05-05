@@ -1,38 +1,20 @@
 import { useState } from "react";
-import { Link } from "react-router-dom"; // 🆕 Importamos Link para la navegación
 import logoCarrera from "../assets/images/Logo-Adm.png";
 
-import { alerta } from '../utils/Notificaciones';
+import { alerta} from '../utils/Notificaciones';
+
 
 export default function Login({ onLogin }) {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
-  const [error, setError] = useState(""); 
+  const [error, _setError] = useState("");
 
-  // 🆕 Convertimos la función a asíncrona para comunicarnos con FastAPI
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    
-    try {
-      // Hacemos la petición a la nueva ruta que creamos en el backend
-      const response = await fetch("http://localhost:8000/login_local", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario: user, password: pass })
-      });
-
-      if (response.ok) {
-        // Si el backend dice que todo está bien, recibimos el perfil
-        const perfil = await response.json();
-        
-        onLogin(perfil); 
-        alerta.success("Acceso concedido", `Bienvenido, ${perfil.nombre}`);
-      } else {
-        // Si la contraseña está mal o el usuario no existe
-        alerta.error("Credenciales incorrectas", "Por favor, verifica tu usuario y contraseña.");
-      }
-    } catch (error) {
-      alerta.error("Error de conexión", "Asegúrate de que el servidor Backend esté corriendo.");
+    if (user === "admin" && pass === "123") {
+      onLogin(true);
+    } else {
+      alerta.error("Credenciales incorrectas", "Por favor, ingresa tus credenciales correctas.");
     }
   };
 
@@ -45,6 +27,7 @@ export default function Login({ onLogin }) {
             alt="Logo Administración de Empresas"
             style={{ width: '200px', height: 'auto' }}
           />
+          
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -71,10 +54,7 @@ export default function Login({ onLogin }) {
           <button type="submit" style={{
             backgroundColor: 'var(--accent-color)',
             padding: '12px',
-            fontSize: '1rem',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer'
+            fontSize: '1rem'
           }}>
             Ingresar
           </button>
@@ -89,13 +69,8 @@ export default function Login({ onLogin }) {
             </div>
           )}
         </form>
-
-        {/* 🆕 Enlace para ir a la pantalla de Registro */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.9rem' }}>
-          <p>¿No tienes una cuenta? <Link to="/registro" style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>Regístrate aquí</Link></p>
-        </div>
-
       </div>
     </div>
+    
   );
 }
