@@ -157,23 +157,46 @@ export function useCalculadoraExcel(filename, sheet) {
   };
 
   const ejecutarCalculo = () => {
-    // === MULTIVARIANTE ===
+   // === MULTIVARIANTE ===
     if (calculo === "distribucion_bivariada" || calculo === "distribucion_bivariada_avanzada") {
       if (!selectedColumn || !selectedColumnY) return;
+      
       const rawDataX = obtenerColumna(selectedColumn);
       const rawDataY = obtenerColumna(selectedColumnY);
 
-      let resMultivariable = null;
-      if (calculo === "distribucion_bivariada") {
-        resMultivariable = MultiMath.calcularDistribucionBivariada(rawDataX, rawDataY);
-      } else {
-        resMultivariable = MultiMath.calcularBivarianteAvanzada(rawDataX, rawDataY);
+      // 🧹 NUEVO: Limpieza y Parseo de Datos
+      const cleanX = [];
+      const cleanY = [];
+      const maxLen = Math.min(rawDataX.length, rawDataY.length);
+
+      for (let i = 0; i < maxLen; i++) {
+        const valX = rawDataX[i];
+        const valY = rawDataY[i];
+
+        // Ignorar filas donde alguna de las dos celdas esté completamente vacía
+        if (valX !== "" && valX !== null && valX !== undefined &&
+            valY !== "" && valY !== null && valY !== undefined) {
+          
+          // Forzar conversión a número si es posible (ej. "25" -> 25)
+          const numX = Number(valX);
+          const numY = Number(valY);
+          
+          cleanX.push(!isNaN(numX) && valX.toString().trim() !== "" ? numX : valX);
+          cleanY.push(!isNaN(numY) && valY.toString().trim() !== "" ? numY : valY);
+        }
       }
+
+      // Llamada a la función maestra con datos limpios
+      const resMultivariable = MultiMath.calcularDistribucionBivariada(cleanX, cleanY);
+      
+      // Console log temporal para asegurarnos de que la tabla se genera
+      console.log("Matriz Generada:", resMultivariable);
+
       setResultado(resMultivariable);
       setErrorNumerico(false);
       return;
     }
-
+    
     // === REGRESIÓN ===
     if (calculo === "regresion_simple") {
       if (!selectedColumn || !selectedColumnY) return;

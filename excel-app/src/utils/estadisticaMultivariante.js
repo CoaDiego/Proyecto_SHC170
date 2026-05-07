@@ -1,19 +1,57 @@
 // src/utils/estadisticaMultivariante.js
 
 /**
- * Tabla de Doble Entrada Básica (Variables Categóricas o Discretas)
+ * Tabla de Doble Entrada Inteligente (Maneja Texto, Números y Mixtos)
+ * Analiza las variables de forma independiente para aplicar Sturges donde corresponda.
  */
 export const calcularDistribucionBivariada = (dataX, dataY) => {
   const n = dataX.length;
-  if (n === 0 || dataX.length !== dataY.length) return null;
+  if (n === 0 || n !== dataY.length) return null;
 
-  const categoriasX = [...new Set(dataX)].sort();
-  const categoriasY = [...new Set(dataY)].sort();
+  // 1. Escáner individual: ¿Son números continuos o texto categórico?
+  const esNumericoX = dataX.every(v => typeof v === 'number' && !isNaN(v));
+  const esNumericoY = dataY.every(v => typeof v === 'number' && !isNaN(v));
+  const ambosNumericos = esNumericoX && esNumericoY;
 
+  // Función auxiliar interna para generar etiquetas e intervalos si es necesario
+  const procesarDimension = (datos, esNumerico) => {
+    if (esNumerico && n > 1) {
+      const k = Math.round(1 + 3.322 * Math.log10(n)); // Regla de Sturges
+      const min = Math.min(...datos);
+      const max = Math.max(...datos);
+      const amp = (max - min) / k || 1;
+      
+      const limites = [];
+      const labels = [];
+      
+      for (let i = 0; i < k; i++) {
+        const lInf = min + i * amp;
+        const lSup = i === k - 1 ? max : min + (i + 1) * amp;
+        const label = `[${lInf.toFixed(2)} - ${lSup.toFixed(2)}${i === k - 1 ? ']' : ')'}`;
+        labels.push(label);
+        limites.push({ min: lInf, max: lSup, label, isLast: i === k - 1 });
+      }
+      return { labels, limites, esIntervalo: true };
+    } else {
+      // Modo Texto / Categórico: Valores exactos únicos
+      const labels = [...new Set(datos)].sort();
+      return { labels, limites: null, esIntervalo: false };
+    }
+  };
+
+  // Procesamos X e Y de forma independiente
+  const configX = procesarDimension(dataX, esNumericoX);
+  const configY = procesarDimension(dataY, esNumericoY);
+
+  const categoriasX = configX.labels;
+  const categoriasY = configY.labels;
+
+  // 2. CONSTRUCCIÓN DE LA TABLA (Matriz de frecuencias)
   const matriz = {};
   const totalFilas = {};
   const totalColumnas = {};
 
+  // Inicializar con ceros
   categoriasX.forEach(catX => {
     matriz[catX] = {};
     totalFilas[catX] = 0;
@@ -22,138 +60,53 @@ export const calcularDistribucionBivariada = (dataX, dataY) => {
       totalColumnas[catY] = 0;
     });
   });
-  
   categoriasY.forEach(catY => totalColumnas[catY] = 0);
 
+  // Llenar la matriz
   for (let i = 0; i < n; i++) {
     const valX = dataX[i];
     const valY = dataY[i];
-    if (matriz[valX] && matriz[valX][valY] !== undefined) {
-      matriz[valX][valY]++;
-      totalFilas[valX]++;
-      totalColumnas[valY]++;
+
+    // Encontrar la etiqueta correcta para X
+    let labelX = valX;
+    if (configX.esIntervalo) {
+      const bin = configX.limites.find(b => b.isLast ? (valX >= b.min && valX <= b.max) : (valX >= b.min && valX < b.max));
+      labelX = bin ? bin.label : configX.limites[configX.limites.length - 1].label;
+    }
+
+    // Encontrar la etiqueta correcta para Y
+    let labelY = valY;
+    if (configY.esIntervalo) {
+      const bin = configY.limites.find(b => b.isLast ? (valY >= b.min && valY <= b.max) : (valY >= b.min && valY < b.max));
+      labelY = bin ? bin.label : configY.limites[configY.limites.length - 1].label;
+    }
+
+    if (matriz[labelX] && matriz[labelX][labelY] !== undefined) {
+      matriz[labelX][labelY]++;
+      totalFilas[labelX]++;
+      totalColumnas[labelY]++;
     }
   }
 
-  return {
-    tipo: "bivariada",
-    filas: categoriasX,
-    columnas: categoriasY,
-    datos: matriz,
-    totalFilas: totalFilas,
-    totalColumnas: totalColumnas,
-    granTotal: n
-  };
-};
-
-/**
- * Análisis Multivariante Avanzado (Covarianza, Correlación, Sturges 2D)
- */
-export const calcularBivarianteAvanzada = (dataX, dataY) => {
-  const n = dataX.length;
-  if (n === 0 || dataX.length !== dataY.length) return null;
-
-  // 1. Escáner: ¿Son números continuos o texto categórico?
-  const esNumerico = dataX.every(v => typeof v === 'number' && !isNaN(v)) && 
-                     dataY.every(v => typeof v === 'number' && !isNaN(v));
-
-  let categoriasX = [];
-  let categoriasY = [];
-  let matriz = {};
-  let totalFilas = {};
-  let totalColumnas = {};
-
-  // 2. CONSTRUCCIÓN DE LA TABLA
-  if (esNumerico && n > 1) {
-    // --- MODO INTERVALOS ---
-    const k = Math.round(1 + 3.322 * Math.log10(n));
-    
-    const minX = Math.min(...dataX); const maxX = Math.max(...dataX);
-    const ampX = (maxX - minX) / k || 1; 
-    
-    const minY = Math.min(...dataY); const maxY = Math.max(...dataY);
-    const ampY = (maxY - minY) / k || 1;
-
-    const limitesX = []; const limitesY = [];
-    
-    for (let i = 0; i < k; i++) {
-      const lInfX = minX + i * ampX;
-      const lSupX = i === k - 1 ? maxX : minX + (i + 1) * ampX; 
-      const labelX = `[${lInfX.toFixed(2)} - ${lSupX.toFixed(2)}${i === k - 1 ? ']' : ')'}`;
-      categoriasX.push(labelX);
-      limitesX.push({ min: lInfX, max: lSupX, label: labelX, isLast: i === k - 1 });
-
-      const lInfY = minY + i * ampY;
-      const lSupY = i === k - 1 ? maxY : minY + (i + 1) * ampY;
-      const labelY = `[${lInfY.toFixed(2)} - ${lSupY.toFixed(2)}${i === k - 1 ? ']' : ')'}`;
-      categoriasY.push(labelY);
-      limitesY.push({ min: lInfY, max: lSupY, label: labelY, isLast: i === k - 1 });
-    }
-
-    categoriasX.forEach(catX => {
-      matriz[catX] = {};
-      totalFilas[catX] = 0;
-      categoriasY.forEach(catY => {
-        matriz[catX][catY] = 0;
-        totalColumnas[catY] = 0;
-      });
-    });
-
-    for (let i = 0; i < n; i++) {
-      const valX = dataX[i]; const valY = dataY[i];
-      let binX = limitesX.find(b => b.isLast ? (valX >= b.min && valX <= b.max) : (valX >= b.min && valX < b.max));
-      let binY = limitesY.find(b => b.isLast ? (valY >= b.min && valY <= b.max) : (valY >= b.min && valY < b.max));
-      
-      if (!binX) binX = limitesX[limitesX.length - 1];
-      if (!binY) binY = limitesY[limitesY.length - 1];
-
-      matriz[binX.label][binY.label]++;
-      totalFilas[binX.label]++;
-      totalColumnas[binY.label]++;
-    }
-
-  } else {
-    // --- MODO TEXTO ---
-    categoriasX = [...new Set(dataX)].sort();
-    categoriasY = [...new Set(dataY)].sort();
-
-    categoriasX.forEach(catX => {
-      matriz[catX] = {};
-      totalFilas[catX] = 0;
-      categoriasY.forEach(catY => {
-        matriz[catX][catY] = 0;
-        totalColumnas[catY] = 0;
-      });
-    });
-    categoriasY.forEach(catY => totalColumnas[catY] = 0);
-
-    for (let i = 0; i < n; i++) {
-      const valX = dataX[i]; const valY = dataY[i];
-      if (matriz[valX] && matriz[valX][valY] !== undefined) {
-        matriz[valX][valY]++;
-        totalFilas[valX]++;
-        totalColumnas[valY]++;
-      }
-    }
-  }
-
-  // 3. CÁLCULO DE COVARIANZA Y CORRELACIÓN (Solo numéricos)
+  // 3. CÁLCULO DE COVARIANZA Y CORRELACIÓN (Solo si AMBOS son numéricos)
   let covarianza = null;
   let correlacion = null;
-  let interpretacion = "No aplicable (Variables Categóricas)";
-  
-  if (esNumerico && n > 1) {
+  let interpretacion = "No aplicable (Contiene variables cualitativas)";
+
+  if (ambosNumericos && n > 1) {
     const meanX = dataX.reduce((a, b) => a + b, 0) / n;
     const meanY = dataY.reduce((a, b) => a + b, 0) / n;
 
     let sumCross = 0, sumSqX = 0, sumSqY = 0;
-
     for (let i = 0; i < n; i++) {
-      const dx = dataX[i] - meanX; const dy = dataY[i] - meanY;
-      sumCross += dx * dy; sumSqX += dx * dx; sumSqY += dy * dy;
+      const dx = dataX[i] - meanX; 
+      const dy = dataY[i] - meanY;
+      sumCross += dx * dy; 
+      sumSqX += dx * dx; 
+      sumSqY += dy * dy;
     }
 
-    covarianza = sumCross / (n - 1); 
+    covarianza = sumCross / (n - 1);
     const stdX = Math.sqrt(sumSqX / (n - 1));
     const stdY = Math.sqrt(sumSqY / (n - 1));
 
@@ -172,14 +125,14 @@ export const calcularBivarianteAvanzada = (dataX, dataY) => {
   }
 
   return {
-    tipo: "bivariada_avanzada",
+    tipo: "distribucion_bivariada", // Nombre único para tu frontend
     filas: categoriasX,
     columnas: categoriasY,
     datos: matriz,
     totalFilas,
     totalColumnas,
     granTotal: n,
-    esNumerico,
+    ambosNumericos, // Útil por si quieres ocultar los paneles de Correlación en la UI
     covarianza,
     correlacion,
     interpretacion

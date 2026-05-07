@@ -14,7 +14,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
   if (!resultado) return null;
 
   const esBivariada = !Array.isArray(resultado) && 
-    (resultado.tipo === "bivariada" || resultado.tipo === "bivariada_avanzada");
+    resultado.tipo === "distribucion_bivariada";
 
   // =======================================================
   // GRÁFICOS TEMA 6: REGRESIÓN
