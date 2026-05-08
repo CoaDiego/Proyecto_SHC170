@@ -3,22 +3,21 @@ import {
   ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 
-export default function GraficoSeriesTiempo({ resultado }) {
+export default function GraficoSeriesTiempo({ resultado, tipo }) {
   if (!resultado || resultado.tipo !== "series_tiempo") return null;
 
   // Extraemos los datos calculados de nuestro motor
   const datos = resultado.datos;
 
-  return (
-    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      
-      {/* 📊 GRÁFICO 1: LÍNEA DE TENDENCIA (Real vs Pronóstico) */}
-      <div style={{ padding: '20px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+  // GRÁFICO 1: LÍNEA DE TENDENCIA (Real vs Pronóstico)
+  if (tipo === "historico") {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <h4 style={{ textAlign: 'center', marginBottom: '15px', color: 'var(--text-color)' }}>
-          Tendencia Histórica vs. Modelo de {resultado.metodo.replace('_', ' ')}
+          Modelo de {resultado.metodo.replace(/_/g, ' ')}
         </h4>
-        <div style={{ width: '100%', height: 350 }}>
-          <ResponsiveContainer>
+        <div style={{ flexGrow: 1, minHeight: 250 }}>
+          <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={datos} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.2)" vertical={false} />
               <XAxis dataKey="xLabel" tick={{fill: 'var(--text-muted)'}} />
@@ -43,18 +42,22 @@ export default function GraficoSeriesTiempo({ resultado }) {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-        <p style={{textAlign: 'center', fontSize: '0.85em', color: 'var(--text-muted)', marginTop: '10px'}}>
+        <p style={{textAlign: 'center', fontSize: '0.8em', color: 'var(--text-muted)', margin: '10px 0 0 0'}}>
           La línea naranja representa la predicción. Cuanto más se superponga a la azul, más exacto es el modelo.
         </p>
       </div>
+    );
+  }
 
-      {/* 📊 GRÁFICO 2: BARRAS DE ERROR (Residuos) */}
-      <div style={{ padding: '20px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+  // GRÁFICO 2: BARRAS DE ERROR (Residuos)
+  if (tipo === "pronostico") {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <h4 style={{ textAlign: 'center', marginBottom: '15px', color: 'var(--text-color)' }}>
           Análisis de Errores (Residuos)
         </h4>
-        <div style={{ width: '100%', height: 250 }}>
-          <ResponsiveContainer>
+        <div style={{ flexGrow: 1, minHeight: 250 }}>
+          <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={datos} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.2)" vertical={false} />
               <XAxis dataKey="xLabel" tick={{fill: 'var(--text-muted)'}} />
@@ -76,8 +79,12 @@ export default function GraficoSeriesTiempo({ resultado }) {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+        <p style={{textAlign: 'center', fontSize: '0.8em', color: 'var(--text-muted)', margin: '10px 0 0 0'}}>
+          Las barras rojas indican qué tanto falló el modelo en cada periodo. Idealmente deben estar cerca de cero.
+        </p>
       </div>
+    );
+  }
 
-    </div>
-  );
+  return null;
 }

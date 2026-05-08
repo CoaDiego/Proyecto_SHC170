@@ -1,324 +1,189 @@
-// ✅ GraficoEstadistico.jsx
+// src/components/graficos/GraficoEstadistico.jsx
 import React, { useState, useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer, Brush, LabelList
+  PieChart, Pie, Cell, ResponsiveContainer, LabelList
 } from "recharts";
 
-// =========================================================
-// 1. SUB-COMPONENTES (Copiado de GraficoIntervalos)
-// =========================================================
+export default function GraficoEstadistico({ datos = [], tipo = "barras" }) {
+  const [activeIndex, setActiveIndex] = useState(null);
 
-const MaximizeButton = ({ isExpanded, onToggle }) => (
-  <button
-    onClick={onToggle}
-    title={isExpanded ? "Cerrar" : "Maximizar"}
-    className="boton_minimizar"
-    onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--border-color)"}
-    onMouseOut={(e) => e.currentTarget.style.backgroundColor = "var(--bg-input)"}
-    style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}
-  >
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      {isExpanded
-        ? <><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></>
-        : <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />}
-    </svg>
-  </button>
-);
+  if (!Array.isArray(datos) || datos.length === 0) {
+    return <p className="text-gray-500 text-sm" style={{ padding: "20px" }}>No hay datos para graficar.</p>;
+  }
 
-const ChartContent = ({ tipo, datos, isExpanded }) => {
+  // =========================================================
+  // DETECCIÓN INTELIGENTE DE COLUMNAS (Para evitar pantalla blanca)
+  // =========================================================
+  const keys = Object.keys(datos[0] || {});
+  const xKey = keys.includes('x_i') ? 'x_i' : keys[0]; 
+  const yKey = keys.includes('f_i') ? 'f_i' : (keys.find(k => k.toLowerCase().includes('f_i') || k.toLowerCase().includes('frecuencia')) || keys[1]);
+
+  // Limpiamos la fila de "Total" si existe para que no dañe el gráfico
+  const datosLimpios = datos.filter(item => 
+    item[xKey] !== 'Total' && item[xKey] !== 'f_i' && item[xKey] !== 'x_i' && item[xKey] !== undefined
+  );
+
   const axisTextStyle = { fontSize: 12, fill: '#6b7280' };
 
-  const [activeIndex, setActiveIndex] = useState(null);
+  // =========================================================
+  // COLORES DINÁMICOS (Tu lógica original)
+  // =========================================================
   const coloresDinamicos = useMemo(() => {
-    const datosParaColores = tipo === 'pastel' 
-      ? datos.filter(item => item.x_i !== 'f_i' && item.x_i !== 'x_i' && item.x_i !== 'Total')
-      : datos;
-
-    return datosParaColores.map((_, index) => {
+    return datosLimpios.map((_, index) => {
       const hue = (index * 137.5) % 360;
       return `hsl(${hue}, 70%, 50%)`;
     });
-  }, [datos, tipo]); // <- Añadí 'tipo' como dependencia
+  }, [datosLimpios]);
 
-  switch (tipo) {
-    case 'barras':
-      return (
-        <BarChart
-          data={datos}
-          margin={{ top: 20, right: 20, left: -20, bottom: 20 }}
-          barCategoryGap={2} // 👈 1. Esto elimina la separación entre las barras
-        >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-          <XAxis dataKey="x_i" tick={axisTextStyle} dy={10} stroke="#000000" />
-          <YAxis tick={axisTextStyle} stroke="#000000" />
-
-          <Tooltip
-            cursor={{ fill: '#f3f4f6' }}
-            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-          />
-          <Legend wrapperStyle={{ paddingTop: '10px' }} />
-
-          <Bar
-            dataKey="f_i"
-            fill="#3b82f6"
-            name="Frecuencia absoluta"
-            stroke="#424242"
-            strokeWidth={1.5}
-            radius={[1, 1, 0, 0]}
+  // =========================================================
+  // RENDERIZADO DE GRÁFICOS
+  // =========================================================
+  const renderChart = () => {
+    switch (tipo) {
+      case 'barras':
+        return (
+          <BarChart
+            data={datosLimpios}
+            margin={{ top: 20, right: 20, left: -20, bottom: 20 }}
+            barCategoryGap={2} 
           >
-            <LabelList
-              dataKey="f_i"
-              position="top"
-              fill="var(--text-main)"
-              fontSize={isExpanded ? 14 : 12} // 
-              fontWeight="bold"
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis dataKey={xKey} tick={axisTextStyle} dy={10} stroke="#000000" />
+            <YAxis tick={axisTextStyle} stroke="#000000" />
+
+            <Tooltip
+              cursor={{ fill: '#f3f4f6' }}
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
             />
-          </Bar>
+            <Legend wrapperStyle={{ paddingTop: '10px' }} />
 
-        </BarChart>
-      );
-case 'pastel': { 
-      const datosLimpios = datos.filter(item => item.x_i !== 'f_i' && item.x_i !== 'x_i' && item.x_i !== 'Total');
-      const pieMargins = isExpanded 
-        ? { top: 40, right: 120, bottom: 80, left: 120 } 
-        : { top: 30, right: 60, bottom: 60, left: 60 };
-      const renderLeyendaEnU = (props) => {
-        const { payload } = props;
-        const payloadLimpio = payload.filter(entry => 
-            entry.value !== 'f_i' && entry.value !== 'x_i' && entry.value !== 'Total'
-        );
-        const total = payloadLimpio.length;
-        const tercio = Math.ceil(total / 3);
-        const datosIzquierda = payload.slice(0, tercio);
-        const datosAbajo = payload.slice(tercio, total - tercio);
-        const datosDerecha = payload.slice(total - tercio, total);
-
-        const renderItem = (entry, index) => (
-          <div
-            key={`legend-item-${entry.value}-${index}`}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              opacity: activeIndex === null || activeIndex === String(entry.value) ? 1 : 0.25,
-              transition: 'opacity 0.3s ease',
-              margin: '1px 0'
-            }}
-            onMouseEnter={() => setActiveIndex(String(entry.value))}
-            onMouseLeave={() => setActiveIndex(null)}
-          >
-            <div style={{ width: 12, height: 12, backgroundColor: entry.color, marginRight: 6, borderRadius: 2 }} />
-            <span style={{ color: 'var(--text-main)' }}>{entry.value}</span>
-          </div>
-        );
-
-       return (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'flex-start', 
-            width: '100%', 
-            maxWidth: isExpanded ? '650px' : '100%', 
-            margin: '0 auto', 
-            marginLeft: isExpanded ? 'auto' : '0px',  
-            marginRight: isExpanded ? 'auto' : '0px', 
-            fontSize: isExpanded ? '13px' : '11px' 
-          }}>
-            
-            <div style={{ 
-              display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-              marginTop: isExpanded ? '-80px' : '-50px' 
-            }}>
-              {datosIzquierda.map(renderItem)}
-            </div>
-
-            <div style={{ 
-              display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px 15px', flex: 1, padding: '0 10px',
-              marginTop: '30px' 
-            }}>
-              {datosAbajo.map(renderItem)}
-            </div>
-
-            <div style={{ 
-              display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-              marginTop: isExpanded ? '-80px' : '-50px' 
-            }}>
-              {datosDerecha.map(renderItem)}
-            </div>
-
-          </div>
-        );
-      };
-
-      return (
-        <PieChart margin={pieMargins}>
-          <Pie
-            data={datosLimpios} 
-            dataKey="f_i"
-            nameKey="x_i"
-            cx="50%"
-            cy="50%"
-            innerRadius={isExpanded ? 20 : 10} 
-            outerRadius={isExpanded ? 150 : 60}
-            fill="#8884d8"
-            paddingAngle={2} 
-            labelLine={false}
-            isAnimationActive={false}
-            onMouseEnter={(data) => setActiveIndex(String(data.name))}
-            onMouseLeave={() => setActiveIndex(null)}
-
-            label={({ cx, cy, midAngle, innerRadius, outerRadius, value, percent }) => {
-              if (percent < 0.015) return null; 
-              const mostrarAdentro = percent >= 0.04;
-              const RADIAN = Math.PI / 180;
-              const sin = Math.sin(-midAngle * RADIAN);
-              const cos = Math.cos(-midAngle * RADIAN);
-              const innerRadiusText = innerRadius + (outerRadius - innerRadius) * 0.5; 
-              const inx = cx + innerRadiusText * cos;
-              const iny = cy + innerRadiusText * sin;
-              const offset = isExpanded ? 30 : 20; 
-              const xTextOffset = isExpanded ? 15 : 10; 
-              const sx = cx + outerRadius * cos; 
-              const sy = cy + outerRadius * sin;
-              const mx = cx + (outerRadius + offset * 0.5) * cos; 
-              const my = cy + (outerRadius + offset * 0.5) * sin;
-              const ex = mx + (cos >= 0 ? 1 : -1) * offset; 
-              const ey = my;
-              const tx = ex + (cos >= 0 ? 1 : -1) * xTextOffset;
-              const ty = ey;
-              const textAnchor = cos >= 0 ? 'start' : 'end';
-              const fontSizeIn = isExpanded ? 12 : 11; 
-              const fontSizeOut = isExpanded ? 14 : 12; 
-              const textColor = 'var(--text-main)';
-
-              return (
-                <g>
-                  {mostrarAdentro && (
-                    <text x={inx} y={iny} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={fontSizeIn} fontWeight="bold">
-                      {`${(percent * 100).toFixed(2)}%`}
-                    </text>
-                  )}
-                  <polyline points={`${sx},${sy} ${mx},${my} ${ex},${ey}`} stroke={textColor} fill="none" strokeWidth={1} />
-                  <circle cx={ex} cy={ey} r={2} fill={textColor} stroke="none" />
-                  <text x={tx} y={ty} dy={4} textAnchor={textAnchor} fill={textColor} fontSize={fontSizeOut} fontWeight="bold">
-                    {value}
-                  </text>
-                </g>
-              );
-            }}
-          >
-            {datosLimpios.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={coloresDinamicos[index]}
-                stroke="var(--bg-card)" 
-                strokeWidth={1}
-               style={{
-                  opacity: activeIndex === null || activeIndex === String(entry.x_i) ? 1 : 0.25,
-                  transition: 'opacity 0.3s ease',
-                  cursor: 'pointer'
-                }}
+            <Bar
+              dataKey={yKey}
+              fill="#3b82f6"
+              name="Frecuencia absoluta"
+              stroke="#424242"
+              strokeWidth={1.5}
+              radius={[2, 2, 0, 0]}
+            >
+              <LabelList
+                dataKey={yKey}
+                position="top"
+                fill="var(--text-main)"
+                fontSize={12}
+                fontWeight="bold"
               />
-            ))}
-          </Pie>
-          <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-          <Legend 
-            content={renderLeyendaEnU} 
-            verticalAlign="bottom" 
-           wrapperStyle={{ width: '100%', left: 0, right: 0 }}
-          />
-        </PieChart>
-      );
+            </Bar>
+          </BarChart>
+        );
+
+      case 'pastel': {
+        // TU LEYENDA PERSONALIZADA EN FORMA DE U
+        const renderLeyendaEnU = (props) => {
+          const { payload } = props;
+          const total = payload.length;
+          const tercio = Math.ceil(total / 3);
+          const datosIzquierda = payload.slice(0, tercio);
+          const datosAbajo = payload.slice(tercio, total - tercio);
+          const datosDerecha = payload.slice(total - tercio, total);
+
+          const renderItem = (entry, index) => (
+            <div
+              key={`legend-item-${entry.value}-${index}`}
+              style={{
+                display: 'flex', alignItems: 'center', cursor: 'pointer',
+                opacity: activeIndex === null || activeIndex === String(entry.value) ? 1 : 0.25,
+                transition: 'opacity 0.3s ease', margin: '1px 0'
+              }}
+              onMouseEnter={() => setActiveIndex(String(entry.value))}
+              onMouseLeave={() => setActiveIndex(null)}
+            >
+              <div style={{ width: 12, height: 12, backgroundColor: entry.color, marginRight: 6, borderRadius: 2 }} />
+              <span style={{ color: 'var(--text-main)' }}>{entry.value}</span>
+            </div>
+          );
+
+          return (
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+              width: '100%', fontSize: '11px', marginTop: '10px'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>{datosIzquierda.map(renderItem)}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px 15px', flex: 1, padding: '0 10px' }}>{datosAbajo.map(renderItem)}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>{datosDerecha.map(renderItem)}</div>
+            </div>
+          );
+        };
+
+        return (
+          <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+            <Pie
+              data={datosLimpios}
+              dataKey={yKey}
+              nameKey={xKey}
+              cx="50%"
+              cy="50%"
+              innerRadius={20}
+              outerRadius={80}
+              paddingAngle={2}
+              labelLine={false}
+              isAnimationActive={true}
+              onMouseEnter={(data) => setActiveIndex(String(data.name))}
+              onMouseLeave={() => setActiveIndex(null)}
+              label={({ cx, cy, midAngle, innerRadius, outerRadius, value, percent }) => {
+                if (percent < 0.015) return null;
+                const RADIAN = Math.PI / 180;
+                const sin = Math.sin(-midAngle * RADIAN);
+                const cos = Math.cos(-midAngle * RADIAN);
+                const sx = cx + outerRadius * cos;
+                const sy = cy + outerRadius * sin;
+                const mx = cx + (outerRadius + 15) * cos;
+                const my = cy + (outerRadius + 15) * sin;
+                const ex = mx + (cos >= 0 ? 1 : -1) * 10;
+                const ey = my;
+                const textAnchor = cos >= 0 ? 'start' : 'end';
+
+                return (
+                  <g>
+                    <polyline points={`${sx},${sy} ${mx},${my} ${ex},${ey}`} stroke="var(--text-main)" fill="none" strokeWidth={1} />
+                    <circle cx={ex} cy={ey} r={2} fill="var(--text-main)" stroke="none" />
+                    <text x={ex + (cos >= 0 ? 1 : -1) * 5} y={ey} dy={4} textAnchor={textAnchor} fill="var(--text-main)" fontSize={12} fontWeight="bold">
+                      {value}
+                    </text>
+                  </g>
+                );
+              }}
+            >
+              {datosLimpios.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={coloresDinamicos[index]}
+                  stroke="var(--bg-card)"
+                  strokeWidth={1}
+                  style={{
+                    opacity: activeIndex === null || activeIndex === String(entry[xKey]) ? 1 : 0.25,
+                    transition: 'opacity 0.3s ease', cursor: 'pointer'
+                  }}
+                />
+              ))}
+            </Pie>
+            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+            <Legend content={renderLeyendaEnU} verticalAlign="bottom" />
+          </PieChart>
+        );
+      }
+
+      default:
+        return <p>Tipo de gráfico no soportado.</p>;
     }
-    case 'histograma':
-      return (
-        <BarChart data={datos}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="intervalo" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="f_i" fill="#2563eb" name="Frecuencia absoluta" />
-        </BarChart>
-      );
-    case 'poligono':
-      return (
-        <LineChart data={datos}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="x_i" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="f_i" stroke="#2563eb" name="Frecuencia absoluta" />
-        </LineChart>
-      );
-    case 'ojiva_creciente':
-      return (
-        <LineChart data={datos}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="x_i" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="F_i" stroke="#10b981" name="Frecuencia acumulada creciente" />
-        </LineChart>
-      );
-    case 'ojiva_decreciente':
-      return (
-        <LineChart data={datos}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="x_i" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="F_i_desc" stroke="#ef4444" name="Frecuencia acumulada decreciente" />
-        </LineChart>
-      );
-    default:
-      return <p>Tipo de gráfico no soportado.</p>;
-  }
-};
+  };
 
-// =========================================================
-// 2. COMPONENTE PRINCIPAL
-// =========================================================
-export default function GraficoEstadistico({ datos = [], tipo = "barras" }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  if (!Array.isArray(datos) || datos.length === 0) {
-    return <p className="text-gray-500 text-sm">No hay datos para graficar.</p>;
-  }
-
+  // Como MarcoWidget se encarga de contenerlo, aquí solo devolvemos el ResponsiveContainer puro
   return (
-    <>
-      {/* VISTA NORMAL */}
-      <div className="chartContainerStyle" style={{ position: 'relative', minHeight: "340px", display: "flex", flexDirection: "column" }}>
-        <MaximizeButton isExpanded={false} onToggle={() => setIsExpanded(true)} />
-
-        <div style={{ flex: 1, width: "100%", height: "340px", marginTop: "15px" }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <ChartContent tipo={tipo} datos={datos} isExpanded={false} />
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* VENTANA MODAL (MAXIMIZAR GRÁFICO - Igual a GraficoIntervalos) */}
-      {isExpanded && (
-        <div className="modal-grafico-overlay" onClick={() => setIsExpanded(false)}>
-          <div className="modal-grafico-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-grafico-header">
-              <h2 className="modal-grafico-titulo">Detalle del Gráfico</h2>
-              <MaximizeButton isExpanded={true} onToggle={() => setIsExpanded(false)} />
-            </div>
-            <div className="container_responsivo">
-              <ResponsiveContainer width="100%" height="100%">
-                <ChartContent tipo={tipo} datos={datos} isExpanded={true} />
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <div style={{ width: "100%", height: "100%", minHeight: "250px", display: "flex", flexDirection: "column" }}>
+      <ResponsiveContainer width="100%" height="100%">
+        {renderChart()}
+      </ResponsiveContainer>
+    </div>
   );
 }

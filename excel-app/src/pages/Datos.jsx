@@ -318,7 +318,7 @@ const SimuladorMAT251 = () => {
         }));
         return [rowNumberCol, ...dataCols];
     }, [rowData, variables, currentSheet, selection]);
-    console.log("ESTADO DE VARIABLES:", variables);
+    /* console.log("ESTADO DE VARIABLES:", variables); */
 
     return (
         <AgGridProvider modules={[AllCommunityModule]}>
