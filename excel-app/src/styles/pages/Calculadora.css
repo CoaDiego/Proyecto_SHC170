@@ -118,7 +118,7 @@
    ESTILOS PARA LOS WIDGETS GRÁFICOS (DASHBOARD)
    ========================================= */
 .widget-grafico {
-  background-color: var(--bg-card); /* 👈 Ahora respeta al 100% el modo oscuro */
+  background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -127,13 +127,12 @@
   overflow: hidden; 
   resize: both; 
   min-width: 300px;
-  min-height: 250px; /* Altura mínima normal */
+  min-height: 420px; 
   position: relative;
   transition: box-shadow 0.2s ease;
   color: var(--text-color);
 }
 
-/* 👈 NUEVO: Cuando se minimiza, quitamos la altura mínima y el resize */
 .widget-grafico.minimizada {
   min-height: auto;
   height: auto !important;
@@ -144,12 +143,13 @@
   box-shadow: 0 8px 15px rgba(0,0,0,0.1);
 }
 
+/* Busca y actualiza esta parte en tu CSS */
 .widget-grafico.maximizada {
   position: fixed;
   top: 5vh;
   left: 5vw;
-  width: 90vw;
-  height: 90vh;
+  width: 90vw !important;  /* 👈 !important es vital aquí */
+  height: 90vh !important; /* 👈 !important es vital aquí */
   z-index: 9999;
   resize: none; 
   box-shadow: 0 0 0 100vmax rgba(0,0,0,0.5); 
@@ -199,20 +199,18 @@
 
 .widget-body {
   padding: 15px;
-  flex-grow: 1; /* Toma el espacio restante de la tarjeta */
   width: 100%;
-  overflow: auto; /* Permite scroll interno si algo es muy grande */
-  display: block; /* 👈 MAGIA: Quitamos "flex" para evitar el colapso a 0px */
+  display: block; /* 👈 LA CURA AL PROBLEMA: No usar flex aquí */
+  overflow: hidden;
 }
 
-/* 👈 MAGIA: Altura estricta para que Recharts NUNCA lea 0px */
 .contenedor-grafico-interno {
   width: 100%;
-  height: 320px; 
-  transition: height 0.3s ease; /* Animación suave al maximizar */
+  height: 320px; /* 👈 Altura estricta para que Recharts no colapse */
+  transition: height 0.3s ease;
 }
 
-/* 👈 MAGIA: Cuando presionas 🗖, esta regla toma el control y lo estira */
+/* Al maximizar, la altura estricta cambia al tamaño de la pantalla */
 .maximizada .contenedor-grafico-interno {
   height: calc(100vh - 120px); 
 }

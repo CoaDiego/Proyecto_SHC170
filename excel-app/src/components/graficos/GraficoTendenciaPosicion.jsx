@@ -67,3 +67,4 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores }
 
   return null;
 }
+

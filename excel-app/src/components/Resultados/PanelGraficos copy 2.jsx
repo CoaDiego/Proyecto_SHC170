@@ -13,7 +13,8 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
 
   if (!resultado) return null;
 
-  const esBivariada = !Array.isArray(resultado) && resultado.tipo === "distribucion_bivariada";
+  const esBivariada = !Array.isArray(resultado) && 
+    resultado.tipo === "distribucion_bivariada";
 
   return (
     <div className="graficos-grid">
@@ -21,13 +22,17 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {/* 1. TEMA: REGRESIÓN E ÍNDICES */}
       {resultado.tipo === "regresion" && (
         <MarcoWidget id="reg-main" titulo="Análisis de Regresión y Correlación" anchoCompleto={true}>
-          <GraficoRegresion resultado={resultado} />
+          <div className="contenedor-grafico-interno">
+            <GraficoRegresion resultado={resultado} />
+          </div>
         </MarcoWidget>
       )}
 
       {["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo) && (
         <MarcoWidget id="ind-main" titulo="Indicadores Económicos e Índices" anchoCompleto={true}>
-          <GraficoIndices resultado={resultado} />
+          <div className="contenedor-grafico-interno">
+            <GraficoIndices resultado={resultado} />
+          </div>
         </MarcoWidget>
       )}
 
@@ -35,13 +40,19 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {resultado.tipo === "variabilidad_y_forma" && (
         <>
           <MarcoWidget id="v1" titulo="Boxplot (Caja y Bigotes)">
-            <GraficoDispersionForma tipo="boxplot" resultado={resultado} />
+            <div className="contenedor-grafico-interno">
+              <GraficoDispersionForma tipo="boxplot" resultado={resultado} />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="v2" titulo="Curva de Densidad Normal">
-            <GraficoDispersionForma tipo="campana" resultado={resultado} />
+            <div className="contenedor-grafico-interno">
+              <GraficoDispersionForma tipo="campana" resultado={resultado} />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="v3" titulo="Desviaciones Respecto a la Media" anchoCompleto={true}>
-            <GraficoDispersionForma tipo="desviaciones" resultado={resultado} />
+            <div className="contenedor-grafico-interno">
+              <GraficoDispersionForma tipo="desviaciones" resultado={resultado} />
+            </div>
           </MarcoWidget>
         </>
       )}
@@ -50,10 +61,14 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {resultado.tipo === "tendencia_y_posicion" && (
         <>
           <MarcoWidget id="t1" titulo="Histograma de Tendencia Central">
-            <GraficoTendenciaPosicion tipo="histograma_tendencia" graficos={resultado.graficosTema3?.graficoData} indicadores={resultado.graficosTema3?.indicadores} />
+            <div className="contenedor-grafico-interno">
+              <GraficoTendenciaPosicion tipo="histograma_tendencia" graficos={resultado.graficosTema3?.graficoData} indicadores={resultado.graficosTema3?.indicadores} />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="t2" titulo="Gráfico de Ojiva (Frecuencias Acumuladas)">
-            <GraficoTendenciaPosicion tipo="ojiva" graficos={resultado.graficosTema3?.graficoData} />
+            <div className="contenedor-grafico-interno">
+              <GraficoTendenciaPosicion tipo="ojiva" graficos={resultado.graficosTema3?.graficoData} />
+            </div>
           </MarcoWidget>
         </>
       )}
@@ -62,10 +77,15 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {resultado.tipo === "series_tiempo" && (
         <>
           <MarcoWidget id="ser-1" titulo="Gráfico de Serie Cronológica Histórica">
-            <GraficoSeriesTiempo resultado={resultado} tipo="historico" />
+            <div className="contenedor-grafico-interno">
+              <GraficoSeriesTiempo resultado={resultado} tipo="historico" />
+            </div>
           </MarcoWidget>
+          
           <MarcoWidget id="ser-2" titulo="Línea de Tendencia y Pronóstico" anchoCompleto={true}>
-            <GraficoSeriesTiempo resultado={resultado} tipo="pronostico" />
+            <div className="contenedor-grafico-interno">
+              <GraficoSeriesTiempo resultado={resultado} tipo="pronostico" />
+            </div>
           </MarcoWidget>
         </>
       )}
@@ -74,19 +94,29 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {Array.isArray(resultado) && esIntervalo && (
         <>
           <MarcoWidget id="int-1" titulo="Histograma de Frecuencias">
-            <GraficoIntervalos datos={resultado} tipo="histograma" />
+            <div className="contenedor-grafico-interno">
+              <GraficoIntervalos datos={resultado} tipo="histograma" />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="int-2" titulo="Polígono de Frecuencias">
-            <GraficoIntervalos datos={resultado} tipo="poligono" />
+            <div className="contenedor-grafico-interno">
+              <GraficoIntervalos datos={resultado} tipo="poligono" />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="int-3" titulo="Ojiva Creciente (Fi)">
-            <GraficoIntervalos datos={resultado} tipo="ojiva_creciente" />
+            <div className="contenedor-grafico-interno">
+              <GraficoIntervalos datos={resultado} tipo="ojiva_creciente" />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="int-4" titulo="Ojiva Decreciente (F'i)">
-            <GraficoIntervalos datos={resultado} tipo="ojiva_decreciente" />
+            <div className="contenedor-grafico-interno">
+              <GraficoIntervalos datos={resultado} tipo="ojiva_decreciente" />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="int-5" titulo="Histograma + Polígono (Mixto)" anchoCompleto={true}>
-            <GraficoIntervalos datos={resultado} tipo="mixto" />
+            <div className="contenedor-grafico-interno">
+              <GraficoIntervalos datos={resultado} tipo="mixto" />
+            </div>
           </MarcoWidget>
         </>
       )}
@@ -95,10 +125,14 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {Array.isArray(resultado) && !esIntervalo && resultado.length > 0 && (
         <>
           <MarcoWidget id="uni-1" titulo="Gráfico de Barras">
-            <GraficoEstadistico datos={resultado} tipo="barras" />
+            <div className="contenedor-grafico-interno">
+              <GraficoEstadistico datos={resultado} tipo="barras" />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="uni-2" titulo="Gráfico Circular (Pastel)">
-            <GraficoEstadistico datos={resultado} tipo="pastel" />
+            <div className="contenedor-grafico-interno">
+              <GraficoEstadistico datos={resultado} tipo="pastel" />
+            </div>
           </MarcoWidget>
         </>
       )}
@@ -107,15 +141,21 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {esBivariada && (
         <>
           <MarcoWidget id="biv-1" titulo="Barras Agrupadas">
-            <GraficoBivariado datos={resultado} tipo="agrupadas" />
+            <div className="contenedor-grafico-interno">
+              <GraficoBivariado datos={resultado} tipo="agrupadas" />
+            </div>
           </MarcoWidget>
           <MarcoWidget id="biv-2" titulo="Barras Apiladas (100%)">
-            <GraficoBivariado datos={resultado} tipo="apiladas_100" />
+            <div className="contenedor-grafico-interno">
+              <GraficoBivariado datos={resultado} tipo="apiladas_100" />
+            </div>
           </MarcoWidget>
 
           {resultado.ambosNumericos && (
             <MarcoWidget id="biv-3" titulo="Diagrama de Dispersión (Nube de Puntos)" anchoCompleto={true}>
-              <GraficoBivariado datos={resultado} tipo="dispersion" />
+              <div className="contenedor-grafico-interno">
+                <GraficoBivariado datos={resultado} tipo="dispersion" />
+              </div>
             </MarcoWidget>
           )}
         </>
