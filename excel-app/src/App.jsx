@@ -11,6 +11,7 @@ import About from "./pages/About";
 import Login from "./pages/Login";
 import MAT251 from "./pages/MAT251/Pantalla";
 import Registro from "./pages/Registro";
+import Perfil from "./pages/Perfil";
 
 // 👇 1. IMPORTAMOS EL DATAPROVIDER DE LA CARPETA EXCEL
 import { DataProvider } from "./components/excel/DataContext"; 
@@ -36,23 +37,12 @@ function App() {
             <Toaster position="bottom-right" />
           </>
           
-          {/* Menú de navegación con el botón incluido */}
+          {/* Menú de navegación unificado */}
+         {/* Menú de navegación unificado */}
           {isAuth && (
-            <header className="flex justify-between items-center p-4 shadow-md">
-              <Menu /> 
-              
-              {/* 🆕 Añadimos este pequeño panel para comprobar quién entró */}
-              <div style={{ 
-                backgroundColor: 'var(--accent-color, #4A90E2)', 
-                color: 'white', 
-                padding: '8px 15px', 
-                borderRadius: '20px',
-                fontSize: '0.9rem',
-                fontWeight: 'bold'
-              }}>
-                👤 {usuario.nombre} | {usuario.rol}
-              </div>
-
+            <header style={{ width: '100%' }}>
+              {/* Le pasamos la variable 'usuario' como prop al componente Menu */}
+              <Menu usuario={usuario} /> 
             </header>
           )}
 
@@ -85,6 +75,8 @@ function App() {
                   <Route path="/registro" element={<Navigate to="/" />} />
                   
                   <Route path="/MAT251" element={<MAT251 />} />
+
+                  <Route path="/perfil" element={<Perfil usuario={usuario} setUsuario={setUsuario} />} />
                 </>
               )}
             </Routes>

@@ -16,11 +16,11 @@ import urllib.parse # 🆕 Nuevo import estándar de Python
 app = FastAPI()
 
 # =======================
-# Configuración CORS
-# =======================
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # ⚠️ En producción restringir
+    allow_origins=["*"], # El asterisco permite que cualquier IP (como tu celular) se conecte
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -180,25 +180,24 @@ nav ul li a.active {
 
 
 /* =========================================
-   ESTILOS BASE DEL NAVBAR (PC)
+   ESTILOS BASE DEL NAVBAR (PC) - CLÁSICO
    ========================================= */
 .main-navbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 15px 30px;
-  background-color: var(--bg-nav, #ffffff);
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  background-color: var(--bg-nav); /* Tu color naranja original */
+  border-bottom: 1px solid var(--border-color);
   min-height: 70px;
+  width: 100%;
+  box-sizing: border-box;
   position: relative;
-  /* Clave para el menú desplegable en celular */
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
   z-index: 100;
-  /* Asegura que el logo esté siempre arriba */
 }
 
 .nav-logo {
@@ -206,52 +205,40 @@ nav ul li a.active {
   height: 50px;
   width: auto;
   display: block;
-  /*vertical-align: middle;*/
-  transition: filter 0.3s ease;
 }
 
-/* Ocultar el botón hamburguesa en PC */
 .hamburger-menu {
   display: none;
 }
 
-/* Contenedor horizontal en PC */
+/* Contenedor central (Ocupa todo el espacio) */
 .nav-menu {
   display: flex;
   align-items: center;
-  flex: 1;
-  /* Ocupa el espacio restante */
+  flex: 1; 
 }
 
-/* Enlaces centrados en PC */
+/* Enlaces (Centrados perfectamente) */
 .nav-links {
   display: flex;
   list-style: none;
   gap: 30px;
-  margin: 0 auto;
-  /* Magia: empuja los enlaces exactamente al centro */
+  margin: 0 auto; /* Esto es lo que centra los enlaces */
   padding: 0;
 }
 
 .nav-links a {
   text-decoration: none;
-  color: var(--text-nav, #64748b);
+  color: var(--text-nav); /* Blanco sobre naranja */
   font-weight: 600;
   font-size: 0.95rem;
-  /*transition: all 0.2s ease;*/
   transition: color 0.2s ease;
   padding: 5px 0;
   position: relative;
 }
 
-.nav-links a:hover {
-  color: var(--text-main, #1e293b);
-}
-
-
-/*aqui esta el problema*/
 .nav-links a.active {
-  color: var(--primary-color2, #3b82f6);
+  color: #ffffff; /* Enlace activo más brillante */
 }
 
 .nav-links a.active::after {
@@ -261,14 +248,53 @@ nav ul li a.active {
   left: 0;
   width: 100%;
   height: 3px;
-  background-color: var(--primary-color, #3b82f6);
+  background-color: #ffffff; 
   border-radius: 2px;
 }
-
 .nav-theme {
   margin-left: auto;
   /* Empuja el botón a la derecha extrema en PC */
 }
+
+/* =========================================
+   CONTENEDOR DERECHO: TEMA + USUARIO
+   ========================================= */
+.menu-derecha {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: auto; /* Empuja esto al borde derecho */
+}
+
+/* La píldora blanca del usuario */
+.perfil-usuario-menu {
+  background-color: white;
+  color: #213547;
+  padding: 4px 12px 4px 4px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+/* El círculo con la inicial */
+.avatar-naranja {
+  background-color: var(--bg-nav);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
 
 /* =========================================
    ESTILOS PARA CELULAR (MENÚ HAMBURGUESA)
@@ -421,52 +447,107 @@ nav ul li a.active {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ========================================= */
 /* 4. LAYOUTS ESPECÍFICOS (Calculadora y Archivos) */
 /* ========================================= */
 
 /* El contenedor principal de la App */
+/* El contenedor principal de la App */
 .App {
   display: flex;
   flex-direction: column;
-  /*min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la pantalla */
+  min-height: 100vh; 
+  background-color: var(--bg-body); 
+  color: var(--text-main); /* 👈 Agrega esto para que el texto cambie también */
+  
+  border-left: 1px solid rgba(0, 0, 0, 0.05); 
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  max-width: 1400px; 
+  margin: 0 auto; 
+  border: none;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.02); 
 }
 
 /* El área donde se cargan las páginas (Inicio, Archivos, Calculadora) */
 .content {
-  width: 100%;
-  max-width: 1280px;
-  /* Ancho máximo para que no se estire infinito en pantallas grandes */
-  margin: 0 auto;
-  /* Centra el contenido horizontalmente */
-  /*padding: 30px 20px;     /* Relleno: 30px arriba/abajo, 20px a los lados */
-  box-sizing: border-box;
-  /* Evita que el padding rompa el ancho */
-  flex: 1;
-  /* Hace que este div ocupe el espacio disponible */
+  flex-grow: 1; /* Esto obliga a este div a expandirse y ocupar todo el espacio disponible */
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
-
 /* Ajuste para el Header/Menú para que tampoco pegue a los bordes si es necesario */
 header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--bg-nav);
+}
+
+
+/* Estilo unificado para la barra superior */
+.header-institucional {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  height: 70px;
+  background-color: var(--bg-nav);
+  border-bottom: 1px solid var(--border-color);
   width: 100%;
   box-sizing: border-box;
-  /* Si quieres que el menú también tenga tope de ancho igual al contenido: */
-  /* max-width: 1280px; */
-  /* margin: 0 auto; */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03); /* Sombra muy suave */
+}
+
+/* Estilo para la etiqueta del usuario */
+.badge-usuario {
+  background-color: #f3f4f6; /* Gris muy clarito */
+  color: #374151; /* Texto oscuro */
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botón de Perfil Compacto */
+.badge-usuario {
+  background-color: #ffffff;
+  color: #374151;
+  padding: 4px 12px 4px 4px; /* Menos espacio, ajustado para el icono */
+  border-radius: 50px; /* Bien redondo */
+  font-size: 0.85rem; /* Letra más discreta */
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer; /* 👈 Cambia el mouse a la "manito" para indicar que es un botón */
+  transition: all 0.2s ease; /* Transición suave para el hover */
+}
+
+/* Efecto al pasar el mouse por encima */
+.badge-usuario:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* El circulito de la foto/icono */
+.avatar-icono {
+  background-color: var(--accent-color, #e67e22);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
 }
 
 .calculadora-resultados {

@@ -15,11 +15,14 @@ export default function Login({ onLogin }) {
     
     try {
       // Hacemos la petición a la nueva ruta que creamos en el backend
-      const response = await fetch("http://localhost:8000/login_local", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario: user, password: pass })
-      });
+     /*  const response = await fetch("http://localhost:8000/login_local", { */
+     // CÁMBIALO POR ESTO:
+// Reemplaza la URL manual por la variable de entorno
+const response = await fetch(`${import.meta.env.VITE_API_URL}/login_local`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ usuario: user, password: pass })
+});
 
       if (response.ok) {
         // Si el backend dice que todo está bien, recibimos el perfil
