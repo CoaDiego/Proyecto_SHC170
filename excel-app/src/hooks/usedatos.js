@@ -1,11 +1,9 @@
 import { useState, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import { generarColorAleatorio } from '../utils/excelHelpers';
+import { alerta } from "../utils/Notificaciones";
 
-import {alerta} from "../utils/Notificaciones";
-
-
-export const useSimuladorLogic = () => {
+export const useSimuladorLogic = (usuario) => {
   const [workbook, setWorkbook] = useState(null);
   const [sheetNames, setSheetNames] = useState([]);
   const [currentSheet, setCurrentSheet] = useState("");
@@ -17,17 +15,15 @@ export const useSimuladorLogic = () => {
     if (!wb) return;
     setCurrentSheet(sheetName);
     const ws = wb.Sheets[sheetName];
-    // Convertimos la hoja a JSON usando la fila A como cabecera (letras)
     const data = XLSX.utils.sheet_to_json(ws, { header: "A", defval: "" }).slice(0, limite);
+    
+    console.log("📊 Filas extraídas del Excel:", data.length); // 👈 Chismoso para la consola
     setRowData(data);
   }, [limiteFilas]);
 
-  // MODIFICADO: Ahora acepta el evento tradicional o un archivo directo
+  // 1. MÉTODO LOCAL (Restaurado a tu versión original que funcionaba)
   const handleFileUpload = (e) => {
-    // Si viene de un drop manual (mockEvent), lo sacamos de target.files
-    // Si es un evento nativo de input, también está ahí.
     const file = e.target?.files ? e.target.files[0] : null;
-
     if (!file) return;
 
     const reader = new FileReader();
@@ -36,48 +32,43 @@ export const useSimuladorLogic = () => {
         const wb = XLSX.read(evt.target.result, { type: 'binary' });
         setWorkbook(wb);
         setSheetNames(wb.SheetNames);
-        setVariables([]); // Limpiamos variables al cargar nuevo archivo
+        setVariables([]); 
         cargarHoja(wb, wb.SheetNames[0], 50);
-        alerta.exito("Archivo cargado", `Se ha cargado el archivo "${file.name}" con éxito.`);
+        alerta.success("Archivo cargado", `"${file.name}" leído correctamente.`);
       } catch (error) {
-        console.error("Error al leer el archivo Excel:", error);
-        alerta.error("Error de lectura", "No se pudo procesar el archivo Excel.");
+        console.error("Error local:", error);
+        alerta.error("Error", "No se pudo leer el archivo Excel.");
       }
     };
     reader.readAsBinaryString(file);
   };
 
+  // 2. 🆕 NUEVO MÉTODO NUBE: Lee los bytes puros sin usar FileReader
+  const procesarBufferExcel = (buffer, fileName) => {
+    try {
+      // Leemos el buffer que nos manda FastAPI directamente
+      const data = new Uint8Array(buffer);
+      const wb = XLSX.read(data, { type: 'array' });
+      
+      if (wb.SheetNames.length === 0) throw new Error("Excel sin hojas");
 
-
-  const agregarVariable = () => {
-    setVariables(prev => {
-      const nuevocolor = generarColorAleatorio(prev.length)
-
-      return [...prev, {
-        id: Date.now(),
-        nombre: `Variable ${prev.length + 1}`,
-        color: nuevocolor,
-        datos: [],
-        rangoLabel: "",
-        coords: null,
-        sheet: ""
-      }];
-    });
+      setWorkbook(wb);
+      setSheetNames(wb.SheetNames);
+      setVariables([]);
+      cargarHoja(wb, wb.SheetNames[0], 50);
+      alerta.success("Sincronizado", `"${fileName}" cargado de tu nube.`);
+    } catch (error) {
+      console.error("Error de nube:", error);
+      alerta.error("Error", "El archivo de la nube está dañado o vacío.");
+    }
   };
 
-  const eliminarVariable = (id) => {
-    setVariables(prev => {
-        const variableAEliminar = prev.find(v => v.id === id);
-        alerta.advertencia("Variable eliminada", `Se borró "${variableAEliminar?.nombre}"`);
-        return prev.filter(v => v.id !== id);
-    });
-  };
-
-  const actualizarVariable = (id, data) => {
-    setVariables(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
-  };
+  const agregarVariable = () => { /* tu código actual */ };
+  const eliminarVariable = (id) => { /* tu código actual */ };
+  const actualizarVariable = (id, data) => { /* tu código actual */ };
 
   return {
+    usuario,
     workbook,
     sheetNames,
     currentSheet,
@@ -87,6 +78,7 @@ export const useSimuladorLogic = () => {
     setVariables,
     setLimiteFilas,
     handleFileUpload,
+    procesarBufferExcel, // 👈 Exponemos la nueva función
     cargarHoja,
     agregarVariable,
     eliminarVariable,

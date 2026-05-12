@@ -5,90 +5,53 @@ import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { useData } from '../components/excel/DataContext';
 import { keyToNum, getExcelChar, excelToCoords } from '../utils/excelHelpers';
 import VariableCard from '../components/excel/VariableCard';
+import SelectorNube from '../components/excel/SelectorNube'; // 🆕 Importamos el nuevo componente
 
-/* import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css'; */
 import "../styles/pages/Datos.css";
 import * as XLSX from 'xlsx'; 
 
 import api from '../services/api';
-
+import { alerta } from '../utils/Notificaciones';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const SimuladorMAT251 = () => {
 
     const gridRef = useRef();
+    
+    // 🆕 1. Extraemos el 'usuario' y la nueva vía directa 'procesarBufferExcel'
     const {
         workbook, sheetNames, currentSheet, rowData, variables, limiteFilas,
-        handleFileUpload, cargarHoja, agregarVariable, eliminarVariable, actualizarVariable, setLimiteFilas
+        handleFileUpload, procesarBufferExcel, cargarHoja, agregarVariable, 
+        eliminarVariable, actualizarVariable, setLimiteFilas, usuario
     } = useData();
 
     const [selection, setSelection] = useState({ start: null, end: null, isDragging: false });
     const [isDraggingFile, setIsDraggingFile] = useState(false);
-
-
-
-    // ESTADOS PARA LA API
-    const [archivosApi, setArchivosApi] = useState([]); 
-    const [cargandoApi, setCargandoApi] = useState(false); 
     const [archivoActivo, setArchivoActivo] = useState(null); 
-    const [_selectedApiFile, setSelectedApiFile] = useState("");
-
-    // USE-EFFECT: Cargar lista de archivos de FastAPI 
-    useEffect(() => {
-        const cargarListaArchivos = async () => {
-            try {
-                const data = await api.obtenerArchivos();
-                if (data && data.files) {
-                    setArchivosApi(data.files);
-                }
-            } catch (error) {
-                console.error("Error al cargar la lista de archivos de la API", error);
-            }
-        };
-        cargarListaArchivos();
-    }, []);
 
     const manejarSubidaLocal = (e) => {
         const files = e.target?.files || e.dataTransfer?.files;
         if (files && files.length > 0) {
             setArchivoActivo({ nombre: files[0].name, origen: 'LOCAL' });
-            setSelectedApiFile("");
             handleFileUpload(e);
         }
     };
 
-    // FUNCIÓN: Descargar de FastAPI y simular en PC
+    // 🆕 2. FUNCIÓN DE LA NUBE ACTUALIZADA (Sin tocar el resto de la app)
     const cargarDesdeAPI = async (filename) => {
-        if (!filename) return;
+        if (!filename || !usuario) return;
         try {
-            setCargandoApi(true);
-
-            // Usamos tu BASE_URL (http://127.0.0.1:8000) que tienes en api.js
-            // Y llamamos al endpoint de descarga: /files/{filename}
-            const BASE_URL = "http://127.0.0.1:8000";
-            const urlDescarga = `${BASE_URL}/files/${encodeURIComponent(filename)}`;
-
-            const response = await fetch(urlDescarga);
-            if (!response.ok) throw new Error("No se pudo descargar el archivo del servidor.");
-
-            const dataBuffer = await response.arrayBuffer();
-
-            // Creamos el archivo virtual para engañar al sistema
-            const fileVirtual = new File([dataBuffer], filename, {
-                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            });
-
+            console.log(`Descargando ${filename} del servidor...`);
+            // Usamos api.js con el nombre del usuario
+            const dataBuffer = await api.descargarArchivoBinario(filename, usuario.nombre);
+            // Procesamos los bytes directamente
+            procesarBufferExcel(dataBuffer, filename);
             setArchivoActivo({ nombre: filename, origen: 'API' });
-            handleFileUpload({ target: { files: [fileVirtual] } });
         } catch (error) {
-            alert("Error al cargar dataset: " + error.message);
-        } finally {
-            setCargandoApi(false);
+            alerta.error("Error al importar", error.message);
         }
     };
-
 
     useEffect(() => {
         if (gridRef.current?.api) {
@@ -116,7 +79,6 @@ const SimuladorMAT251 = () => {
     const totalFilasEnHoja = useMemo(() => {
         if (!workbook || !currentSheet) return 0;
         const ws = workbook.Sheets[currentSheet];
-        // XLSX.utils.sheet_to_json con header "A" nos da un array donde cada item es una fila
         const dataCompleta = XLSX.utils.sheet_to_json(ws, { header: "A", defval: "" });
         return dataCompleta.length;
     }, [workbook, currentSheet]);
@@ -130,7 +92,7 @@ const SimuladorMAT251 = () => {
         }
     };
 
-    // Agrupamos las acciones para pasarlas a la VariableCard
+    // TUS ACCIONES INTACTAS
     const actions = {
         delete: eliminarVariable,
         update: actualizarVariable,
@@ -139,18 +101,11 @@ const SimuladorMAT251 = () => {
             const val = rowData[selection.start?.row]?.[getExcelChar(selection.start?.col)];
             if (val) actualizarVariable(id, { nombre: String(val) });
         },
-
         clear: (id) => {
             if (window.confirm("¿Estás seguro de limpiar los datos de esta variable?")) {
-                actualizarVariable(id, {
-                    rangoLabel: '',
-                    coords: null,
-                    datos: [],
-                    sheet: null
-                });
+                actualizarVariable(id, { rangoLabel: '', coords: null, datos: [], sheet: null });
             }
         },
-
         capture: (id) => {
             const { start, end } = selection;
             if (!start || !end) return alert("⚠️ Selecciona un rango en el Excel primero.");
@@ -173,27 +128,16 @@ const SimuladorMAT251 = () => {
                 return alert(`⚠️ Error: El rango choca con la variable "${solapada.nombre}".`);
             }
 
-
-            // 🌟 LA RED DE CAPTURA CORREGIDA 🌟
             const datosValidos = [];
             let contadorNumeros = 0;
             let contadorTextos = 0;
 
             for (let r = rMin; r <= rMax; r++) {
                 for (let c = cMin; c <= cMax; c++) {
-
-                    // 1. Obtenemos el dato en bruto. ¡NADA de parseFloat aquí!
                     const columnaLetra = getExcelChar(c);
                     const rawVal = rowData[r]?.[columnaLetra];
-
-                    // 2. Si la celda NO está vacía, NO es nula, y NO es undefined
                     if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
-
-                        // 3. Lo guardamos INMEDIATAMENTE en el array (sea lo que sea)
                         datosValidos.push(rawVal);
-
-                        // 4. Ahora sí, clasificamos qué fue lo que acabamos de guardar
-                        // Usamos Number() solo para comprobar, no para transformar el dato original
                         if (isNaN(Number(rawVal))) {
                             contadorTextos++;
                         } else {
@@ -203,23 +147,17 @@ const SimuladorMAT251 = () => {
                 }
             }
 
-            // Decisión por mayoría
             let tipoDetectado = "Sin datos";
             if (datosValidos.length > 0) {
-                if (contadorNumeros > 0 && contadorTextos > 0) {
-                    tipoDetectado = "Mixta (Error)";
-                } else if (contadorNumeros > 0 && contadorTextos === 0) {
-                    tipoDetectado = "Cuantitativa (Número)";
-                } else {
-                    tipoDetectado = "Cualitativa (Texto)";
-                }
+                if (contadorNumeros > 0 && contadorTextos > 0) tipoDetectado = "Mixta (Error)";
+                else if (contadorNumeros > 0 && contadorTextos === 0) tipoDetectado = "Cuantitativa (Número)";
+                else tipoDetectado = "Cualitativa (Texto)";
             }
 
-            // Actualizamos la variable inyectando los datos y el tipo
             actualizarVariable(id, {
                 rangoLabel: `${getExcelChar(cMin)}${rMin + 1}:${getExcelChar(cMax)}${rMax + 1}`,
                 coords: { rMin, rMax, cMin, cMax },
-                datos: datosValidos, // 👈 Ahora esto ya no estará vacío
+                datos: datosValidos, 
                 sheet: currentSheet,
                 tipo: tipoDetectado
             });
@@ -234,13 +172,10 @@ const SimuladorMAT251 = () => {
 
             if (inicio && fin) {
                 const coords = {
-                    rMin: Math.min(inicio.r, fin.r),
-                    rMax: Math.max(inicio.r, fin.r),
-                    cMin: Math.min(inicio.c, fin.c),
-                    cMax: Math.max(inicio.c, fin.c)
+                    rMin: Math.min(inicio.r, fin.r), rMax: Math.max(inicio.r, fin.r),
+                    cMin: Math.min(inicio.c, fin.c), cMax: Math.max(inicio.c, fin.c)
                 };
 
-                // 🌟 LA MISMA RED DE CAPTURA QUE USAMOS EN EL BOTÓN 🌟
                 const datosValidos = [];
                 let contadorNumeros = 0;
                 let contadorTextos = 0;
@@ -250,40 +185,20 @@ const SimuladorMAT251 = () => {
                         const rawVal = rowData[r]?.[getExcelChar(c)];
                         if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
                             datosValidos.push(rawVal);
-
-                            if (isNaN(Number(rawVal))) {
-                                contadorTextos++;
-                            } else {
-                                contadorNumeros++;
-                            }
+                            if (isNaN(Number(rawVal))) contadorTextos++; else contadorNumeros++;
                         }
                     }
                 }
 
-                // Decisión de tipo
                 let tipoDetectado = "Sin datos";
-
                 if (datosValidos.length > 0) {
-                    // Si hay por lo menos 1 número Y por lo menos 1 texto en la misma selección:
-                    if (contadorNumeros > 0 && contadorTextos > 0) {
-                        tipoDetectado = "Mixta (Error)";
-                    }
-                    // Si SOLO hay números:
-                    else if (contadorNumeros > 0 && contadorTextos === 0) {
-                        tipoDetectado = "Cuantitativa (Número)";
-                    }
-                    // Si SOLO hay textos:
-                    else {
-                        tipoDetectado = "Cualitativa (Texto)";
-                    }
+                    if (contadorNumeros > 0 && contadorTextos > 0) tipoDetectado = "Mixta (Error)";
+                    else if (contadorNumeros > 0 && contadorTextos === 0) tipoDetectado = "Cuantitativa (Número)";
+                    else tipoDetectado = "Cualitativa (Texto)";
                 }
 
                 actualizarVariable(id, {
-                    rangoLabel: nuevoTexto,
-                    coords,
-                    datos: datosValidos,
-                    sheet: currentSheet,
-                    tipo: tipoDetectado // Inyectamos el tipo también aquí
+                    rangoLabel: nuevoTexto, coords, datos: datosValidos, sheet: currentSheet, tipo: tipoDetectado
                 });
             } else {
                 actualizarVariable(id, { rangoLabel: nuevoTexto });
@@ -291,6 +206,7 @@ const SimuladorMAT251 = () => {
         }
     };
 
+    // TUS COLUMNAS INTACTAS
     const columnDefs = useMemo(() => {
         if (rowData.length === 0) return [];
         const keys = Object.keys(rowData[0]);
@@ -318,34 +234,24 @@ const SimuladorMAT251 = () => {
         }));
         return [rowNumberCol, ...dataCols];
     }, [rowData, variables, currentSheet, selection]);
-    /* console.log("ESTADO DE VARIABLES:", variables); */
 
     return (
         <AgGridProvider modules={[AllCommunityModule]}>
             <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)', minHeight: '100vh', fontFamily: 'sans-serif', marginTop: '5px' }}>
                 <header>
                     <div className="upload-container">
-                        <div className="upload-column">
-                            <p className="upload-title">Archivos subidos</p>
-                            <select
-                                className="select-hoja"
-                                style={{ width: '60%', cursor: 'pointer' }}
-                                disabled={cargandoApi || archivosApi.length === 0}
-                                onChange={(e) => cargarDesdeAPI(e.target.value)}
-                            >
-                                <option value="">
-                                    {archivosApi.length === 0 ? "Buscando archivos..." : "Seleccionar Archivo"}
-                                </option>
-                                {archivosApi.map((archivo, index) => (
-                                    <option key={index} value={archivo.filename}>
-                                        {archivo.filename}
-                                    </option>
-                                ))}
-                            </select>
-                            <p style={{ fontSize: '11px', marginTop: '5px', color: 'var(--text-muted)' }}>
-                                {cargandoApi ? "⏳ Descargando y procesando..." : "Click para cargar"}
-                            </p>
+                        
+                        {/* 🆕 3. AQUÍ REEMPLAZAMOS EL SELECT VIEJO POR EL COMPONENTE NUEVO */}
+                        <div className="upload-column" style={{ minWidth: '300px' }}>
+                            {usuario ? (
+                                <SelectorNube usuario={usuario} onImportar={cargarDesdeAPI} />
+                            ) : (
+                                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                    Debes iniciar sesión para importar archivos del servidor.
+                                </p>
+                            )}
                         </div>
+
                         <div className="column-divider"></div>
                         <div
                             className={`upload-box ${isDraggingFile ? 'drag-over' : ''}`}
@@ -372,6 +278,8 @@ const SimuladorMAT251 = () => {
                             </div>
                         </div>
                     </div >
+                    
+                    {/* TU BARRA DE HOJAS ORIGINAL */}
                     {sheetNames.length > 0 && (
                         <div style={{
                             margin: '5px',
@@ -415,6 +323,7 @@ const SimuladorMAT251 = () => {
 
                 </header>
 
+                {/* TU DISEÑO DE PANEL Y TABLA ORIGINAL */}
                 <div className='main-layout-flex'>
                     <aside className='bloque-variables'>
                         <div className="header-variables">

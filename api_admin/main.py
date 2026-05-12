@@ -161,19 +161,23 @@ os.makedirs(EXCEL_FOLDER, exist_ok=True)
 # =======================
 # Subir archivo Excel
 # =======================
+# =======================
+# Subir archivo Excel (PRIVADO POR USUARIO)
+# =======================
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...), autor: str = Form(...)):
-    file_path = os.path.join(EXCEL_FOLDER, file.filename)
+    # 1. Crear carpeta específica para el autor (ej. excels/Diego/)
+    # Usamos urllib para limpiar el nombre y evitar errores en carpetas con espacios
+    safe_author = urllib.parse.quote(autor) 
+    user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+    os.makedirs(user_folder, exist_ok=True)
+
+    # 2. Guardar el archivo dentro de SU carpeta
+    file_path = os.path.join(user_folder, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Guardar metadata
-    meta_path = os.path.join(EXCEL_FOLDER, f"{file.filename}.meta")
-    meta_data = {"filename": file.filename, "author": autor}
-    with open(meta_path, "w") as f:
-        json.dump(meta_data, f)
-
-    return {"message": f"Archivo {file.filename} subido correctamente!", "author": autor}
+    return {"message": f"Archivo {file.filename} subido correctamente a la carpeta de {autor}!"}
 
 # =======================
 # Listar archivos Excel
@@ -183,32 +187,37 @@ async def list_files():
     return {"files": os.listdir(EXCEL_FOLDER)}
  """
 
+# =======================
+# Listar archivos Excel (SOLO DEL USUARIO)
+# =======================
 @app.get("/files")
-def list_files():
+def list_files(autor: str = Query("Desconocido")):
+    safe_author = urllib.parse.quote(autor)
+    user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+    
     files_list = []
-    for fname in os.listdir(EXCEL_FOLDER):
+    
+    # Si la carpeta no existe (el usuario es nuevo), devolvemos lista vacía
+    if not os.path.exists(user_folder):
+        return {"files": files_list}
+
+    # Si existe, listamos solo SUS archivos
+    for fname in os.listdir(user_folder):
         if fname.endswith(".xlsx"):
-            meta_file = f"{fname}.meta"
-            author = "Desconocido"
-            meta_path = os.path.join(EXCEL_FOLDER, meta_file)
-            if os.path.exists(meta_path):
-                with open(meta_path, "r") as f:
-                    meta_data = json.load(f)
-                    author = meta_data.get("author", "Desconocido")
-            files_list.append({"filename": fname, "author": author})
+            files_list.append({"filename": fname, "author": autor})
+            
     return {"files": files_list}
-
-
 
 # =======================
 # Descargar archivo Excel
 # =======================
 @app.get("/files/{filename}")
-async def get_file(filename: str):
-    file_path = os.path.join(EXCEL_FOLDER, filename)
+async def get_file(filename: str, autor: str = Query(...)):
+    safe_author = urllib.parse.quote(autor)
+    file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
     if os.path.exists(file_path):
         return FileResponse(file_path)
-    return {"error": "Archivo no encontrado"}
+    return {"error": "Archivo no encontrado o no tienes permiso"}
 
 
 # ========= Ver contenido de una hoja específica ==========
@@ -259,10 +268,10 @@ async def list_sheets(filename: str):
         return {"error": f"No se pudieron obtener las hojas: {e}"}
     
     
-# ======== Eliminar archivo ===============
 @app.delete("/files/{filename}")
-async def delete_file(filename: str):
-    file_path = os.path.join(EXCEL_FOLDER, filename)
+async def delete_file(filename: str, autor: str = Query(...)):
+    safe_author = urllib.parse.quote(autor)
+    file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
         return {"message": f"Archivo {filename} eliminado correctamente"}

@@ -7,6 +7,7 @@ import {alerta} from "../../utils/Notificaciones"
 
 import "../../styles/components/excel/ExcelContent.css";
 
+
 // --- FUNCIÓN PARA LETRAS DE COLUMNAS (A, B, C...) ---
 const getExcelColumnName = (colIndex) => {
   let dividend = colIndex + 1;
@@ -33,8 +34,7 @@ function textEditor({ row, column, onRowChange, onClose }) {
   );
 }
 
-// 🆕 1. Recibimos 'autor' como una prop adicional
-export default function ExcelContent({ filename, autor, onSheetChange, mostrarTabla = true, permitirEdicion = true }) {
+export default function ExcelContent({ filename, onSheetChange, mostrarTabla = true, permitirEdicion = true }) {
   const [sheets, setSheets] = useState([]);
   const [selectedSheet, setSelectedSheet] = useState(0);
   const [rows, setRows] = useState([]);
@@ -47,15 +47,13 @@ export default function ExcelContent({ filename, autor, onSheetChange, mostrarTa
 
   // 1. CARGAR HOJAS
   useEffect(() => {
-    // 🆕 Verificamos que exista el filename y el autor
-    if (!filename || !autor) return;
+    if (!filename) return;
     setSheets([]); setRows([]); setColumns([]); setSelectedSheet(0); setError("");
     if (onSheetChange) onSheetChange(0);
 
     const fetchHojas = async () => {
       try {
-        // 🆕 2. Pasamos el autor a la API
-        const json = await api.obtenerHojas(filename, autor);
+        const json = await api.obtenerHojas(filename);
         if (json.sheets && json.sheets.length > 0) {
           setSheets(json.sheets);
         } else {
@@ -69,19 +67,17 @@ export default function ExcelContent({ filename, autor, onSheetChange, mostrarTa
 
     fetchHojas();
 
-  // 🆕 Agregamos 'autor' a las dependencias
-  }, [filename, autor, onSheetChange]);
+    // ESTA ES LA LÍNEA QUE ARREGLA EL ERROR (se borró onSheetChange)
+  }, [filename, onSheetChange]);
 
   // 2. CARGAR DATOS DE LA HOJA
   useEffect(() => {
-    // 🆕 Verificamos el autor aquí también
-    if (!filename || !autor || sheets.length === 0 || !mostrarTabla) return;
+    if (!filename || sheets.length === 0 || !mostrarTabla) return;
     setLoading(true);
 
     const fetchDatos = async () => {
       try {
-        // 🆕 3. Pasamos el autor a la API para obtener los datos
-        const json = await api.obtenerDatosHoja(filename, selectedSheet, autor);
+        const json = await api.obtenerDatosHoja(filename, selectedSheet);
 
         if (Array.isArray(json) && json.length > 0) {
           const rawKeys = Object.keys(json[0]);
@@ -116,8 +112,7 @@ export default function ExcelContent({ filename, autor, onSheetChange, mostrarTa
     };
 
     fetchDatos();
-  // 🆕 Agregamos 'autor' a las dependencias
-  }, [filename, selectedSheet, sheets, mostrarTabla, autor]);
+  }, [filename, selectedSheet, sheets, mostrarTabla]);
 
   const handleSheetChange = (e) => {
     const newIndex = Number(e.target.value);
@@ -137,46 +132,59 @@ export default function ExcelContent({ filename, autor, onSheetChange, mostrarTa
     setRows(newRows);
     setHuboCambios(true);
   }
-  
   const guardarExcel = async () => {
     setCargandoGuardado(true);
     try {
-      // 🆕 4. Pasamos el autor a la función que actualiza el Excel
-      await api.actualizarExcel(filename, selectedSheet, rows, autor);
+      await api.actualizarExcel(filename, selectedSheet, rows);
       setHuboCambios(false);
-      alerta.success("Cambios guardados");
+      alerta.success("cambios guardados");
     } catch (err) {
-      alerta.error("Error", err.message);
+      alerta.error("error", err.message);
     } finally {
       setCargandoGuardado(false);
     }
   };
 
-  // ... (El resto del render (return) se mantiene exactamente igual) ...
   return (
-    <div className="container_content" style={{ height: mostrarTabla ? '550px' : 'auto' }}>
-      {/* CABECERA DEL CONTENIDO */}
+    <div className="container_content" style={{
+      height: mostrarTabla ? '550px' : 'auto',
+    }}>
+
+      {/* CABECERA DEL CONTENIDO (AHORA SÍ ES RESPONSIVA) */}
       <div className="container_cabecera">
+
         <div className="container_cabecera_info">
-          <h5>Archivo en uso</h5>
-          <span>{filename}</span>
+          <h5 >Archivo en uso</h5>
+          <span>
+            {filename}
+          </span>
           { permitirEdicion && huboCambios && <small>tiene cambios pendientes</small>}
         </div>
 
         {permitirEdicion && huboCambios && (
+
           <div className="container_cabecera_botones">
-            <button onClick={guardarExcel} disabled={cargandoGuardado}>
+            <button
+              onClick={guardarExcel}
+              disabled={cargandoGuardado}
+            >
               {cargandoGuardado ? "Guardando..." : "Actualizar"}
             </button>
           </div>
+
         )}
 
         {sheets.length > 0 && (
           <div className="container_edicion">
-              <span>Edición Activa</span>
+              <span>
+                Edición Activa
+              </span>
             <div className="container_edicion_datos">
               <label>Hoja:</label>
-              <select value={selectedSheet} onChange={handleSheetChange}>
+              <select
+                value={selectedSheet}
+                onChange={handleSheetChange}
+              >
                 {sheets.map((sheetName, index) => (
                   <option key={index} value={index}>{sheetName}</option>
                 ))}

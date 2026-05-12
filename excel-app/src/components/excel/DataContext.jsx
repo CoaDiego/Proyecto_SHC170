@@ -3,8 +3,11 @@ import { useSimuladorLogic } from '../../hooks/usedatos';
 
 const DataContext = createContext(null);
 
-export const DataProvider = ({ children }) => {
-    const pDatos = useSimuladorLogic();
+// 🆕 1. Recibimos 'usuario' como prop, además de los children
+export const DataProvider = ({ children, usuario }) => {
+    
+    // 🆕 2. Le inyectamos el usuario al hook que maneja toda tu lógica
+    const pDatos = useSimuladorLogic(usuario);
 
     return (
         <DataContext.Provider value={pDatos}>

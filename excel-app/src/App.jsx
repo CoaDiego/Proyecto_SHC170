@@ -29,7 +29,7 @@ function App() {
 
   return (
     // 👇 2. ENVOLVEMOS TODA LA APLICACIÓN CON EL DATAPROVIDER
-    <DataProvider>
+    <DataProvider usuario={usuario}>
       <Router>
         <div className="App">
 
@@ -64,7 +64,7 @@ function App() {
               ) : (
                 <>
                   <Route path="/" element={<Inicio />} />
-                  <Route path="/archivos" element={<Archivos />} />
+                  <Route path="/archivos" element={<Archivos usuario={usuario} />} />
                   <Route path="/calculadora" element={<Calculadora />} />
                   <Route path="/about" element={<About />} />
 

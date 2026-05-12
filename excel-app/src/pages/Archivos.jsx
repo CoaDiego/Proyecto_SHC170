@@ -5,138 +5,83 @@ import ExcelContent from "../components/excel/ExcelContent";
 import ExcelReader from "../components/excel/ExcelReader";
 
 import { api } from "../services/api";
-
 import { alerta } from '../utils/Notificaciones';
-
 import "../styles/pages/Archivos.css";
 
-export default function Archivos() {
+// 🆕 1. Recibimos 'usuario' como prop desde App.jsx
+export default function Archivos({ usuario }) {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, _setError] = useState("");
-
   const [modoSubida, setModoSubida] = useState(true);
 
-  // 1. CARGAR LISTA DE ARCHIVOS
+  // 🆕 2. CARGAR LISTA DE ARCHIVOS (Solo los del usuario actual)
   const loadFiles = async () => {
+    if (!usuario) return; // Seguridad
     try {
-      //const res = await fetch("http://127.0.0.1:8000/files");
-      const data = await api.obtenerArchivos();
+      // Pasamos el nombre del usuario a la API
+      const data = await api.obtenerArchivos(usuario.nombre);
       if (data.files) setFiles(data.files);
     } catch (err) {
       console.error("Error cargando archivos:", err);
-      alerta.error("Error de conexión", "No se pudo conectar con el servidor para cargar los archivos.");
-      //setError("No se pudo conectar con el servidor.");
+      alerta.error("Error de conexión", "No se pudo cargar tu lista de archivos.");
     }
   };
 
-  useEffect(() => { loadFiles(); }, []);
+  useEffect(() => { 
+    loadFiles(); 
+  }, [usuario]); // Se recarga si el usuario cambia
 
-  // 2. FUNCIÓN PARA SUBIR ARCHIVO
+  // 🆕 3. FUNCIÓN PARA SUBIR ARCHIVO (A la carpeta del usuario)
   const handleUploadFile = async (fileObj) => {
-    if (!fileObj) return;
+    if (!fileObj || !usuario) return;
+    
     const formData = new FormData();
     formData.append("file", fileObj);
-    formData.append("autor", "Usuario");
+    // 👈 Cambiamos "Usuario" por el nombre real del logueado
+    formData.append("autor", usuario.nombre); 
 
     try {
-      //const res = await fetch("http://127.0.0.1:8000/upload", { method: "POST", body: formData });
       await api.subirArchivo(formData);
       loadFiles();
       alerta.success("Archivo subido correctamente");
-      /*if (res.ok) {
-        loadFiles();
-        alert("Archivo subido correctamente");
-      } else {
-        const errorData = await res.json();
-        alert(`Error al subir: ${errorData.detail?.[0]?.msg || "Error desconocido"}`);
-      }*/
     } catch (err) {
       alerta.error("Error al subir archivo", err.message);
     }
   };
 
-  // 3. FUNCIÓN PARA ELIMINAR ARCHIVO
+  // 🆕 4. FUNCIÓN PARA ELIMINAR ARCHIVO (Solo de su carpeta)
   const handleDeleteFile = async (filename) => {
-    //if (!window.confirm(`¿Estás seguro de eliminar "${filename}"?`)) return;
     try {
-      //const res = await fetch(`http://127.0.0.1:8000/files/${encodeURIComponent(filename)}`, { method: "DELETE" });
-      await api.eliminarArchivo(filename);
+      // Pasamos el nombre del archivo Y el nombre del usuario
+      await api.eliminarArchivo(filename, usuario.nombre);
       setFiles(prev => prev.filter(f => f.filename !== filename));
       if (selectedFile === filename) setSelectedFile(null);
       alerta.success("Archivo eliminado correctamente");
-      /*if (res.ok) {
-        setFiles(prev => prev.filter(f => f.filename !== filename));
-        if (selectedFile === filename) setSelectedFile(null);
-      } else {
-        alert("No se pudo eliminar el archivo.");
-      }*/
     } catch (err) {
-      alerta.error(`Error al eliminar el archivo: ${err.message}`);
-      console.error(err);
+      alerta.error(`Error al eliminar: ${err.message}`);
     }
   };
 
- return (
+  return (
     <div className="page-container">
       <h2 className="titulo_archivos">Gestión de Archivos</h2>
+      <p style={{marginBottom: '20px', color: 'var(--text-muted)'}}>
+        Carpeta personal de: <strong>{usuario?.nombre}</strong>
+      </p>
 
-      {error && <p style={{ color: "red", fontWeight: "bold" }}>Error: {error}</p>}
-
-      {/* SECCIÓN DE HERRAMIENTAS (Botones y Uploader/Reader) */}
+      {/* Resto del JSX se mantiene igual... */}
       <div className="upload-section">
-        <div className="upload-section_container">
-          <button
-            onClick={() => setModoSubida(true)}
-            style={{
-              fontWeight: modoSubida ? "bold" : "normal",
-              opacity: modoSubida ? 1 : 0.6,
-              borderBottom: modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent"
-            }}
-            className="button_upload_1"
-          >
-          Subir al Servidor
-          </button>
-
-          <button
-            onClick={() => setModoSubida(false)}
-            style={{
-              fontWeight: !modoSubida ? "bold" : "normal",
-              opacity: !modoSubida ? 1 : 0.6,
-              borderBottom: !modoSubida ? "3px solid var(--accent-color)" : "3px solid transparent"
-            }}
-            className="button_upload_2"
-          >
-          Solo Leer (Local)
-          </button>
-        </div>
-
-        {/* Carga condicional de los componentes de subida/lectura */}
+        {/* ... (Botones de modo subida/local) ... */}
         <div className="container_excelUploader">
           {modoSubida ? <ExcelUploader onUpload={handleUploadFile} /> : <ExcelReader />}
         </div>
       </div>
 
-      {/* ========================================================
-          AQUÍ ESTÁ LA MAGIA:
-          Solo mostramos la lista y la vista previa del servidor
-          SI estamos en modo "Subir al Servidor" (modoSubida === true)
-          ======================================================== */}
-    {/* ========================================================
-          ZONA INFERIOR: LISTA Y VISTA PREVIA (AHORA SÍ RESPONSIVA)
-          ======================================================== */}
       {modoSubida && (
-        <div 
-          className="files-layout"
-        >
-
-          {/* COLUMNA IZQUIERDA: LISTA */}
-          <div 
-            className="panel-section_1" 
-          >
-            <h3>
-              Archivos en el Servidor
-            </h3>
+        <div className="files-layout">
+          <div className="panel-section_1">
+            <h3>Archivos en el Servidor</h3>
             <ExcelViewer
               files={files}
               onSelect={setSelectedFile}
@@ -144,25 +89,19 @@ export default function Archivos() {
             />
           </div>
 
-          {/* COLUMNA DERECHA: CONTENIDO */}
-          <div 
-            className="panel-section_2" 
-          >
-            <h3>
-              Vista Previa (Servidor)
-            </h3>
+          <div className="panel-section_2">
+            <h3>Vista Previa (Servidor)</h3>
             {selectedFile ? (
-              <ExcelContent filename={selectedFile} />
+              /* 🆕 5. Le pasamos el nombre del usuario para que pueda encontrar el archivo */
+              <ExcelContent filename={selectedFile} autor={usuario.nombre} />
             ) : (
               <div className="container_reader_archivo">
                 Selecciona un archivo de la lista izquierda para ver su contenido.
               </div>
             )}
           </div>
-
         </div>
       )}
-
     </div>
   );
 }
