@@ -3,6 +3,7 @@ import { DataGrid } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 
 // --- IMPORTS ---
+import escudoAdmin from "../assets/images/escudoAdmin.png";
 
 import Calculator from "../components/excel/Calculator";
 import ExcelContent from "../components/excel/ExcelContent";
@@ -110,28 +111,24 @@ export default function Calculos() {
     return valor;
   };
 
-// 🆕 2. Actualizamos la función para que use el nombre del usuario
- const cargarArchivos = async () => {
-    if (!usuario) return; // 🆕 Seguridad: si no hay usuario, no pedimos nada
+const cargarArchivos = async () => {
+    if (!usuario) return; 
     
     try {
-      // 🆕 Le pasamos el nombre del usuario a la API
       const data = await api.obtenerArchivos(usuario.nombre); 
       if (data && data.files) {
         setFiles(data.files);
-        if (data.files.length > 0 && !selectedFile)
-          setSelectedFile(data.files[0].filename);
+        // Eliminamos la línea que seleccionaba el primer archivo automáticamente
       }
     } catch (error) {
       console.error("Error al cargar archivos:", error);
     }
-  };
+};
 
   useEffect(() => {
     cargarArchivos();
-  }, [usuario]); // 🆕 Se recarga si el usuario cambia
+  }, [usuario]); 
 
-  // 🆕 3. Hacemos que se vuelva a cargar si el usuario cambia
   useEffect(() => {
     cargarArchivos();
   }, [usuario]);
@@ -250,20 +247,23 @@ export default function Calculos() {
         {panelAbierto && (
           <>
             <label className="etiqueta">Selecciona un archivo:</label>
-            <select
-              value={selectedFile}
-              onChange={(e) => {
-                setSelectedFile(e.target.value);
-                setModoCreacion(false);
-              }}
-              className="selector-archivo"
-            >
-              {files.map((file) => (
-                <option key={file.filename} value={file.filename}>
-                  {file.filename} ({file.author || "Desconocido"})
-                </option>
-              ))}
-            </select>
+<select
+  value={selectedFile}
+  onChange={(e) => {
+    setSelectedFile(e.target.value);
+    setModoCreacion(false);
+  }}
+  className="selector-archivo"
+>
+  {/* Opción inicial neutra */}
+  <option value="">-- Selecciona un archivo para empezar --</option>
+  
+  {files.map((file) => (
+    <option key={file.filename} value={file.filename}>
+      {file.filename} ({file.author || "Desconocido"})
+    </option>
+  ))}
+</select>
 
             <ExcelContent
               filename={selectedFile}
@@ -478,9 +478,6 @@ export default function Calculos() {
                       )}
                     </div>
                   ) : (
-                    /* ==============================================
-                       CONTROLES TEMAS ANTERIORES (Regresión, Series, etc)
-                       ============================================== */
                     <>
                       <label>
                         {calculo === "series_tiempo"
@@ -535,7 +532,6 @@ export default function Calculos() {
                     </>
                   )}
 
-                  {/* CONTROLES EXTRA TEMA 7 */}
                   {calculo === "series_tiempo" && (
                     <div
                       className="container_intervalos"
@@ -612,7 +608,6 @@ export default function Calculos() {
                     </div>
                   )}
 
-                  {/* CONTROLES EXTRA TEMAS 2, 3, 4 */}
                   {esUnidimensional &&
                     calculo !== "frecuencias_completas" &&
                     calculo !== "estadistica_descriptiva" && (
@@ -672,7 +667,6 @@ export default function Calculos() {
                       </div>
                     )}
 
-                  {/* VISTA PREVIA Y BOTÓN CALCULAR */}
                   {mostrarTabla && excelData.length > 0 && (
                     <div
                       className=".container_dataset"
@@ -736,6 +730,7 @@ export default function Calculos() {
       </div>
 
       {/* ================= DERECHA: RESULTADOS ================= */}
+   {/* ================= DERECHA: RESULTADOS ================= */}
       <div className="calculadora-resultados">
         {modoCreacion ? (
           <TablaDinamica
@@ -744,65 +739,60 @@ export default function Calculos() {
               setModoCreacion(false);
             }}
           />
-    ) : (
-        /* 🆕 1. Envolvemos todo en el contenedor que tiene el escudo de fondo */
-        <div className="contenedor-resultados-vacio">
+        ) : !resultado && !errorNumerico ? (
           
-          <div className="frecuencias">
-            <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
-
-            {errorNumerico && (
-              <div
-                style={{
-                  padding: "20px",
-                  textAlign: "center",
-                  color: "#d9534f",
-                  backgroundColor: "rgba(217, 83, 79, 0.1)",
-                  borderRadius: "8px",
-                  border: "1px solid #d9534f",
-                  marginBottom: "15px",
-                }}
-              >
-                <p style={{ margin: "0" }}>
-                  ⚠️ Error: Faltan datos numéricos o hay celdas de texto en el
-                  cálculo actual.
-                </p>
-              </div>
-            )}
-
-            {resultado ? (
-              <>
-                {/* --- AQUÍ SE MANTIENEN TUS TABLAS (NO BORRAR ESTO) --- */}
-                {calculo === "regresion_simple" && resultado.tipo === "regresion" && <TablaRegresion resultado={resultado} />}
-                {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && <TablaSeriesTiempo resultado={resultado} />}
-                {calculo === "numeros_indices" && ["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo) && <TablaIndices resultado={resultado} />}
-                {esBivariada && resultado.tipo === "distribucion_bivariada" && <TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} />}
-                {esUnidimensional && (!resultado.tipo || ["tendencia_y_posicion", "variabilidad_y_forma", "estadistica_descriptiva"].includes(resultado.tipo)) && (
-                  <TablasUnidimensionales resultado={resultado} calculo={calculo} formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil} />
-                )}
-              </>
-            ) : (
-              !errorNumerico && (
-                /* Este es el mensaje que se ve sobre el escudo */
-                <p style={{ 
-                  color: "var(--text-main)", 
-                  fontSize: "1.2rem", 
-                  fontWeight: "bold",
-                  marginTop: "60px",
-                  position: "relative",
-                  zIndex: 2 
-                }}>
-                  Configura los parámetros a la izquierda y presiona Calcular.
-                </p>
-              )
-            )}
+          /* 🆕 ESTADO DE ESPERA: Ahora usa clases de CSS */
+          <div className="contenedor-espera-logo">
+            <img 
+              src={escudoAdmin} 
+              alt="Escudo Administración de Empresas" 
+              className="logo-espera"
+            />
           </div>
 
-          <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
+        ) : (
+          
+          /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
+          <div className="contenedor-resultados-vacio">
+            <div className="frecuencias">
+              <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
 
-        </div>
-      )}
+              {errorNumerico && (
+                <div
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "#d9534f",
+                    backgroundColor: "rgba(217, 83, 79, 0.1)",
+                    borderRadius: "8px",
+                    border: "1px solid #d9534f",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <p style={{ margin: "0" }}>
+                    ⚠️ Error: Faltan datos numéricos o hay celdas de texto en el
+                    cálculo actual.
+                  </p>
+                </div>
+              )}
+
+              {resultado && (
+                <>
+                  {calculo === "regresion_simple" && resultado.tipo === "regresion" && <TablaRegresion resultado={resultado} />}
+                  {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && <TablaSeriesTiempo resultado={resultado} />}
+                  {calculo === "numeros_indices" && ["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo) && <TablaIndices resultado={resultado} />}
+                  {esBivariada && resultado.tipo === "distribucion_bivariada" && <TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} />}
+                  {esUnidimensional && (!resultado.tipo || ["tendencia_y_posicion", "variabilidad_y_forma", "estadistica_descriptiva"].includes(resultado.tipo)) && (
+                    <TablasUnidimensionales resultado={resultado} calculo={calculo} formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil} />
+                  )}
+                </>
+              )}
+            </div>
+
+            <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
+          </div>
+        )}
+      </div> 
     </div> 
-  </div> 
   );
 }

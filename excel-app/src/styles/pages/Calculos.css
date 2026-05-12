@@ -312,3 +312,28 @@
 }
 
 
+/* Estilos para la pantalla de espera con el logo */
+.contenedor-espera-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 60vh;
+  width: 100%;
+}
+
+.logo-espera {
+  width: 550px;
+  max-width: 80%; /* Para que sea responsivo */
+  height: auto;
+  pointer-events: none;
+  /* Sombra sutil para modo claro */
+  filter: drop-shadow(0px 4px 15px rgba(0, 0, 0, 0.15));
+  transition: filter 0.3s ease;
+}
+
+/* Si tu app usa una clase "dark" en el body o contenedor para el modo oscuro */
+body.dark-mode .logo-espera {
+  /* En modo oscuro, le damos un brillo sutil en lugar de sombra negra */
+  filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.2));
+}
