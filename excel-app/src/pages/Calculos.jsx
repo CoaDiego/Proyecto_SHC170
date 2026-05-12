@@ -43,9 +43,10 @@ function textEditor({ row, column, onRowChange, onClose }) {
 }
 
 export default function Calculos() {
-  const { variables } = useData();
+ const { variables, usuario } = useData();
 
   const [files, setFiles] = useState([]);
+
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedSheet, setSelectedSheet] = useState(0);
 
@@ -109,9 +110,13 @@ export default function Calculos() {
     return valor;
   };
 
-  const cargarArchivos = async () => {
+// 🆕 2. Actualizamos la función para que use el nombre del usuario
+ const cargarArchivos = async () => {
+    if (!usuario) return; // 🆕 Seguridad: si no hay usuario, no pedimos nada
+    
     try {
-      const data = await api.obtenerArchivos();
+      // 🆕 Le pasamos el nombre del usuario a la API
+      const data = await api.obtenerArchivos(usuario.nombre); 
       if (data && data.files) {
         setFiles(data.files);
         if (data.files.length > 0 && !selectedFile)
@@ -124,7 +129,12 @@ export default function Calculos() {
 
   useEffect(() => {
     cargarArchivos();
-  }, []);
+  }, [usuario]); // 🆕 Se recarga si el usuario cambia
+
+  // 🆕 3. Hacemos que se vuelva a cargar si el usuario cambia
+  useEffect(() => {
+    cargarArchivos();
+  }, [usuario]);
 
   const esIntervalo = calculo === "distribucion_intervalos";
   const esUnidimensional = [
@@ -734,92 +744,65 @@ export default function Calculos() {
               setModoCreacion(false);
             }}
           />
-        ) : (
-          <>
-            <div className="frecuencias">
-              <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
+    ) : (
+        /* 🆕 1. Envolvemos todo en el contenedor que tiene el escudo de fondo */
+        <div className="contenedor-resultados-vacio">
+          
+          <div className="frecuencias">
+            <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
 
-              {errorNumerico && (
-                <div
-                  style={{
-                    padding: "20px",
-                    textAlign: "center",
-                    color: "#d9534f",
-                    backgroundColor: "rgba(217, 83, 79, 0.1)",
-                    borderRadius: "8px",
-                    border: "1px solid #d9534f",
-                    marginBottom: "15px",
-                  }}
-                >
-                  <p style={{ margin: "0" }}>
-                    ⚠️ Error: Faltan datos numéricos o hay celdas de texto en el
-                    cálculo actual.
-                  </p>
-                </div>
-              )}
+            {errorNumerico && (
+              <div
+                style={{
+                  padding: "20px",
+                  textAlign: "center",
+                  color: "#d9534f",
+                  backgroundColor: "rgba(217, 83, 79, 0.1)",
+                  borderRadius: "8px",
+                  border: "1px solid #d9534f",
+                  marginBottom: "15px",
+                }}
+              >
+                <p style={{ margin: "0" }}>
+                  ⚠️ Error: Faltan datos numéricos o hay celdas de texto en el
+                  cálculo actual.
+                </p>
+              </div>
+            )}
 
-              {resultado ? (
-                <>
-                  {/* Tema 6: Regresión */}
-                  {calculo === "regresion_simple" &&
-                    resultado.tipo === "regresion" && (
-                      <TablaRegresion resultado={resultado} />
-                    )}
+            {resultado ? (
+              <>
+                {/* --- AQUÍ SE MANTIENEN TUS TABLAS (NO BORRAR ESTO) --- */}
+                {calculo === "regresion_simple" && resultado.tipo === "regresion" && <TablaRegresion resultado={resultado} />}
+                {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && <TablaSeriesTiempo resultado={resultado} />}
+                {calculo === "numeros_indices" && ["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo) && <TablaIndices resultado={resultado} />}
+                {esBivariada && resultado.tipo === "distribucion_bivariada" && <TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} />}
+                {esUnidimensional && (!resultado.tipo || ["tendencia_y_posicion", "variabilidad_y_forma", "estadistica_descriptiva"].includes(resultado.tipo)) && (
+                  <TablasUnidimensionales resultado={resultado} calculo={calculo} formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil} />
+                )}
+              </>
+            ) : (
+              !errorNumerico && (
+                /* Este es el mensaje que se ve sobre el escudo */
+                <p style={{ 
+                  color: "var(--text-main)", 
+                  fontSize: "1.2rem", 
+                  fontWeight: "bold",
+                  marginTop: "60px",
+                  position: "relative",
+                  zIndex: 2 
+                }}>
+                  Configura los parámetros a la izquierda y presiona Calcular.
+                </p>
+              )
+            )}
+          </div>
 
-                  {/* Tema 7: Series de Tiempo */}
-                  {calculo === "series_tiempo" &&
-                    resultado.tipo === "series_tiempo" && (
-                      <TablaSeriesTiempo resultado={resultado} />
-                    )}
+          <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
 
-                  {/* Tema 8: Números Índices */}
-                  {calculo === "numeros_indices" &&
-                    [
-                      "indices_compuestos",
-                      "operaciones_indices",
-                      "deflacion_financiera",
-                    ].includes(resultado.tipo) && (
-                      <TablaIndices resultado={resultado} />
-                    )}
-
-                  {/* Tema 5: Bivariantes */}
-                  {esBivariada &&
-                    resultado.tipo === "distribucion_bivariada" && (
-                      <TablasBivariantes
-                        resultado={resultado}
-                        formatearCelda={formatearCelda}
-                      />
-                    )}
-
-                  {/* Temas 2, 3 y 4: Unidimensionales */}
-                  {esUnidimensional &&
-                    (!resultado.tipo ||
-                      [
-                        "tendencia_y_posicion",
-                        "variabilidad_y_forma",
-                        "estadistica_descriptiva",
-                      ].includes(resultado.tipo)) && (
-                      <TablasUnidimensionales
-                        resultado={resultado}
-                        calculo={calculo}
-                        formatearCelda={formatearCelda}
-                        filtroFractil={filtroFractil}
-                        setFiltroFractil={setFiltroFractil}
-                      />
-                    )}
-                </>
-              ) : (
-                !errorNumerico && (
-                  <p style={{ color: "var(--text-muted)" }}>
-                    Configura los parámetros a la izquierda y presiona Calcular.
-                  </p>
-                )
-              )}
-            </div>
-            <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
-          </>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </div> 
+  </div> 
   );
 }

@@ -240,3 +240,125 @@
     grid-template-columns: 1fr; /* En móviles, uno debajo de otro */
   }
 }
+
+/* ========================================= */
+/* BOTÓN FLOTANTE LATERAL (Estilo Redes)     */
+/* ========================================= */
+.flotante-lateral-datos {
+    position: fixed;
+    top: 50%; /* Centrado verticalmente */
+    right: 0; /* Pegado a la derecha */
+    transform: translateY(-50%);
+    z-index: 1000;
+}
+
+.btn-flotante-datos {
+    background-color: var(--accent-color, #FF7000); /* Usa el naranja de tu facultad */
+    color: white;
+    border: none;
+    padding: 20px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    border-radius: 8px 0 0 8px; /* Bordes redondeados solo del lado izquierdo */
+    box-shadow: -3px 2px 10px rgba(0,0,0,0.2);
+    transition: background-color 0.3s, transform 0.2s;
+    
+    /* Este truco hace que el texto se lea de arriba hacia abajo verticalmente */
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    letter-spacing: 2px;
+}
+
+.btn-flotante-datos:hover {
+    background-color: #e65c00;
+    transform: translateX(-5px); /* Sale un poquito hacia afuera al pasar el mouse */
+}
+
+/* ========================================= */
+/* PANTALLA EMERGENTE DE DATOS (MODAL)       */
+/* ========================================= */
+.modal-overlay-datos {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.75); /* Fondo oscuro semitransparente */
+    z-index: 2000; /* Por encima de todo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content-datos {
+    background-color: var(--bg-body, #ffffff);
+    width: 95%; /* Ocupa casi toda la pantalla para que la tabla quepa bien */
+    height: 95%;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: relative;
+    overflow-y: auto;
+    padding-top: 40px; /* Espacio para el botón de cerrar */
+}
+
+/* Botón de cerrar */
+.btn-cerrar-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background-color: #ef4444; /* Rojo */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 2010;
+    transition: background-color 0.2s;
+}
+
+.btn-cerrar-modal:hover {
+    background-color: #dc2626;
+}
+
+/* El contenedor debe ocupar el espacio disponible */
+.contenedor-resultados-vacio {
+    position: relative;
+    width: 100%;
+    min-height: 80vh; /* Altura suficiente para ver el escudo */
+    display: flex;
+    flex-direction: column;
+}
+
+/* El Escudo de la Facultad */
+.contenedor-resultados-vacio::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 450px; /* Tamaño del escudo */
+    height: 450px;
+    background-image: url('../../assets/images/escudoAdmin.png'); /* ⚠️ Verifica ruta */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.08; /* Muy sutil */
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Para que el texto de bienvenida esté centrado y por encima del logo */
+.mensaje-bienvenida {
+    margin-top: 100px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.mensaje-bienvenida p {
+    color: var(--text-main);
+    font-size: 1.3rem;
+    font-weight: bold;
+}
