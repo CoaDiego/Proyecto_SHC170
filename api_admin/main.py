@@ -534,6 +534,94 @@ async def update_excel(body: dict = Body(...)):
         return {"message": "Actualizado correctamente"}
     except Exception as e:
         return {"error": str(e)} 
+    
+    # =======================
+# SISTEMA DE HISTORIAL
+# =======================
+from datetime import datetime
 
+# Carpeta para guardar los historiales
+HISTORIAL_FOLDER = "historial"
+os.makedirs(HISTORIAL_FOLDER, exist_ok=True)
+
+# Actualiza el modelo en main.py
+class RegistroHistorial(BaseModel):
+    autor: str
+    calculo: str
+    archivo_origen: str
+    columna_x: str          # 🆕 Nuevo campo
+    columna_y: str = None   # 🆕 Nuevo campo (opcional para unidimensionales)
+    hoja: int = 0
+
+@app.post("/guardar_historial")
+async def guardar_historial(registro: RegistroHistorial):
+    try:
+        safe_author = urllib.parse.quote(registro.autor)
+        user_historial_folder = os.path.join(HISTORIAL_FOLDER, safe_author)
+        os.makedirs(user_historial_folder, exist_ok=True)
+        
+        # Cada usuario tendrá su propio archivo historial.json
+        historial_file = os.path.join(user_historial_folder, "historial.json")
+        
+        # Cargar historial existente
+        historial_data = []
+        if os.path.exists(historial_file):
+            with open(historial_file, "r", encoding="utf-8") as f:
+                historial_data = json.load(f)
+        
+        # Crear el nuevo registro
+        nuevo_registro = {
+        "id": f"HIST_{int(datetime.now().timestamp())}",
+        "fecha": datetime.now().strftime("%d/%m/%Y"),
+        "hora": datetime.now().strftime("%H:%M:%S"),
+        "calculo": registro.calculo,
+        "archivo_origen": registro.archivo_origen,
+        "columna_x": registro.columna_x,     # 🆕 Guardamos X
+        "columna_y": registro.columna_y,      # 🆕 Guardamos Y
+        "hoja": registro.hoja
+    }
+        
+        # Añadir al inicio de la lista (para que el más reciente salga primero)
+        historial_data.insert(0, nuevo_registro)
+        
+        # Guardar archivo actualizado
+        with open(historial_file, "w", encoding="utf-8") as f:
+            json.dump(historial_data, f, indent=4)
+            
+        return {"message": "Historial guardado con éxito", "registro": nuevo_registro}
+        
+    except Exception as e:
+        print(f"Error al guardar historial: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/obtener_historial")
+async def obtener_historial(autor: str = Query(...)):
+    safe_author = urllib.parse.quote(autor)
+    historial_file = os.path.join(HISTORIAL_FOLDER, safe_author, "historial.json")
+    
+    if not os.path.exists(historial_file):
+        return {"historial": []}
+        
+    with open(historial_file, "r", encoding="utf-8") as f:
+        return {"historial": json.load(f)}
+
+@app.delete("/eliminar_historial/{registro_id}")
+async def eliminar_historial(registro_id: str, autor: str = Query(...)):
+    safe_author = urllib.parse.quote(autor)
+    historial_file = os.path.join(HISTORIAL_FOLDER, safe_author, "historial.json")
+    
+    if not os.path.exists(historial_file):
+        return JSONResponse(status_code=404, content={"error": "Historial no encontrado"})
+        
+    with open(historial_file, "r", encoding="utf-8") as f:
+        historial_data = json.load(f)
+        
+    # Filtramos la lista, conservando solo los que NO tengan el ID a eliminar
+    nuevo_historial = [reg for reg in historial_data if reg.get("id") != registro_id]
+    
+    with open(historial_file, "w", encoding="utf-8") as f:
+        json.dump(nuevo_historial, f, indent=4)
+        
+    return {"message": "Registro eliminado con éxito"}
     
 

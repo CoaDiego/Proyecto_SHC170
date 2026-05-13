@@ -1,0 +1,21 @@
+[
+    {
+        "id": "HIST_1778644822",
+        "fecha": "13/05/2026",
+        "hora": "00:00:22",
+        "calculo": "frecuencias_completas",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Cant. Piezas defectuosas",
+        "columna_y": "Cant. Piezas defectuosas",
+        "hoja": 2
+    },
+    {
+        "id": "HIST_1778643856",
+        "fecha": "12/05/2026",
+        "hora": "23:44:16",
+        "calculo": "variabilidad_y_forma",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Datos 2",
+        "columna_y": "Datos 2"
+    }
+]

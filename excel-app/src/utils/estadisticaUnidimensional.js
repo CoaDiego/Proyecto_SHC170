@@ -1,5 +1,6 @@
 // src/utils/estadisticaUnidimensional.js
 
+
 // ==========================================
 // --- FUNCIONES BÁSICAS DE APOYO ---
 // ==========================================

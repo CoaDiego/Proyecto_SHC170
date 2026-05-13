@@ -337,3 +337,27 @@ body.dark-mode .logo-espera {
   /* En modo oscuro, le damos un brillo sutil en lugar de sombra negra */
   filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.2));
 }
+
+/* Estilos para la tabla de historial */
+.tabla-historial-container {
+    margin-top: 20px;
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.fila-historial:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s;
+}
+
+.badge-calculo {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    color: var(--accent-color);
+    font-weight: bold;
+}

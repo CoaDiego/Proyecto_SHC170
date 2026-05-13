@@ -8,7 +8,7 @@ export const api = {
   obtenerDatosHoja: async (filename, hojaIndex, autor) => {
     try {
       const res = await fetch(
-        `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hojaIndex}&autor=${encodeURIComponent(autor)}`
+        `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hojaIndex}&autor=${encodeURIComponent(autor)}`,
       );
       if (!res.ok) throw new Error("Error al leer la hoja del servidor");
       return await res.json();
@@ -23,7 +23,7 @@ export const api = {
   obtenerHojas: async (filename, autor) => {
     try {
       const res = await fetch(
-        `${BASE_URL}/sheets/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`
+        `${BASE_URL}/sheets/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`,
       );
       if (!res.ok) throw new Error("Error al obtener las hojas");
       return await res.json();
@@ -100,7 +100,7 @@ export const api = {
     try {
       const res = await fetch(`${BASE_URL}/upload`, {
         method: "POST",
-        body: formData, 
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok)
@@ -120,7 +120,7 @@ export const api = {
         `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`,
         {
           method: "DELETE",
-        }
+        },
       );
       if (!res.ok) throw new Error("Error al eliminar el archivo");
       return true;
@@ -134,10 +134,11 @@ export const api = {
   descargarArchivoBinario: async (filename, autor) => {
     try {
       const res = await fetch(
-        `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`
+        `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`,
       );
-      if (!res.ok) throw new Error("No se pudo obtener el archivo del servidor");
-      
+      if (!res.ok)
+        throw new Error("No se pudo obtener el archivo del servidor");
+
       // 🆕 Devolvemos el arrayBuffer (los bytes puros del archivo)
       return await res.arrayBuffer();
     } catch (error) {
@@ -150,7 +151,9 @@ export const api = {
   // 🆕 Añadimos el parámetro 'autor'
   obtenerArchivos: async (autor) => {
     try {
-      const res = await fetch(`${BASE_URL}/files?autor=${encodeURIComponent(autor)}`);
+      const res = await fetch(
+        `${BASE_URL}/files?autor=${encodeURIComponent(autor)}`,
+      );
       if (!res.ok) throw new Error("Error al obtener la lista de archivos");
       return await res.json();
     } catch (error) {
@@ -160,7 +163,6 @@ export const api = {
   },
 
   // --- ACTUALIZAR EXCEL ---
-  // 🆕 Añadimos el parámetro 'autor'
   actualizarExcel: async (filename, hojaindex, datos, autor) => {
     try {
       const res = await fetch(`${BASE_URL}/update_excel`, {
@@ -168,15 +170,67 @@ export const api = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           filename: filename,
-          hojaindex: hojaindex,
+          hoja_index: hojaindex, // ✅ CORREGIDO: Ahora coincide con el backend
           datos: datos,
-          autor: autor // Enviamos el autor en el body para que Python sepa de quién es
+          autor: autor,
         }),
       });
       if (!res.ok) throw new Error("Error al actualizar el excel");
       return await res.json();
     } catch (error) {
       console.error("Error en api.actualizarExcel", error);
+      throw error;
+    }
+  },
+  // --- GUARDAR EN HISTORIAL ---
+  guardarEnHistorial: async (autor, calculo, archivo, colX, colY, hoja) => {
+    try {
+      const res = await fetch(`${BASE_URL}/guardar_historial`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          autor: autor,
+          calculo: calculo,
+          archivo_origen: archivo,
+          columna_x: colX,
+          columna_y: colY,
+          hoja: hoja
+        }),
+      });
+      return await res.json();
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // --- OBTENER HISTORIAL ---
+  obtenerHistorial: async (autor) => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/obtener_historial?autor=${encodeURIComponent(autor)}`,
+      );
+      if (!res.ok)
+        throw new Error("Error al obtener el historial del servidor");
+      return await res.json();
+    } catch (error) {
+      console.error("Error en api.obtenerHistorial:", error);
+      throw error;
+    }
+  },
+
+  // --- ELIMINAR DEL HISTORIAL ---
+  eliminarHistorial: async (registro_id, autor) => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/eliminar_historial/${registro_id}?autor=${encodeURIComponent(autor)}`,
+        {
+          method: "DELETE",
+        },
+      );
+      if (!res.ok) throw new Error("Error al eliminar el registro");
+      return await res.json();
+    } catch (error) {
+      console.error("Error en api.eliminarHistorial", error);
       throw error;
     }
   },

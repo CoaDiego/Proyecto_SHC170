@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DataGrid } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 
 // --- IMPORTS ---
 import escudoAdmin from "../assets/images/escudoAdmin.png";
+import { useLocation } from "react-router-dom";
 
 import Calculator from "../components/excel/Calculator";
 import ExcelContent from "../components/excel/ExcelContent";
@@ -20,6 +21,10 @@ import PanelGraficos from "../components/Resultados/PanelGraficos";
 import TablaRegresion from "../components/Resultados/TablaRegresion";
 import TablaSeriesTiempo from "../components/Resultados/TablaSeriesTiempo";
 import TablaIndices from "../components/Resultados/TablaIndices";
+
+import { alerta } from "../utils/Notificaciones";
+
+import { generarPDFReporte } from "../utils/exportUtils"; // 🆕
 
 function textEditor({ row, column, onRowChange, onClose }) {
   return (
@@ -44,7 +49,7 @@ function textEditor({ row, column, onRowChange, onClose }) {
 }
 
 export default function Calculos() {
- const { variables, usuario } = useData();
+  const { variables, usuario } = useData();
 
   const [files, setFiles] = useState([]);
 
@@ -101,6 +106,50 @@ export default function Calculos() {
     setNuevoIndiceBase,
   } = useCalculadoraExcel(selectedFile, selectedSheet);
 
+  const location = useLocation(); // 🆕 Leemos la ruta actual
+
+  const calculoPendiente = useRef(false);
+
+
+
+// 🆕 EFECTO PARA REABRIR HISTORIAL (VERSIÓN AUTOMÁTICA)
+  // 1. EFECTO INICIAL: Saca los datos de la mochila y prepara el banderín
+  useEffect(() => {
+    if (location.state) {
+      const { archivoReabrir, calculoReabrir, colXReabrir, colYReabrir, hojaReabrir } = location.state;
+
+      if (archivoReabrir) setSelectedFile(archivoReabrir);
+      if (calculoReabrir) setCalculo(calculoReabrir);
+      if (colXReabrir) setSelectedColumn(colXReabrir);
+      if (colYReabrir) setSelectedColumnY(colYReabrir);
+      if (hojaReabrir !== undefined) setSelectedSheet(hojaReabrir);
+
+      // Si tenemos los datos principales, levantamos el banderín de cálculo
+      if (archivoReabrir && calculoReabrir && colXReabrir) {
+        calculoPendiente.current = true;
+      }
+
+      // Limpiamos la mochila del navegador para que no se repita en bucle si recargamos la página
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, setCalculo, setSelectedColumn, setSelectedColumnY]);
+
+  // 2. EFECTO OBSERVADOR: Espera a que el Excel termine de cargar
+  useEffect(() => {
+    // Si hay un cálculo pendiente Y ya tenemos datos en la tabla (excelData)
+    if (calculoPendiente.current && excelData && excelData.length > 0) {
+      
+      const timer = setTimeout(() => {
+        ejecutarCalculo();
+        alerta.exito("Historial Cargado", "Se restauró el cálculo automáticamente.");
+      }, 300); // Un pequeñísimo respiro de 300ms para que React pinte la tabla
+      
+      calculoPendiente.current = false; // Bajamos el banderín
+      
+      return () => clearTimeout(timer);
+    }
+  }, [excelData, ejecutarCalculo]); // React vigilará excelData constantemente
+
   const formatearCelda = (valor) => {
     if (typeof valor === "number")
       return Number.isInteger(valor) ? valor : Number(valor).toFixed(2);
@@ -111,11 +160,11 @@ export default function Calculos() {
     return valor;
   };
 
-const cargarArchivos = async () => {
-    if (!usuario) return; 
-    
+  const cargarArchivos = async () => {
+    if (!usuario) return;
+
     try {
-      const data = await api.obtenerArchivos(usuario.nombre); 
+      const data = await api.obtenerArchivos(usuario.nombre);
       if (data && data.files) {
         setFiles(data.files);
         // Eliminamos la línea que seleccionaba el primer archivo automáticamente
@@ -123,15 +172,39 @@ const cargarArchivos = async () => {
     } catch (error) {
       console.error("Error al cargar archivos:", error);
     }
-};
-
-  useEffect(() => {
-    cargarArchivos();
-  }, [usuario]); 
+  };
 
   useEffect(() => {
     cargarArchivos();
   }, [usuario]);
+
+  useEffect(() => {
+    cargarArchivos();
+  }, [usuario]);
+
+// Dentro de export default function Calculos() { ...
+
+// En src/pages/Calculos.jsx
+const handleGuardarResultado = async () => {
+  if (!usuario) return;
+  try {
+    alerta.success("Guardando...", "Registrando configuración del cálculo.");
+    
+    // Pasamos las variables de estado actuales: selectedColumn y selectedColumnY
+    await api.guardarEnHistorial(
+        usuario.nombre, 
+        calculo, 
+        selectedFile, 
+        selectedColumn, 
+        selectedColumnY,
+        selectedSheet
+    );
+    
+    alerta.exito("¡Guardado!", "El historial ahora recordará las columnas usadas.");
+  } catch (error) {
+    alerta.error("Error", "No se pudo guardar la configuración.");
+  }
+};
 
   const esIntervalo = calculo === "distribucion_intervalos";
   const esUnidimensional = [
@@ -247,26 +320,27 @@ const cargarArchivos = async () => {
         {panelAbierto && (
           <>
             <label className="etiqueta">Selecciona un archivo:</label>
-<select
-  value={selectedFile}
-  onChange={(e) => {
-    setSelectedFile(e.target.value);
-    setModoCreacion(false);
-  }}
-  className="selector-archivo"
->
-  {/* Opción inicial neutra */}
-  <option value="">-- Selecciona un archivo para empezar --</option>
-  
-  {files.map((file) => (
-    <option key={file.filename} value={file.filename}>
-      {file.filename} ({file.author || "Desconocido"})
-    </option>
-  ))}
-</select>
+            <select
+              value={selectedFile}
+              onChange={(e) => {
+                setSelectedFile(e.target.value);
+                setModoCreacion(false);
+              }}
+              className="selector-archivo"
+            >
+              {/* Opción inicial neutra */}
+              <option value="">-- Selecciona un archivo para empezar --</option>
+
+              {files.map((file) => (
+                <option key={file.filename} value={file.filename}>
+                  {file.filename} ({file.author || "Desconocido"})
+                </option>
+              ))}
+            </select>
 
             <ExcelContent
               filename={selectedFile}
+              autor={usuario?.nombre}
               mostrarTabla={false}
               onSheetChange={setSelectedSheet}
             />
@@ -730,7 +804,6 @@ const cargarArchivos = async () => {
       </div>
 
       {/* ================= DERECHA: RESULTADOS ================= */}
-   {/* ================= DERECHA: RESULTADOS ================= */}
       <div className="calculadora-resultados">
         {modoCreacion ? (
           <TablaDinamica
@@ -740,22 +813,63 @@ const cargarArchivos = async () => {
             }}
           />
         ) : !resultado && !errorNumerico ? (
-          
           /* 🆕 ESTADO DE ESPERA: Ahora usa clases de CSS */
           <div className="contenedor-espera-logo">
-            <img 
-              src={escudoAdmin} 
-              alt="Escudo Administración de Empresas" 
+            <img
+              src={escudoAdmin}
+              alt="Escudo Administración de Empresas"
               className="logo-espera"
             />
           </div>
-
         ) : (
-          
           /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
           <div className="contenedor-resultados-vacio">
             <div className="frecuencias">
-              <h3>Resultados: {calculo.replace(/_/g, " ").toUpperCase()}</h3>
+              {/* 🆕 CABECERA CON BOTÓN EXPORTAR */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "15px",
+                }}
+              >
+                <h3 style={{ margin: 0 }}>
+                  Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
+                </h3>
+
+                
+<button 
+                      onClick={handleGuardarResultado}
+                      style={{
+                          backgroundColor: 'var(--primary-color)', /* Usa el azul/morado principal de tu app */
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 15px',
+                          borderRadius: '5px',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                      }}
+                    >
+                      💾 Guardar Cálculo
+                    </button>
+
+                    {/* Botón 2: Generar el PDF */}
+                    <button 
+                      onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
+                      style={{
+                          backgroundColor: '#d9534f', /* Rojo clásico PDF */
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 15px',
+                          borderRadius: '5px',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                      }}
+                    >
+                      📄 Exportar PDF
+                    </button>
+              </div>
 
               {errorNumerico && (
                 <div
@@ -778,13 +892,44 @@ const cargarArchivos = async () => {
 
               {resultado && (
                 <>
-                  {calculo === "regresion_simple" && resultado.tipo === "regresion" && <TablaRegresion resultado={resultado} />}
-                  {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && <TablaSeriesTiempo resultado={resultado} />}
-                  {calculo === "numeros_indices" && ["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo) && <TablaIndices resultado={resultado} />}
-                  {esBivariada && resultado.tipo === "distribucion_bivariada" && <TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} />}
-                  {esUnidimensional && (!resultado.tipo || ["tendencia_y_posicion", "variabilidad_y_forma", "estadistica_descriptiva"].includes(resultado.tipo)) && (
-                    <TablasUnidimensionales resultado={resultado} calculo={calculo} formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil} />
-                  )}
+                  {calculo === "regresion_simple" &&
+                    resultado.tipo === "regresion" && (
+                      <TablaRegresion resultado={resultado} />
+                    )}
+                  {calculo === "series_tiempo" &&
+                    resultado.tipo === "series_tiempo" && (
+                      <TablaSeriesTiempo resultado={resultado} />
+                    )}
+                  {calculo === "numeros_indices" &&
+                    [
+                      "indices_compuestos",
+                      "operaciones_indices",
+                      "deflacion_financiera",
+                    ].includes(resultado.tipo) && (
+                      <TablaIndices resultado={resultado} />
+                    )}
+                  {esBivariada &&
+                    resultado.tipo === "distribucion_bivariada" && (
+                      <TablasBivariantes
+                        resultado={resultado}
+                        formatearCelda={formatearCelda}
+                      />
+                    )}
+                  {esUnidimensional &&
+                    (!resultado.tipo ||
+                      [
+                        "tendencia_y_posicion",
+                        "variabilidad_y_forma",
+                        "estadistica_descriptiva",
+                      ].includes(resultado.tipo)) && (
+                      <TablasUnidimensionales
+                        resultado={resultado}
+                        calculo={calculo}
+                        formatearCelda={formatearCelda}
+                        filtroFractil={filtroFractil}
+                        setFiltroFractil={setFiltroFractil}
+                      />
+                    )}
                 </>
               )}
             </div>
@@ -792,7 +937,160 @@ const cargarArchivos = async () => {
             <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
           </div>
         )}
-      </div> 
-    </div> 
+      </div>
+
+      {/* ======================================================== */}
+      {/* 🆕 AQUÍ PEGAS EL COMPONENTE OCULTO (Antes de cerrar el div principal) */}
+      {/* ======================================================== */}
+      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+        <div
+          id="reporte-formal-pdf"
+          style={{
+            width: "8.5in",
+            minHeight: "11in",
+            padding: "0.8in",
+            backgroundColor: "white",
+            color: "black",
+            fontFamily: "Arial, sans-serif",
+          }}
+        >
+          {/* ENCABEZADO INSTITUCIONAL */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "2px solid #000",
+              paddingBottom: "10px",
+              marginBottom: "20px",
+            }}
+          >
+            <img src={escudoAdmin} style={{ width: "1in" }} alt="USFX" />
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <h2 style={{ margin: 0, fontSize: "16pt" }}>
+                UNIVERSIDAD DE SAN FRANCISCO XAVIER
+              </h2>
+              <h3 style={{ margin: 0, fontSize: "14pt" }}>
+                Facultad de Ciencias Económicas y Empresariales
+              </h3>
+              <p style={{ margin: 0, fontSize: "10pt" }}>
+                Carrera: Administración de Empresas
+              </p>
+            </div>
+            <div style={{ width: "1in" }}></div>
+          </div>
+
+          {/* DATOS DEL REPORTE */}
+          <div style={{ marginBottom: "20px" }}>
+            <h1
+              style={{
+                textAlign: "center",
+                textDecoration: "underline",
+                fontSize: "18pt",
+              }}
+            >
+              REPORTE ESTADÍSTICO
+            </h1>
+            <div
+              style={{
+                marginTop: "20px",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+                fontSize: "11pt",
+              }}
+            >
+              <p>
+                <strong>Responsable:</strong> Diego Armando Coa Veliz
+              </p>
+              <p>
+                <strong>Fecha:</strong> {new Date().toLocaleDateString()}
+              </p>
+              <p>
+                <strong>Cálculo:</strong>{" "}
+                {calculo.replace(/_/g, " ").toUpperCase()}
+              </p>
+              <p>
+                <strong>Sede:</strong> Sucre, Bolivia
+              </p>
+            </div>
+          </div>
+
+          {/* CONTENIDO (Inyectamos las tablas) */}
+          <div id="contenido-pdf-dinamico">
+            <p style={{ fontStyle: "italic", marginBottom: "15px" }}>
+              Este documento contiene el análisis estadístico detallado generado
+              por el sistema.
+            </p>
+
+            {/* Aquí repetimos los mismos if que dibujan las tablas, 
+                      para que se rendericen dentro del PDF */}
+            {resultado && (
+              <>
+                {calculo === "regresion_simple" &&
+                  resultado.tipo === "regresion" && (
+                    <TablaRegresion resultado={resultado} />
+                  )}
+                {calculo === "series_tiempo" &&
+                  resultado.tipo === "series_tiempo" && (
+                    <TablaSeriesTiempo resultado={resultado} />
+                  )}
+                {calculo === "numeros_indices" &&
+                  [
+                    "indices_compuestos",
+                    "operaciones_indices",
+                    "deflacion_financiera",
+                  ].includes(resultado.tipo) && (
+                    <TablaIndices resultado={resultado} />
+                  )}
+                {esBivariada && resultado.tipo === "distribucion_bivariada" && (
+                  <TablasBivariantes
+                    resultado={resultado}
+                    formatearCelda={formatearCelda}
+                  />
+                )}
+                {esUnidimensional &&
+                  (!resultado.tipo ||
+                    [
+                      "tendencia_y_posicion",
+                      "variabilidad_y_forma",
+                      "estadistica_descriptiva",
+                    ].includes(resultado.tipo)) && (
+                    <TablasUnidimensionales
+                      resultado={resultado}
+                      calculo={calculo}
+                      formatearCelda={formatearCelda}
+                      filtroFractil={filtroFractil}
+                      setFiltroFractil={setFiltroFractil}
+                    />
+                  )}
+
+                {/* También incluimos los gráficos para que salgan en el PDF */}
+                <PanelGraficos
+                  resultado={resultado}
+                  esIntervalo={esIntervalo}
+                />
+              </>
+            )}
+          </div>
+
+          {/* PIE DE PÁGINA */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: "0.8in",
+              left: "0.8in",
+              right: "0.8in",
+              borderTop: "1px solid #ccc",
+              paddingTop: "5px",
+              fontSize: "9pt",
+              textAlign: "center",
+            }}
+          >
+            Software Estadístico - Trabajo Dirigido USFX © 2026
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
