@@ -69,18 +69,25 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
     try {
         alerta.success("Generando reporte...", "Capturando gráficos y tablas...");
         
-        // 🆕 Ajustes para evitar cortes:
+        // 🆕 Ajustes para evitar cortes y mejorar renderizado de gráficos:
         const canvas = await html2canvas(input, {
-            scale: 2, // Alta calidad
+            scale: 2, 
             useCORS: true,
             backgroundColor: "#ffffff",
-            scrollY: -window.scrollY, // Evita desfases por scroll
-            windowHeight: input.scrollHeight, // Captura todo el alto interno
+            logging: false,
+            allowTaint: true,
+            removeContainer: true,
+            // Esperamos un poco para que Recharts termine de renderizar
+            delay: 300,
             onclone: (clonedDoc) => {
-                // Forzamos a que el elemento clonado sea visible para la captura
                 const el = clonedDoc.getElementById(elementId);
-                el.style.position = "static";
-                el.style.display = "block";
+                if (el) {
+                    el.style.position = "relative";
+                    el.style.display = "block";
+                    el.style.left = "0";
+                    el.style.top = "0";
+                    el.style.visibility = "visible";
+                }
             }
         });
 

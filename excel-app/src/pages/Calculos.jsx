@@ -949,7 +949,7 @@ const handleGuardarResultado = async () => {
       {/* ======================================================== */}
       {/* 🆕 AQUÍ PEGAS EL COMPONENTE OCULTO (Antes de cerrar el div principal) */}
       {/* ======================================================== */}
-      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+      <div style={{ position: "fixed", left: "200vw", top: "200vh", opacity: 0, pointerEvents: "none" }}>
         <div
           id="reporte-formal-pdf"
           style={{
@@ -1076,6 +1076,7 @@ const handleGuardarResultado = async () => {
                 <PanelGraficos
                   resultado={resultado}
                   esIntervalo={esIntervalo}
+                  calculo={calculo}
                 />
               </>
             )}
