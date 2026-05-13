@@ -60,6 +60,7 @@ export default function Calculos() {
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
   const [filtroFractil, setFiltroFractil] = useState("Cuartil");
   const [panelAbierto, setPanelAbierto] = useState(true);
+  const [modoCreacion, setModoCreacion] = useState(false);
 
   const {
     excelData,
@@ -186,9 +187,7 @@ export default function Calculos() {
     cargarArchivos();
   }, [usuario]);
 
-// Dentro de export default function Calculos() { ...
 
-// En src/pages/Calculos.jsx
 const handleGuardarResultado = async () => {
   if (!usuario) return;
   try {
@@ -783,6 +782,19 @@ const handleGuardarResultado = async () => {
             </div>
             <br />
             <br />
+            <br />
+            <button
+              onClick={() => setModoCreacion(!modoCreacion)}
+              className="button_resultados"
+              style={{
+                backgroundColor: modoCreacion
+                  ? "var(--text-muted)"
+                  : "var(--accent-color)",
+              }}
+            >
+              {modoCreacion ? "Volver a Resultados" : "Crear Tabla de Datos"}
+            </button>
+            <br />
             <button
               onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
               style={{ width: "100%", padding: "8px", background: "#6b7280" }}
@@ -816,10 +828,7 @@ const handleGuardarResultado = async () => {
             />
           </div>
         ) : (
-<<<<<<< HEAD
 
-=======
->>>>>>> diego/main
           /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
           <div className="contenedor-resultados-vacio">
             <div className="frecuencias">
