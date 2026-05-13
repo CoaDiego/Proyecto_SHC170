@@ -21,7 +21,7 @@ export default function MarcoWidget({ id, titulo, children, anchoCompleto = fals
   });
 
   return (
-    <div id={id} style={style} className={`widget-grafico ${isMaximized ? 'maximizada' : ''} ${isMinimized ? 'minimizada' : ''}`}>
+    <div id={id} style={style} className={`widget-grafico pdf-section ${isMaximized ? 'maximizada' : ''} ${isMinimized ? 'minimizada' : ''}`}>
       <div className="widget-header">
         <h4 className="widget-titulo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <IconoGrafico /> {titulo}

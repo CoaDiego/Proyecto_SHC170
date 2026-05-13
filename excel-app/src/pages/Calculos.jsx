@@ -963,6 +963,7 @@ const handleGuardarResultado = async () => {
         >
           {/* ENCABEZADO INSTITUCIONAL */}
           <div
+            className="pdf-section"
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -988,7 +989,7 @@ const handleGuardarResultado = async () => {
           </div>
 
           {/* DATOS DEL REPORTE */}
-          <div style={{ marginBottom: "20px" }}>
+          <div className="pdf-section" style={{ marginBottom: "20px" }}>
             <h1
               style={{
                 textAlign: "center",
@@ -1025,10 +1026,12 @@ const handleGuardarResultado = async () => {
 
           {/* CONTENIDO (Inyectamos las tablas) */}
           <div id="contenido-pdf-dinamico">
-            <p style={{ fontStyle: "italic", marginBottom: "15px" }}>
-              Este documento contiene el análisis estadístico detallado generado
-              por el sistema.
-            </p>
+            <div className="pdf-section">
+              <p style={{ fontStyle: "italic", marginBottom: "15px" }}>
+                Este documento contiene el análisis estadístico detallado generado
+                por el sistema.
+              </p>
+            </div>
 
             {/* Aquí repetimos los mismos if que dibujan las tablas, 
                       para que se rendericen dentro del PDF */}
@@ -1036,11 +1039,15 @@ const handleGuardarResultado = async () => {
               <>
                 {calculo === "regresion_simple" &&
                   resultado.tipo === "regresion" && (
-                    <TablaRegresion resultado={resultado} />
+                    <div className="pdf-section">
+                      <TablaRegresion resultado={resultado} />
+                    </div>
                   )}
                 {calculo === "series_tiempo" &&
                   resultado.tipo === "series_tiempo" && (
-                    <TablaSeriesTiempo resultado={resultado} />
+                    <div className="pdf-section">
+                      <TablaSeriesTiempo resultado={resultado} />
+                    </div>
                   )}
                 {calculo === "numeros_indices" &&
                   [
@@ -1048,13 +1055,17 @@ const handleGuardarResultado = async () => {
                     "operaciones_indices",
                     "deflacion_financiera",
                   ].includes(resultado.tipo) && (
-                    <TablaIndices resultado={resultado} />
+                    <div className="pdf-section">
+                      <TablaIndices resultado={resultado} />
+                    </div>
                   )}
                 {esBivariada && resultado.tipo === "distribucion_bivariada" && (
-                  <TablasBivariantes
-                    resultado={resultado}
-                    formatearCelda={formatearCelda}
-                  />
+                  <div className="pdf-section">
+                    <TablasBivariantes
+                      resultado={resultado}
+                      formatearCelda={formatearCelda}
+                    />
+                  </div>
                 )}
                 {esUnidimensional &&
                   (!resultado.tipo ||
@@ -1063,34 +1074,36 @@ const handleGuardarResultado = async () => {
                       "variabilidad_y_forma",
                       "estadistica_descriptiva",
                     ].includes(resultado.tipo)) && (
-                    <TablasUnidimensionales
-                      resultado={resultado}
-                      calculo={calculo}
-                      formatearCelda={formatearCelda}
-                      filtroFractil={filtroFractil}
-                      setFiltroFractil={setFiltroFractil}
-                    />
+                    <div className="pdf-section">
+                      <TablasUnidimensionales
+                        resultado={resultado}
+                        calculo={calculo}
+                        formatearCelda={formatearCelda}
+                        filtroFractil={filtroFractil}
+                        setFiltroFractil={setFiltroFractil}
+                      />
+                    </div>
                   )}
 
                 {/* También incluimos los gráficos para que salgan en el PDF */}
-                <PanelGraficos
-                  resultado={resultado}
-                  esIntervalo={esIntervalo}
-                  calculo={calculo}
-                />
+                <div>
+                  <PanelGraficos
+                    resultado={resultado}
+                    esIntervalo={esIntervalo}
+                    calculo={calculo}
+                  />
+                </div>
               </>
             )}
           </div>
 
           {/* PIE DE PÁGINA */}
           <div
+            className="pdf-section"
             style={{
-              position: "absolute",
-              bottom: "0.8in",
-              left: "0.8in",
-              right: "0.8in",
+              marginTop: "50px",
               borderTop: "1px solid #ccc",
-              paddingTop: "5px",
+              paddingTop: "10px",
               fontSize: "9pt",
               textAlign: "center",
             }}
