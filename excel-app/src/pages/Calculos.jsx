@@ -44,14 +44,13 @@ function textEditor({ row, column, onRowChange, onClose }) {
 }
 
 export default function Calculos() {
- const { variables, usuario } = useData();
+  const { variables, usuario } = useData();
 
   const [files, setFiles] = useState([]);
 
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedSheet, setSelectedSheet] = useState(0);
 
-  const [modoCreacion, setModoCreacion] = useState(false);
   const [mostrarTabla, _setMostrarTabla] = useState(true);
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
   const [filtroFractil, setFiltroFractil] = useState("Cuartil");
@@ -111,11 +110,11 @@ export default function Calculos() {
     return valor;
   };
 
-const cargarArchivos = async () => {
-    if (!usuario) return; 
-    
+  const cargarArchivos = async () => {
+    if (!usuario) return;
+
     try {
-      const data = await api.obtenerArchivos(usuario.nombre); 
+      const data = await api.obtenerArchivos(usuario.nombre);
       if (data && data.files) {
         setFiles(data.files);
         // Eliminamos la línea que seleccionaba el primer archivo automáticamente
@@ -123,11 +122,11 @@ const cargarArchivos = async () => {
     } catch (error) {
       console.error("Error al cargar archivos:", error);
     }
-};
+  };
 
   useEffect(() => {
     cargarArchivos();
-  }, [usuario]); 
+  }, [usuario]);
 
   useEffect(() => {
     cargarArchivos();
@@ -247,23 +246,23 @@ const cargarArchivos = async () => {
         {panelAbierto && (
           <>
             <label className="etiqueta">Selecciona un archivo:</label>
-<select
-  value={selectedFile}
-  onChange={(e) => {
-    setSelectedFile(e.target.value);
-    setModoCreacion(false);
-  }}
-  className="selector-archivo"
->
-  {/* Opción inicial neutra */}
-  <option value="">-- Selecciona un archivo para empezar --</option>
-  
-  {files.map((file) => (
-    <option key={file.filename} value={file.filename}>
-      {file.filename} ({file.author || "Desconocido"})
-    </option>
-  ))}
-</select>
+            <select
+              value={selectedFile}
+              onChange={(e) => {
+                setSelectedFile(e.target.value);
+                setModoCreacion(false);
+              }}
+              className="selector-archivo"
+            >
+              {/* Opción inicial neutra */}
+              <option value="">-- Selecciona un archivo para empezar --</option>
+
+              {files.map((file) => (
+                <option key={file.filename} value={file.filename}>
+                  {file.filename} ({file.author || "Desconocido"})
+                </option>
+              ))}
+            </select>
 
             <ExcelContent
               filename={selectedFile}
@@ -497,38 +496,38 @@ const cargarArchivos = async () => {
                       {(esBivariada ||
                         calculo === "regresion_simple" ||
                         calculo === "series_tiempo") && (
-                        <div
-                          style={{
-                            padding: "10px",
-                            border: "1px solid var(--border-color)",
-                            borderRadius: "4px",
-                            marginBottom: "15px",
-                            backgroundColor: "var(--bg-card)",
-                          }}
-                        >
-                          <label
+                          <div
                             style={{
-                              display: "block",
-                              marginBottom: "5px",
-                              fontWeight: "bold",
+                              padding: "10px",
+                              border: "1px solid var(--border-color)",
+                              borderRadius: "4px",
+                              marginBottom: "15px",
+                              backgroundColor: "var(--bg-card)",
                             }}
                           >
-                            {calculo === "series_tiempo"
-                              ? "Valores Históricos Y (Demanda/Ventas):"
-                              : "Variable Y (Dependiente):"}
-                          </label>
-                          <select
-                            value={selectedColumnY}
-                            onChange={(e) => setSelectedColumnY(e.target.value)}
-                            style={{ width: "100%", padding: "5px" }}
-                          >
-                            <option value="">
-                              -- Seleccionar Variable Y --
-                            </option>
-                            {renderOpcionesColumnas()}
-                          </select>
-                        </div>
-                      )}
+                            <label
+                              style={{
+                                display: "block",
+                                marginBottom: "5px",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {calculo === "series_tiempo"
+                                ? "Valores Históricos Y (Demanda/Ventas):"
+                                : "Variable Y (Dependiente):"}
+                            </label>
+                            <select
+                              value={selectedColumnY}
+                              onChange={(e) => setSelectedColumnY(e.target.value)}
+                              style={{ width: "100%", padding: "5px" }}
+                            >
+                              <option value="">
+                                -- Seleccionar Variable Y --
+                              </option>
+                              {renderOpcionesColumnas()}
+                            </select>
+                          </div>
+                        )}
                     </>
                   )}
 
@@ -616,54 +615,54 @@ const cargarArchivos = async () => {
                           calculo === "tendencia_central" ||
                           calculo === "tendencia_y_posicion" ||
                           calculo === "variabilidad_y_forma") && (
-                          <>
-                            <label>Tipo Intervalo:</label>
-                            <select
-                              value={tipoIntervalo}
-                              onChange={(e) => setTipoIntervalo(e.target.value)}
-                              className="container_select"
-                            >
-                              <option value="semiabierto">[a, b)</option>
-                              <option value="cerrado">[a, b]</option>
-                              <option value="abierto">(a, b)</option>
-                            </select>
-                            <label>Método K:</label>
-                            <select
-                              value={metodoK}
-                              onChange={(e) => setMetodoK(e.target.value)}
-                              className="container_select"
-                            >
-                              <option value="sturges">Sturges</option>
-                              <option value="cuadratica">Cuadrática</option>
-                              <option value="logaritmica">Logarítmica</option>
-                              <option value="personalizada">Manual</option>
-                            </select>
-                            {metodoK === "personalizada" && (
-                              <input
-                                type="number"
-                                value={kPersonalizado}
-                                onChange={(e) =>
-                                  setKPersonalizado(e.target.value)
-                                }
-                                placeholder="Valor k"
-                                className="container_cal_input"
-                              />
-                            )}
-                          </>
-                        )}
+                            <>
+                              <label>Tipo Intervalo:</label>
+                              <select
+                                value={tipoIntervalo}
+                                onChange={(e) => setTipoIntervalo(e.target.value)}
+                                className="container_select"
+                              >
+                                <option value="semiabierto">[a, b)</option>
+                                <option value="cerrado">[a, b]</option>
+                                <option value="abierto">(a, b)</option>
+                              </select>
+                              <label>Método K:</label>
+                              <select
+                                value={metodoK}
+                                onChange={(e) => setMetodoK(e.target.value)}
+                                className="container_select"
+                              >
+                                <option value="sturges">Sturges</option>
+                                <option value="cuadratica">Cuadrática</option>
+                                <option value="logaritmica">Logarítmica</option>
+                                <option value="personalizada">Manual</option>
+                              </select>
+                              {metodoK === "personalizada" && (
+                                <input
+                                  type="number"
+                                  value={kPersonalizado}
+                                  onChange={(e) =>
+                                    setKPersonalizado(e.target.value)
+                                  }
+                                  placeholder="Valor k"
+                                  className="container_cal_input"
+                                />
+                              )}
+                            </>
+                          )}
                         {(calculo === "medidas_posicion" ||
                           calculo === "tendencia_y_posicion") && (
-                          <div className="container_cal_percentil">
-                            <label>Percentil (1 - 99):</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="99"
-                              value={percentilK}
-                              onChange={(e) => setPercentilK(e.target.value)}
-                            />
-                          </div>
-                        )}
+                            <div className="container_cal_percentil">
+                              <label>Percentil (1 - 99):</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="99"
+                                value={percentilK}
+                                onChange={(e) => setPercentilK(e.target.value)}
+                              />
+                            </div>
+                          )}
                       </div>
                     )}
 
@@ -704,17 +703,6 @@ const cargarArchivos = async () => {
               )}
             </div>
             <br />
-            <button
-              onClick={() => setModoCreacion(!modoCreacion)}
-              className="button_resultados"
-              style={{
-                backgroundColor: modoCreacion
-                  ? "var(--text-muted)"
-                  : "var(--accent-color)",
-              }}
-            >
-              {modoCreacion ? "Volver a Resultados" : "Crear Tabla de Datos"}
-            </button>
             <br />
             <button
               onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
@@ -730,28 +718,21 @@ const cargarArchivos = async () => {
       </div>
 
       {/* ================= DERECHA: RESULTADOS ================= */}
-   {/* ================= DERECHA: RESULTADOS ================= */}
+      {/* ================= DERECHA: RESULTADOS ================= */}
       <div className="calculadora-resultados">
-        {modoCreacion ? (
-          <TablaDinamica
-            onTablaCreada={() => {
-              cargarArchivos();
-              setModoCreacion(false);
-            }}
-          />
-        ) : !resultado && !errorNumerico ? (
-          
+        {!resultado && !errorNumerico ? (
+
           /* 🆕 ESTADO DE ESPERA: Ahora usa clases de CSS */
           <div className="contenedor-espera-logo">
-            <img 
-              src={escudoAdmin} 
-              alt="Escudo Administración de Empresas" 
+            <img
+              src={escudoAdmin}
+              alt="Escudo Administración de Empresas"
               className="logo-espera"
             />
           </div>
 
         ) : (
-          
+
           /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
           <div className="contenedor-resultados-vacio">
             <div className="frecuencias">
@@ -789,10 +770,10 @@ const cargarArchivos = async () => {
               )}
             </div>
 
-            <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
+            <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} calculo={calculo} />
           </div>
         )}
-      </div> 
-    </div> 
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import { generarColorAleatorio } from '../utils/excelHelpers';
-import { alerta } from "../utils/Notificaciones";
+
+import {alerta} from "../utils/Notificaciones";
+
 
 export const useSimuladorLogic = (usuario) => {
   const [workbook, setWorkbook] = useState(null);
@@ -15,15 +17,17 @@ export const useSimuladorLogic = (usuario) => {
     if (!wb) return;
     setCurrentSheet(sheetName);
     const ws = wb.Sheets[sheetName];
+    // Convertimos la hoja a JSON usando la fila A como cabecera (letras)
     const data = XLSX.utils.sheet_to_json(ws, { header: "A", defval: "" }).slice(0, limite);
-    
-    console.log("📊 Filas extraídas del Excel:", data.length); // 👈 Chismoso para la consola
     setRowData(data);
   }, [limiteFilas]);
 
-  // 1. MÉTODO LOCAL (Restaurado a tu versión original que funcionaba)
+  // MODIFICADO: Ahora acepta el evento tradicional o un archivo directo
   const handleFileUpload = (e) => {
+    // Si viene de un drop manual (mockEvent), lo sacamos de target.files
+    // Si es un evento nativo de input, también está ahí.
     const file = e.target?.files ? e.target.files[0] : null;
+
     if (!file) return;
 
     const reader = new FileReader();
@@ -32,53 +36,58 @@ export const useSimuladorLogic = (usuario) => {
         const wb = XLSX.read(evt.target.result, { type: 'binary' });
         setWorkbook(wb);
         setSheetNames(wb.SheetNames);
-        setVariables([]); 
+        setVariables([]); // Limpiamos variables al cargar nuevo archivo
         cargarHoja(wb, wb.SheetNames[0], 50);
-        alerta.success("Archivo cargado", `"${file.name}" leído correctamente.`);
+        alerta.exito("Archivo cargado", `Se ha cargado el archivo "${file.name}" con éxito.`);
       } catch (error) {
-        console.error("Error local:", error);
-        alerta.error("Error", "No se pudo leer el archivo Excel.");
+        console.error("Error al leer el archivo Excel:", error);
+        alerta.error("Error de lectura", "No se pudo procesar el archivo Excel.");
       }
     };
     reader.readAsBinaryString(file);
   };
 
-  // 2. 🆕 NUEVO MÉTODO NUBE: Lee los bytes puros sin usar FileReader
-  const procesarBufferExcel = (buffer, fileName) => {
-    try {
-      // Leemos el buffer que nos manda FastAPI directamente
-      const data = new Uint8Array(buffer);
-      const wb = XLSX.read(data, { type: 'array' });
-      
-      if (wb.SheetNames.length === 0) throw new Error("Excel sin hojas");
 
-      setWorkbook(wb);
-      setSheetNames(wb.SheetNames);
-      setVariables([]);
-      cargarHoja(wb, wb.SheetNames[0], 50);
-      alerta.success("Sincronizado", `"${fileName}" cargado de tu nube.`);
-    } catch (error) {
-      console.error("Error de nube:", error);
-      alerta.error("Error", "El archivo de la nube está dañado o vacío.");
-    }
+
+  const agregarVariable = () => {
+    setVariables(prev => {
+      const nuevocolor = generarColorAleatorio(prev.length)
+
+      return [...prev, {
+        id: Date.now(),
+        nombre: `Variable ${prev.length + 1}`,
+        color: nuevocolor,
+        datos: [],
+        rangoLabel: "",
+        coords: null,
+        sheet: ""
+      }];
+    });
   };
 
-  const agregarVariable = () => { /* tu código actual */ };
-  const eliminarVariable = (id) => { /* tu código actual */ };
-  const actualizarVariable = (id, data) => { /* tu código actual */ };
+  const eliminarVariable = (id) => {
+    setVariables(prev => {
+        const variableAEliminar = prev.find(v => v.id === id);
+        alerta.advertencia("Variable eliminada", `Se borró "${variableAEliminar?.nombre}"`);
+        return prev.filter(v => v.id !== id);
+    });
+  };
+
+  const actualizarVariable = (id, data) => {
+    setVariables(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
+  };
 
   return {
-    usuario,
     workbook,
     sheetNames,
     currentSheet,
     rowData,
     variables,
     limiteFilas,
+    usuario,
     setVariables,
     setLimiteFilas,
     handleFileUpload,
-    procesarBufferExcel, // 👈 Exponemos la nueva función
     cargarHoja,
     agregarVariable,
     eliminarVariable,

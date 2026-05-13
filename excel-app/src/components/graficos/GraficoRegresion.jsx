@@ -3,9 +3,15 @@ import {
   ComposedChart, Scatter, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
-export default function GraficoRegresion({ resultado }) {
+export default function GraficoRegresion({ resultado, isMaximized = false }) {
   const mejorModelo = resultado.comparativa[0].tipoModelo;
-  
+
+  // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
+  const isMobile = window.innerWidth < 768;
+  const fontSmall = isMaximized && !isMobile ? 14 : 11;
+  const fontAxis = isMaximized && !isMobile ? 16 : 12;
+  const fontMed = isMaximized && !isMobile ? 18 : 14;
+
   // 1. Agregamos cuadratica y cubica al estado inicial
   const [lineasVisibles, setLineasVisibles] = useState({
     lineal: mejorModelo === 'lineal',
@@ -23,7 +29,7 @@ export default function GraficoRegresion({ resultado }) {
   const xVals = datosReales.map(d => d.x);
   const minX = Math.min(...xVals);
   const maxX = Math.max(...xVals);
-  
+
   const datosCurvas = [];
   const pasos = 100;
   const pasoX = (maxX - minX) / pasos;
@@ -53,10 +59,7 @@ export default function GraficoRegresion({ resultado }) {
   };
 
   return (
-    <div style={{ padding: '20px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)', marginTop: '20px' }}>
-      <h4 style={{ textAlign: 'center', marginBottom: '15px', color: 'var(--text-color)' }}>
-        Gráfico de Dispersión y Curvas de Ajuste
-      </h4>
+    <div style={{ width: "100%", height: "100%", display: 'flex', flexDirection: 'column', paddingTop: '10px' }}>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
         {listaModelos.map(tipo => {
@@ -65,7 +68,7 @@ export default function GraficoRegresion({ resultado }) {
 
           const color = colores[tipo];
           const esMejor = tipo === mejorModelo;
-          
+
           return (
             <button
               key={tipo}
@@ -87,23 +90,32 @@ export default function GraficoRegresion({ resultado }) {
         })}
       </div>
 
-      <div style={{ width: '100%', height: 450, backgroundColor: 'transparent', padding: '10px', borderRadius: '4px' }}>
-        <ResponsiveContainer>
-          <ComposedChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-            {/* Cuadrícula semi-transparente para modo oscuro/claro */}
-            <CartesianGrid stroke="rgba(128, 128, 128, 0.3)" strokeDasharray="3 3" vertical={true} horizontal={true} />
-            
-            <XAxis dataKey="x" type="number" domain={['auto', 'auto']} tick={{fill: 'var(--text-muted)'}} label={{ value: 'Variable X', position: 'bottom', offset: 0, fill: 'var(--text-color)' }} />
-            <YAxis tick={{fill: 'var(--text-muted)'}} label={{ value: 'Variable Y', angle: -90, position: 'left', fill: 'var(--text-color)' }} />
-            
+      {/* CONTENEDOR CENTRALIZADO Y LIMITADO EN ANCHO */}
+      <div style={{ flex: 1, width: '100%', minHeight: '350px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ width: '100%', maxWidth: isMaximized ? '1200px' : '1000px', height: isMaximized ? '90%' : '100%' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart margin={{ top: 20, right: 30, bottom: 40, left: 45 }}>
+              {/* Cuadrícula semi-transparente para modo oscuro/claro */}
+              <CartesianGrid stroke="var(--border-color)" strokeDasharray="3 3" opacity={0.5} vertical={true} horizontal={true} />
+
+              <XAxis 
+                dataKey="x" type="number" domain={['auto', 'auto']} 
+                tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} 
+                label={{ value: 'Variable X', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} 
+              />
+              <YAxis 
+                tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} 
+                label={{ value: 'Variable Y', angle: -90, position: 'insideLeft', offset: -30, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} 
+              />
+
             {/* Tooltip con fondo adaptativo */}
-            <Tooltip 
-              formatter={(value) => value.toFixed(4)} 
-              contentStyle={{backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}} 
-              itemStyle={{color: 'var(--text-color)'}}
+            <Tooltip
+              formatter={(value) => value.toFixed(4)}
+              contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '8px' }}
+              itemStyle={{ color: 'var(--text-main)', fontWeight: 'bold' }}
             />
-            
-            <Legend wrapperStyle={{ paddingTop: '20px', color: 'var(--text-color)' }} />
+
+            <Legend verticalAlign="bottom" align="center" wrapperStyle={{ bottom: 0, paddingBottom: '10px', color: 'var(--text-main)', fontSize: fontAxis, fontWeight: 'bold' }} iconType="circle" />
 
             <Scatter name="Datos Observados" data={datosReales} dataKey="yReal" fill="#ff0000" shape="circle" />
 
@@ -112,14 +124,15 @@ export default function GraficoRegresion({ resultado }) {
               if (lineasVisibles[tipo]) {
                 return (
                   <React.Fragment key={tipo}>
-                    <Line data={datosCurvas} type="monotone" dataKey={`y_${tipo}`} name={`Curva ${tipo}`} stroke={colores[tipo]} strokeWidth={3} dot={false} activeDot={false} />
+                    <Line data={datosCurvas} type="monotone" dataKey={`y_${tipo}`} name={`Curva ${tipo}`} stroke={colores[tipo]} strokeWidth={isMaximized ? 4 : 3} dot={false} activeDot={false} />
                   </React.Fragment>
                 );
               }
               return null;
             })}
-          </ComposedChart>
-        </ResponsiveContainer>
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

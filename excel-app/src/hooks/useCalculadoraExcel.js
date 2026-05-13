@@ -10,7 +10,7 @@ import * as IndicesMath from "../utils/estadisticaIndices";
 import { api } from "../services/api";
 
 export function useCalculadoraExcel(filename, sheet) {
-  const { variables } = useData();
+  const { variables, usuario } = useData();
   const [exceldataoriginal, setExcelDataOriginal] = useState([]);
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
@@ -42,11 +42,13 @@ export function useCalculadoraExcel(filename, sheet) {
   // 1. CARGA DESDE EL BACKEND
   useEffect(() => {
     if (!filename || sheet === "" || sheet === undefined) return;
+    if (!usuario) return; // Necesitamos el usuario para ubicar el archivo correcto
     const hojaIndex = Number(sheet);
+    const autorNombre = usuario.nombre;
 
     const caragarDatos = async () => {
       try {
-        const data = await api.obtenerDatosHoja(filename, hojaIndex);
+        const data = await api.obtenerDatosHoja(filename, hojaIndex, autorNombre);
         if (Array.isArray(data) && data.length > 0) {
           const headerRow = Object.keys(data[0]);
           setColumns(headerRow);
@@ -70,7 +72,7 @@ export function useCalculadoraExcel(filename, sheet) {
       }
     };
     caragarDatos();
-  }, [filename, sheet]);
+  }, [filename, sheet, usuario]);
 
   useEffect(() => {
     if (columns.length > 0 && selectedColumnY === "") {

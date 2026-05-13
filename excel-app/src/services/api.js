@@ -100,7 +100,7 @@ export const api = {
     try {
       const res = await fetch(`${BASE_URL}/upload`, {
         method: "POST",
-        body: formData, 
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok)
@@ -137,7 +137,7 @@ export const api = {
         `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`
       );
       if (!res.ok) throw new Error("No se pudo obtener el archivo del servidor");
-      
+
       // 🆕 Devolvemos el arrayBuffer (los bytes puros del archivo)
       return await res.arrayBuffer();
     } catch (error) {
@@ -180,6 +180,24 @@ export const api = {
       throw error;
     }
   },
+
+
+  descargarArchivoExcel: async (filename) => {
+    try {
+      const res = await fetch(`${BASE_URL}/files/${encodeURIComponent(filename)}`, {
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error("No se pudo descargar el archivo del servidor.");
+      // Retornamos directamente el ArrayBuffer
+      return await res.arrayBuffer();
+    } catch (error) {
+      console.error("Error en api.descargarArchivoExcel:", error);
+      throw error;
+    }
+  },
+
+
+
 };
 
 export default api;

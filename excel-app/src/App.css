@@ -185,7 +185,7 @@ nav ul li a.active {
 .main-navbar {
   display: flex;
   align-items: center;
-  padding: 15px 30px;
+  padding: 10px 15px;
   background-color: var(--bg-nav); /* Tu color naranja original */
   border-bottom: 1px solid var(--border-color);
   min-height: 70px;
@@ -299,7 +299,18 @@ nav ul li a.active {
 /* =========================================
    ESTILOS PARA CELULAR (MENÚ HAMBURGUESA)
    ========================================= */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .main-navbar {
+    padding: 0 15px;
+    height: 60px;
+    min-height: 60px;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    max-height: 35px;
+    height: 35px;
+  }
 
   /* 1. Mostrar las 3 líneas */
   .hamburger-menu {
@@ -317,9 +328,8 @@ nav ul li a.active {
   .hamburger-menu .bar {
     width: 25px;
     height: 3px;
-    background-color: var(--text-main, #1e293b);
+    background-color: white; /* Blanco para contrastar con el naranja */
     border-radius: 3px;
-    /*transition: all 0.3s ease-in-out;*/
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; 
   }
 
@@ -349,8 +359,8 @@ nav ul li a.active {
     padding: 20px 0;
     gap: 20px;
     border-bottom: 1px solid var(--border-color);
-    border-top: 3px solid var(--border-color);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
     z-index: 99;
 
     /* El truco para ocultarlo y mostrarlo con animación */
@@ -379,7 +389,30 @@ nav ul li a.active {
 
   .nav-theme {
     margin: 0;
-    /* Centra el botón también */
+  }
+
+  .menu-derecha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 10px;
+    margin-left: auto; /* Empuja a la derecha */
+  }
+
+  .user-name-text {
+    display: inline-block; /* Volver a mostrar el nombre como en la imagen */
+    font-size: 0.8rem;
+    color: #213547;
+  }
+
+  .perfil-usuario-menu {
+    padding: 4px 10px 4px 4px;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 }
 

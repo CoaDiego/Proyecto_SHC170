@@ -10,7 +10,7 @@ export default function GraficoBivariado({ datos, tipo }) {
   // 1. Lógica para el Diagrama de Dispersión
   if (tipo === "dispersion" && datos.ambosNumericos && datos.rawDataX) {
     const datosScatter = datos.rawDataX.map((x, i) => ({ x: x, y: datos.rawDataY[i] }));
-    
+
     return (
       <div style={{ width: "100%", height: "100%", display: 'flex', flexDirection: 'column' }}>
         <p style={{ textAlign: 'center', fontFamily: 'Times New Roman', color: 'var(--text-muted)', marginBottom: '5px' }}>
@@ -19,18 +19,18 @@ export default function GraficoBivariado({ datos, tipo }) {
         <ResponsiveContainer width="100%" height="90%">
           <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color, #e0e0e0)" />
-            <XAxis 
-              type="number" dataKey="x" name={datos.nombreX || "Variable X"} 
-              domain={['auto', 'auto']} tick={{ fill: 'var(--text-main)' }} 
+            <XAxis
+              type="number" dataKey="x" name={datos.nombreX || "Variable X"}
+              domain={['auto', 'auto']} tick={{ fill: 'var(--text-main)' }}
             />
-            <YAxis 
-              type="number" dataKey="y" name={datos.nombreY || "Variable Y"} 
-              domain={['auto', 'auto']} tick={{ fill: 'var(--text-main)' }} 
+            <YAxis
+              type="number" dataKey="y" name={datos.nombreY || "Variable Y"}
+              domain={['auto', 'auto']} tick={{ fill: 'var(--text-main)' }}
             />
-            <ZAxis range={[60, 60]} /> 
-            <Tooltip 
-              cursor={{ strokeDasharray: '3 3' }} 
-              contentStyle={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', borderColor: 'var(--border-color)' }} 
+            <ZAxis range={[60, 60]} />
+            <Tooltip
+              cursor={{ strokeDasharray: '3 3' }}
+              contentStyle={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', borderColor: 'var(--border-color)' }}
             />
             <Scatter name="Puntos de Dato" data={datosScatter} fill="#4b5563" />
           </ScatterChart>
@@ -64,16 +64,16 @@ export default function GraficoBivariado({ datos, tipo }) {
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={dataGrafico} margin={{ top: 30, right: 30, left: 10, bottom: 20 }} barSize={isStacked ? 50 : 30}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color, #e0e0e0)" />
-        <XAxis 
-          dataKey="name" 
-          tick={{ fill: 'var(--text-main)' }} 
-          axisLine={{ stroke: 'var(--text-main)' }} 
-          tickLine={{ stroke: 'var(--text-main)' }} 
+        <XAxis
+          dataKey="name"
+          tick={{ fill: 'var(--text-main)' }}
+          axisLine={{ stroke: 'var(--text-main)' }}
+          tickLine={{ stroke: 'var(--text-main)' }}
         />
-        <YAxis 
-          tick={{ fill: 'var(--text-main)' }} 
-          axisLine={{ stroke: 'var(--text-main)' }} 
-          tickLine={{ stroke: 'var(--text-main)' }} 
+        <YAxis
+          tick={{ fill: 'var(--text-main)' }}
+          axisLine={{ stroke: 'var(--text-main)' }}
+          tickLine={{ stroke: 'var(--text-main)' }}
           label={{ value: ejeYLabel, angle: -90, position: 'insideLeft', style: { fill: 'var(--text-main)' } }}
           tickFormatter={(val) => isStacked ? `${val}%` : val}
           domain={isStacked ? [0, 100] : [0, 'auto']}

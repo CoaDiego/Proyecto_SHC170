@@ -35,9 +35,15 @@ const EmptyShape = () => <g></g>;
 // ==========================================
 // COMPONENTE PRINCIPAL EXPORTADO
 // ==========================================
-export default function GraficoDispersionForma({ tipo, resultado }) {
+export default function GraficoDispersionForma({ tipo, resultado, isMaximized = false }) {
   if (!resultado || !resultado.graficos) return null;
   const { estadisticas, graficos } = resultado;
+
+  // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
+  const isMobile = window.innerWidth < 768;
+  const fontSmall = isMaximized && !isMobile ? 16 : 11;
+  const fontMed = isMaximized && !isMobile ? 20 : 14;
+  const fontAxis = isMaximized && !isMobile ? 14 : 12;
 
   // ------------------------------------------
   // 1. DIBUJAR BOXPLOT ACADÉMICO (Método Nativo INFALIBLE)
@@ -59,28 +65,37 @@ export default function GraficoDispersionForma({ tipo, resultado }) {
     // Puntos atípicos flotantes
     const outliersData = outliers ? outliers.map(o => ({ x: o, y: 1 })) : [];
 
+    const ticksX = [minAdyacente, q1, mediana, q3, maxAdyacente];
+
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <ComposedChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} />
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart margin={{ top: 50, right: 30, bottom: 20, left: 30 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} opacity={0.2} />
           {/* Ejes numéricos reales */}
-          <XAxis type="number" dataKey="x" domain={[minDomain, maxDomain]} name="Valores" tickFormatter={tick => tick.toFixed(1)} />
+          <XAxis type="number" dataKey="x" domain={[minDomain, maxDomain]} name="Valores" ticks={ticksX} tick={{ fontSize: fontAxis, fontWeight: 'bold', fill: 'var(--text-variable)' }} tickFormatter={tick => tick.toFixed(2)} stroke="var(--text-variable)" />
           <YAxis type="number" dataKey="y" domain={[0, 2]} hide />
           
           <Tooltip content={<BoxplotTooltip estadisticas={estadisticas} />} cursor={{strokeDasharray: '3 3'}} />
           
+          {/* Etiquetas con variables CSS para Modo Oscuro */}
+          <ReferenceLine x={minAdyacente} stroke="var(--border-color)" strokeDasharray="3 3" label={{ value: 'Min', position: 'top', fill: 'var(--text-variable)', fontSize: fontSmall, fontWeight: 'bold', dy: -10 }} />
+          <ReferenceLine x={maxAdyacente} stroke="var(--border-color)" strokeDasharray="3 3" label={{ value: 'Max', position: 'top', fill: 'var(--text-variable)', fontSize: fontSmall, fontWeight: 'bold', dy: -10 }} />
+          <ReferenceLine x={q1} stroke="#0099ff" strokeDasharray="3 3" label={{ value: 'Q1', position: 'top', fill: 'var(--text-main)', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
+          <ReferenceLine x={mediana} stroke="#f93b3b" strokeDasharray="3 3" label={{ value: 'Me', position: 'top', fill: '#e74c3c', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
+          <ReferenceLine x={q3} stroke="#0099ff" strokeDasharray="3 3" label={{ value: 'Q3', position: 'top', fill: 'var(--text-main)', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
+
           {/* 1. LA CAJA CENTRAL (Usa área nativa de Recharts) */}
-          <ReferenceArea x1={q1} x2={q3} y1={0.7} y2={1.3} fill="rgba(52, 152, 219, 0.3)" stroke="#3498db" strokeWidth={2} />
+          <ReferenceArea x1={q1} x2={q3} y1={0.7} y2={1.3} fill="rgba(52, 152, 219, 0.2)" stroke="#3498db" strokeWidth={isMaximized ? 3 : 2} />
 
           {/* 2. LOS BIGOTES Y LÍNEAS (Usan conexiones nativas de Scatter) */}
-          <Scatter data={whiskerData} line={{ stroke: '#3498db', strokeWidth: 2 }} shape={<EmptyShape />} isAnimationActive={false} />
-          <Scatter data={leftStopperData} line={{ stroke: '#3498db', strokeWidth: 2 }} shape={<EmptyShape />} isAnimationActive={false} />
-          <Scatter data={rightStopperData} line={{ stroke: '#3498db', strokeWidth: 2 }} shape={<EmptyShape />} isAnimationActive={false} />
-          <Scatter data={medianData} line={{ stroke: '#e74c3c', strokeWidth: 3 }} shape={<EmptyShape />} isAnimationActive={false} />
+          <Scatter data={whiskerData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
+          <Scatter data={leftStopperData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
+          <Scatter data={rightStopperData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
+          <Scatter data={medianData} line={{ stroke: '#e74c3c', strokeWidth: isMaximized ? 4 : 3 }} shape={<EmptyShape />} isAnimationActive={false} />
 
           {/* 3. VALORES ATÍPICOS (Puntos Rojos) */}
           {outliersData.length > 0 && (
-            <Scatter data={outliersData} fill="#e74c3c" shape="circle" isAnimationActive={false} />
+            <Scatter data={outliersData} fill="#e74c3c" shape="circle" isAnimationActive={true} />
           )}
           
           {/* Truco: Punto invisible en la caja para que el Tooltip reaccione fácilmente al pasar el mouse */}
@@ -94,15 +109,23 @@ export default function GraficoDispersionForma({ tipo, resultado }) {
   // 2. DIBUJAR HISTOGRAMA + CAMPANA DE GAUSS
   // ------------------------------------------
   if (tipo === "campana") {
+    const maxFrecuencia = Math.max(...graficos.histograma.map(g => g.frecuencia));
+    const limiteEjeY = Math.ceil(maxFrecuencia * 2) / 2 + 0.5;
+
+    const ticksEjeY = [];
+    for (let i = 0; i <= limiteEjeY; i = parseFloat((i + 0.5).toFixed(1))) {
+      ticksEjeY.push(i);
+    }
+
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <ComposedChart data={graficos.histograma} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="rango" label={{ value: 'Intervalos', position: 'insideBottom', offset: -10 }} />
-          <YAxis label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft' }} />
-          <Tooltip formatter={(value, name) => [value.toFixed(2), name]} />
-          <Bar dataKey="frecuencia" fill="#3498db" name="Frecuencia Observada" barSize={50} />
-          <Line type="linear" dataKey="curvaNormal" stroke="#e74c3c" strokeWidth={3} dot={false} name="Curva Normal Teórica" />
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={graficos.histograma} margin={{ top: 15, right: 20, left: 10, bottom: 25 }}>
+          <CartesianGrid strokeDasharray="3 3" opacity={0.4} />
+          <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: 'Intervalos', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontWeight: 'bold' }} />
+          <YAxis stroke="var(--text-variable)" ticks={ticksEjeY} domain={[0, limiteEjeY]} interval={0} tickFormatter={(valor) => valor.toString().replace('.', ',')} tick={{ fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }} label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft', fill: 'var(--text-variable)', fontWeight: 'bold', style: { textAnchor: 'middle', fontSize: fontMed } }} />
+          <Tooltip cursor={{ fill: 'var(--border-color)', opacity: 0.2 }} contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '5px' }} formatter={(value, name) => [value.toFixed(2), name]} />
+          <Bar dataKey="frecuencia" fill="#3498db" name="Frecuencia Observada" barSize={isMaximized ? 80 : 50} radius={[4, 4, 0, 0]} />
+          <Line type="linear" dataKey="curvaNormal" stroke="#e74c3c" strokeWidth={isMaximized ? 5 : 3} dot={false} name="Curva Normal Teórica" />
         </ComposedChart>
       </ResponsiveContainer>
     );
@@ -113,14 +136,14 @@ export default function GraficoDispersionForma({ tipo, resultado }) {
   // ------------------------------------------
   if (tipo === "desviaciones") {
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={graficos.desviaciones} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={graficos.desviaciones} margin={{ top: 15, right: 20, left: 15, bottom: 25 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="id" hide /> 
-          <YAxis label={{ value: 'Distancia a la Media', angle: -90, position: 'insideLeft' }} />
+          <XAxis dataKey="id" hide stroke="var(--text-variable)" />
+          <YAxis stroke="var(--text-variable)" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }} label={{ value: 'Distancia a la Media', angle: -90, position: 'insideLeft', fill: 'var(--text-variable)', fontWeight: 'bold', fontSize: fontMed, style: { textAnchor: 'middle' } }} />
           <Tooltip formatter={(value, name, props) => [`${value.toFixed(2)}`, `Valor real: ${props.payload.valor}`]} />
           
-          <ReferenceLine y={0} stroke="#2c3e50" strokeWidth={3} label="Media (x̄)" />
+          <ReferenceLine y={0} stroke="var(--text-main)" strokeWidth={isMaximized ? 3 : 2} label={{ value: "Media (x̄)", fill: 'var(--text-main)' }} />
           
           <Bar dataKey="desviacion" name="Desviación de la Media">
             {graficos.desviaciones.map((entry, index) => (
