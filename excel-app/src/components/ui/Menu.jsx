@@ -23,6 +23,7 @@ export default function Menu({ usuario }) {
           <li><NavLink to="/archivos" onClick={closeMenu}>Archivos</NavLink></li>
           <li><NavLink to="/calculadora" onClick={closeMenu}>Calculadora</NavLink></li>
           <li><NavLink to="/MAT251" onClick={closeMenu}>MAT-251</NavLink></li>
+          <li><NavLink to="/historial" onClick={closeMenu}>Historial</NavLink></li>
           <li><NavLink to="/about" onClick={closeMenu}>Sobre la App</NavLink></li>
         </ul>
       </div>
@@ -37,7 +38,10 @@ export default function Menu({ usuario }) {
           <div 
             className="perfil-usuario-menu" 
             title={`${usuario.nombre} - ${usuario.rol}`}
-            onClick={() => navigate('/perfil')}
+            onClick={() => {
+              navigate('/perfil');
+              closeMenu();
+            }}
           >
             <div className="avatar-naranja">
               {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
@@ -57,7 +61,6 @@ export default function Menu({ usuario }) {
         <span className="bar"></span>
         <span className="bar"></span>
       </button>
-
     </nav>
   );
 }

@@ -17,6 +17,7 @@ import Perfil from "./pages/Perfil";
 import { DataProvider } from "./components/excel/DataContext"; 
 
 import LtiTester from "./pages/LtiTester";
+import Historial from "./pages/Historial";
 
 import "./App.css"; 
 
@@ -66,6 +67,7 @@ function App() {
                   <Route path="/" element={<Inicio />} />
                   <Route path="/archivos" element={<Archivos usuario={usuario} />} />
                   <Route path="/calculadora" element={<Calculadora />} />
+                  <Route path="/historial" element={<Historial />} />
                   <Route path="/about" element={<About />} />
 
                   <Route path="/lti-tester" element={<Navigate to="/" />} />

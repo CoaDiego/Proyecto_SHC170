@@ -1,5 +1,6 @@
 import React from "react";
 import Latex from "../excel/Latex";
+import { copiarTablaAExcel } from "../../utils/exportUtils";
 
 export default function TablasUnidimensionales({ 
   resultado, calculo, formatearCelda, filtroFractil, setFiltroFractil 
@@ -158,8 +159,9 @@ export default function TablasUnidimensionales({
   // =========================================================
   // --- CASO 3: TABLAS SIMPLES (Frecuencias, Intervalos) ---
   // =========================================================
-  if (Array.isArray(resultado)) {
+ /*  if (Array.isArray(resultado)) {
     return (
+      
       <div style={{ overflowX: "auto" }}>
         <table className="tabla-academica">
           <thead>
@@ -192,6 +194,75 @@ export default function TablasUnidimensionales({
             ))}
           </tbody>
         </table>
+      </div>
+    );
+  } */
+
+  // =========================================================
+  // --- CASO 3: TABLAS SIMPLES (Frecuencias, Intervalos) ---
+  // =========================================================
+  if (Array.isArray(resultado)) {
+    return (
+      <div>
+        {/* 🆕 BOTÓN DE COPIADO ALINEADO A LA DERECHA */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+          <button 
+            /* Pasamos 'resultado' directo porque en este caso es un Array puro */
+            data-html2canvas-ignore="true"
+            onClick={() => copiarTablaAExcel(resultado, calculo)}
+            style={{
+              backgroundColor: '#107c41', /* Verde Excel */
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+            title="Copiar datos puros para Excel"
+          >
+            <span style={{ fontSize: '1.1rem' }}>📋</span> Copiar Tabla
+          </button>
+        </div>
+
+        {/* TU TABLA ORIGINAL SE MANTIENE INTACTA AQUÍ ABAJO */}
+        <div style={{ overflowX: "auto" }}>
+          <table className="tabla-academica">
+            <thead>
+              <tr>
+                {Object.keys(resultado[0]).map((key) => (
+                  <th key={key}>
+                    {key === "f_i" || key === "fi" ? <Latex formula="f_i" /> :
+                     key === "p_i" ? <Latex formula="p_i \%" /> :
+                     key === "F_i" ? <Latex formula="F_i" /> :
+                     key === "P_i" ? <Latex formula="P_i \%" /> :
+                     key === "x_i" ? <Latex formula="x_i" /> :
+                     key === "F_i_inv" || key === "F'i" ? <Latex formula="F^{\uparrow}_i" /> :
+                     key === "P_i_inv" || key === "P'i" ? <Latex formula="P^{\uparrow}_i \%" /> : key}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {resultado.map((row, i) => (
+                <tr key={i}>
+                  {Object.entries(row).map(([key, val], j) => (
+                    <td 
+                      key={j} 
+                      className={key.includes("Total") ? "celda-total" : ""}
+                    >
+                      {formatearCelda(val)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }
