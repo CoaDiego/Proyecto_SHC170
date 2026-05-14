@@ -93,3 +93,22 @@
     align-items: center;
     min-height: 200px;
 }
+
+/* Ajustes para dispositivos pequeños */
+@media (max-width: 768px) {
+    .page-container {
+        padding: 0px; 
+        width: 100%;
+    }
+
+    .upload-section_container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .panel-section_1,
+    .panel-section_2 {
+        max-width: 100%;
+        flex: 1 1 100%;
+    }
+}
