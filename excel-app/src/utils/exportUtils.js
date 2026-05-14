@@ -67,24 +67,8 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
     if (!input) return;
 
     try {
-        alerta.success("Generando reporte...", "Capturando gráficos y tablas...");
+        alerta.success("Generando reporte...", "Calculando paginación inteligente...");
         
-        // 🆕 Ajustes para evitar cortes:
-        const canvas = await html2canvas(input, {
-            scale: 2, // Alta calidad
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            scrollY: -window.scrollY, // Evita desfases por scroll
-            windowHeight: input.scrollHeight, // Captura todo el alto interno
-            onclone: (clonedDoc) => {
-                // Forzamos a que el elemento clonado sea visible para la captura
-                const el = clonedDoc.getElementById(elementId);
-                el.style.position = "static";
-                el.style.display = "block";
-            }
-        });
-
-        const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'in',
@@ -92,29 +76,52 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
         });
 
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgProps = pdf.getImageProperties(imgData);
-        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const margin = 0.5; // Margen de 0.5 pulgadas
+        const contentWidth = pdfWidth - (margin * 2);
+        
+        // 1. Buscamos todas las secciones marcadas
+        const secciones = input.querySelectorAll('.pdf-section');
+        let currentY = margin;
 
-        let heightLeft = imgHeight;
-        let position = 0;
+        for (let i = 0; i < secciones.length; i++) {
+            const seccion = secciones[i];
+            
+            // Capturamos solo esta sección
+            const canvas = await html2canvas(seccion, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+                logging: false,
+                onclone: (clonedDoc) => {
+                    // Aseguramos que la sección sea visible y tenga el ancho correcto en el clon
+                    const el = clonedDoc.getElementById(seccion.id) || clonedDoc.querySelector(`[class*="${seccion.className}"]`);
+                    if (el) {
+                        el.style.display = "block";
+                        el.style.width = "800px";
+                    }
+                }
+            });
 
-        // Primera página
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pageHeight;
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgHeight = (imgProps.height * contentWidth) / imgProps.width;
 
-        // Páginas adicionales si el reporte es muy largo
-        while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pageHeight;
+            // 2. ¿Cabe en la página actual?
+            if (currentY + imgHeight > pdfHeight - margin) {
+                pdf.addPage();
+                currentY = margin; // Reiniciamos en la nueva página
+            }
+
+            // 3. Añadimos la sección
+            pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
+            currentY += imgHeight + 0.2; // Espacio de 0.2in entre secciones
         }
 
         pdf.save(`${nombreArchivo}.pdf`);
-        alerta.exito("PDF Guardado", "El reporte se ha generado sin cortes.");
+        alerta.exito("PDF Guardado", "Reporte generado con paginación perfecta.");
     } catch (error) {
-        console.error(error);
+        console.error("Error al generar PDF:", error);
         alerta.error("Error PDF", "No se pudo generar el archivo.");
     }
 };

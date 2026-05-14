@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
 import escudoAdmin from "../../assets/images/Logo-Adm.png";
 
-// 🆕 Recibimos la variable 'usuario' que nos mandó App.jsx
 export default function Menu({ usuario }) {
   const [isOpen, setIsOpen] = useState(false);
   const closeMenu = () => setIsOpen(false);
@@ -17,21 +16,8 @@ export default function Menu({ usuario }) {
        <img src={escudoAdmin} alt="Escudo Administración" className="nav-logo" />
       </div>
 
-      {/* 2. BOTÓN DE HAMBURGUESA */}
-      <button 
-        className={`hamburger-menu ${isOpen ? "open" : ""}`} 
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Abrir menú"
-      >
-        <span className="bar"></span>
-        <span className="bar"></span>
-        <span className="bar"></span>
-      </button>
-
-      {/* 3. CONTENEDOR DESPLEGABLE */}
+      {/* 2. CONTENEDOR DESPLEGABLE - Se posiciona absoluto en móvil */}
       <div className={`nav-menu ${isOpen ? "active" : ""}`}>
-        
-        {/* Enlaces */}
         <ul className="nav-links">
           <li><NavLink to="/" onClick={closeMenu}>Inicio</NavLink></li>
           <li><NavLink to="/archivos" onClick={closeMenu}>Archivos</NavLink></li>
@@ -41,33 +27,47 @@ export default function Menu({ usuario }) {
           <li><NavLink to="/about" onClick={closeMenu}>Sobre la App</NavLink></li>
         </ul>
 
-      {/* 🆕 ZONA DERECHA: Tema + Usuario acoplados juntos */}
-        <div className="menu-derecha">
-          
-          <div className="nav-theme">
-            <OscuroClaro />
-          </div>
+        {/* MÓVIL: El tema se queda aquí dentro para ganar espacio arriba */}
+        <div className="nav-menu-mobile-extra mobile-only">
+          <OscuroClaro />
+        </div>
+      </div>
 
-          {/* El botón de perfil compacto (Limpio y llamando al CSS) */}
-          {usuario && (
-            <div 
-           className="perfil-usuario-menu" 
-           title={`${usuario.nombre} - ${usuario.rol}`}
-           onClick={() => {
-             navigate('/perfil');
-             closeMenu(); // Cierra el menú en celulares al hacer clic
-           }}
-         >
-              <div className="avatar-naranja">
-                {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
-              </div>
-              <span>{usuario.nombre.split(' ')[0]}</span>
-            </div>
-          )}
-
+      {/* 3. ZONA DERECHA: Siempre visible (Usuario) + Tema solo en Desktop */}
+      <div className="menu-derecha">
+        <div className="nav-theme desktop-only">
+          <OscuroClaro />
         </div>
 
+        {usuario && (
+          <div 
+            className="perfil-usuario-menu" 
+            title={`${usuario.nombre} - ${usuario.rol}`}
+            onClick={() => {
+              navigate('/perfil');
+              closeMenu();
+            }}
+          >
+            <div className="avatar-naranja">
+              {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
+            </div>
+            <span className="user-name-text">
+              {usuario.nombre?.split(' ')[0] || 'Usuario'}
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* 4. BOTÓN DE HAMBURGUESA */}
+      <button 
+        className={`hamburger-menu ${isOpen ? "open" : ""}`} 
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Abrir menú"
+      >
+        <span className="bar"></span>
+        <span className="bar"></span>
+        <span className="bar"></span>
+      </button>
     </nav>
   );
 }

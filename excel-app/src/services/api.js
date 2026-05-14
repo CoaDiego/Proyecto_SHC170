@@ -2,6 +2,10 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 //Base url de Render
 /* const BASE_URL = "https://api-admin-shc170.onrender.com"; */
 
+//uvicorn main:app --reload
+
+
+
 export const api = {
   // --- Función para leer la hoja de Excel ---
   // 🆕 Añadimos el parámetro 'autor'
@@ -182,6 +186,21 @@ export const api = {
       throw error;
     }
   },
+
+  descargarArchivoExcel: async (filename) => {
+    try {
+      const res = await fetch(`${BASE_URL}/files/${encodeURIComponent(filename)}`, {
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error("No se pudo descargar el archivo del servidor.");
+      // Retornamos directamente el ArrayBuffer
+      return await res.arrayBuffer();
+    } catch (error) {
+      console.error("Error en api.descargarArchivoExcel:", error);
+      throw error;
+    }
+  },
+
   // --- GUARDAR EN HISTORIAL ---
   guardarEnHistorial: async (autor, calculo, archivo, colX, colY, hoja) => {
     try {
@@ -199,6 +218,7 @@ export const api = {
       });
       return await res.json();
     } catch (error) {
+      console.error("Error en api.guardarEnHistorial:", error);
       throw error;
     }
   },

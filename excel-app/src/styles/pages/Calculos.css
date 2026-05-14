@@ -99,6 +99,42 @@
   transition: padding 0.3s ease;
 }
 
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-icon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+  filter: brightness(1.1);
+}
+
+.contenedor-resultados-vacio {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.barra-acciones-final {
+  margin-top: 30px;
+  padding: 25px;
+  border-top: 1px dashed var(--border-color);
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  background-color: rgba(128, 128, 128, 0.03);
+}
+
 .calculadora-layout.colapsado .calculadora-datos {
   padding: 0px;
   border: none;
@@ -324,7 +360,8 @@
 
 .logo-espera {
   width: 550px;
-  max-width: 80%; /* Para que sea responsivo */
+  max-width: 80%;
+  /* Para que sea responsivo */
   height: auto;
   pointer-events: none;
   /* Sombra sutil para modo claro */
@@ -336,6 +373,33 @@
 body.dark-mode .logo-espera {
   /* En modo oscuro, le damos un brillo sutil en lugar de sombra negra */
   filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.2));
+}
+
+/* ======================================================= */
+/* MAGIA RESPONSIVA PARA TABLAS EN CELULARES               */
+/* ======================================================= */
+@media (max-width: 768px) {
+  .tabla-academica {
+    font-size: 0.85em;
+    /* Achicamos la letra de las tablas en celulares */
+  }
+
+  .tabla-academica th,
+  .tabla-academica td {
+    padding: 4px;
+    /* Reducimos el relleno interno para que quepan más datos */
+    font-size: 0.9em;
+  }
+
+  .frecuencias {
+    padding: 10px;
+    /* Reducimos el relleno del contenedor blanco de resultados */
+  }
+
+  .container_tablas_academica {
+    margin-bottom: 15px;
+    /* Menos espacio muerto debajo de las tablas */
+  }
 }
 
 /* Estilos para la tabla de historial */

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { copiarTablaAExcel } from "../../utils/exportUtils";
+import { IconoCopiar } from "../ui/iconos";
 
 export default function TablaIndices({ resultado }) {
   const [mostrarDetalles, setMostrarDetalles] = useState(false);
@@ -11,6 +13,16 @@ export default function TablaIndices({ resultado }) {
   if (resultado.tipo === "indices_compuestos") {
     return (
       <div style={{ padding: '15px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)', marginTop: '15px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+          <button 
+            className="btn-icon"
+            onClick={() => copiarTablaAExcel(resultado.detalles, "indices_compuestos")}
+            style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+            title="Copiar datos puros para Excel"
+          >
+            <IconoCopiar /> Copiar Tabla
+          </button>
+        </div>
         
         {/* Tarjetas de Resultados (Ahora son 4) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '20px' }}>

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import Datos from "../Datos";
-import { DataProvider } from "../../components/excel/DataContext";
 import { useCalculadoraExcel } from "../../hooks/useCalculadoraExcel";
-import Tema1 from '../../components/MAT251/Temas/Tema1';
+import Principal from '../../components/MAT251/Principal/Principal';
+import "../../styles/pages/MAT251/Pantalla.css";
 
 export default function Pantalla() {
   const [pestanaActiva, setPestanaActiva] = useState(0);
@@ -22,45 +22,23 @@ export default function Pantalla() {
   ];*/
 
   const nombresVentanas = [
-    "Gestión de Datos"
+    "Gestión de Datos",
+    "Calculos"
   ];
   return (
-    <DataProvider>
-      <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)', minHeight: '100vh', fontFamily: 'sans-serif', marginTop: '5px' }}>
-
-        {/* BARRA DE NAVEGACIÓN */}
-        <div style={{
-          display: 'flex',
-          gap: '10px',
-          overflowX: 'auto',
-          paddingBottom: '10px',
-          justifyContent: "center",
-        }}>
+      <div className="mat251-contenedor">
+        <div className="mat251-navegacion">
           {nombresVentanas.map((nombre, index) => (
             <button
               key={index}
               onClick={() => setPestanaActiva(index)}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '5px',
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: pestanaActiva === index ? '#3b82f6' : '#e2e8f0',
-                color: pestanaActiva === index ? 'white' : '#475569',
-                fontWeight: '500',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.3s ease'
-              }}
+              className={`mat251-tab-btn ${pestanaActiva === index ? 'active' : ''}`}
             >
               {nombre}
             </button>
           ))}
         </div>
-
-        {/* 🌟 AQUÍ ESTÁ EL CAMBIO IMPORTANTE 🌟 */}
         <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)' }}>
-
-          {/* Gestión de Datos: Ocultar con CSS, NO destruir */}
           <div style={{ display: pestanaActiva === 0 ? 'block' : 'none' }}>
             <Datos
               setSelectedFile={setSelectedFile}
@@ -69,9 +47,8 @@ export default function Pantalla() {
             />
           </div>
 
-          {/* Tema 1 */}
           <div style={{ display: pestanaActiva === 1 ? 'block' : 'none' }}>
-            <Tema1 />
+            <Principal />
           </div>
 
           {/* Resto de Temas */}
@@ -98,6 +75,5 @@ export default function Pantalla() {
           </div>
         )}
       </div>
-    </DataProvider>
   );
 }

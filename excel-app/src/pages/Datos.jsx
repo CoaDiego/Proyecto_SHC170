@@ -5,53 +5,97 @@ import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { useData } from '../components/excel/DataContext';
 import { keyToNum, getExcelChar, excelToCoords } from '../utils/excelHelpers';
 import VariableCard from '../components/excel/VariableCard';
-import SelectorNube from '../components/excel/SelectorNube'; // 🆕 Importamos el nuevo componente
 
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
 import "../styles/pages/Datos.css";
 import * as XLSX from 'xlsx'; 
 
 import api from '../services/api';
-import { alerta } from '../utils/Notificaciones';
+
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const SimuladorMAT251 = () => {
 
     const gridRef = useRef();
-    
-    // 🆕 1. Extraemos el 'usuario' y la nueva vía directa 'procesarBufferExcel'
     const {
         workbook, sheetNames, currentSheet, rowData, variables, limiteFilas,
-        handleFileUpload, procesarBufferExcel, cargarHoja, agregarVariable, 
-        eliminarVariable, actualizarVariable, setLimiteFilas, usuario
+        handleFileUpload, cargarHoja, agregarVariable, eliminarVariable, actualizarVariable, setLimiteFilas,
+        usuario
     } = useData();
 
     const [selection, setSelection] = useState({ start: null, end: null, isDragging: false });
+    const selectionRef = useRef(selection);
+    const variablesRef = useRef(variables);
+
+    useEffect(() => {
+        selectionRef.current = selection;
+    }, [selection]);
+
+    useEffect(() => {
+        variablesRef.current = variables;
+    }, [variables]);
+
     const [isDraggingFile, setIsDraggingFile] = useState(false);
+
+
+
+    // ESTADOS PARA LA API
+    const [archivosApi, setArchivosApi] = useState([]); 
+    const [cargandoApi, setCargandoApi] = useState(false); 
     const [archivoActivo, setArchivoActivo] = useState(null); 
+    const [_selectedApiFile, setSelectedApiFile] = useState("");
+    const [modalMatrizInfo, setModalMatrizInfo] = useState(null);
+
+    // USE-EFFECT: Cargar lista de archivos de FastAPI 
+    useEffect(() => {
+        const cargarListaArchivos = async () => {
+            if (!usuario) return; // Necesitamos el usuario para filtrar archivos
+            try {
+                const data = await api.obtenerArchivos(usuario.nombre);
+                if (data && data.files) {
+                    setArchivosApi(data.files);
+                }
+            } catch (error) {
+                console.error("Error al cargar la lista de archivos de la API", error);
+            }
+        };
+        cargarListaArchivos();
+    }, [usuario]);
 
     const manejarSubidaLocal = (e) => {
         const files = e.target?.files || e.dataTransfer?.files;
         if (files && files.length > 0) {
             setArchivoActivo({ nombre: files[0].name, origen: 'LOCAL' });
+            setSelectedApiFile("");
             handleFileUpload(e);
         }
     };
 
-    // 🆕 2. FUNCIÓN DE LA NUBE ACTUALIZADA (Sin tocar el resto de la app)
+    // FUNCIÓN: Descargar de FastAPI y simular en PC
     const cargarDesdeAPI = async (filename) => {
-        if (!filename || !usuario) return;
+        if (!filename) return;
+        if (!usuario) {
+            alert("Error: No hay un usuario activo. Por favor recarga la página.");
+            return;
+        }
         try {
-            console.log(`Descargando ${filename} del servidor...`);
-            // Usamos api.js con el nombre del usuario
+            setCargandoApi(true);
             const dataBuffer = await api.descargarArchivoBinario(filename, usuario.nombre);
-            // Procesamos los bytes directamente
-            procesarBufferExcel(dataBuffer, filename);
+            const fileVirtual = new File([dataBuffer], filename, {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            });
+
             setArchivoActivo({ nombre: filename, origen: 'API' });
+            handleFileUpload({ target: { files: [fileVirtual] } });
         } catch (error) {
-            alerta.error("Error al importar", error.message);
+            alert("Error al cargar dataset: " + error.message);
+        } finally {
+            setCargandoApi(false);
         }
     };
+
 
     useEffect(() => {
         if (gridRef.current?.api) {
@@ -79,6 +123,7 @@ const SimuladorMAT251 = () => {
     const totalFilasEnHoja = useMemo(() => {
         if (!workbook || !currentSheet) return 0;
         const ws = workbook.Sheets[currentSheet];
+        // XLSX.utils.sheet_to_json con header "A" nos da un array donde cada item es una fila
         const dataCompleta = XLSX.utils.sheet_to_json(ws, { header: "A", defval: "" });
         return dataCompleta.length;
     }, [workbook, currentSheet]);
@@ -92,20 +137,28 @@ const SimuladorMAT251 = () => {
         }
     };
 
-    // TUS ACCIONES INTACTAS
+    // Agrupamos las acciones para pasarlas a la VariableCard
     const actions = {
         delete: eliminarVariable,
         update: actualizarVariable,
+        openMatrixModal: (v) => setModalMatrizInfo(v),
         switchSheet: (name) => name && workbook && cargarHoja(workbook, name),
         assignName: (id) => {
             const val = rowData[selection.start?.row]?.[getExcelChar(selection.start?.col)];
             if (val) actualizarVariable(id, { nombre: String(val) });
         },
+
         clear: (id) => {
             if (window.confirm("¿Estás seguro de limpiar los datos de esta variable?")) {
-                actualizarVariable(id, { rangoLabel: '', coords: null, datos: [], sheet: null });
+                actualizarVariable(id, {
+                    rangoLabel: '',
+                    coords: null,
+                    datos: [],
+                    sheet: null
+                });
             }
         },
+
         capture: (id) => {
             const { start, end } = selection;
             if (!start || !end) return alert("⚠️ Selecciona un rango en el Excel primero.");
@@ -128,38 +181,70 @@ const SimuladorMAT251 = () => {
                 return alert(`⚠️ Error: El rango choca con la variable "${solapada.nombre}".`);
             }
 
+
+            // 🌟 LA RED DE CAPTURA CORREGIDA 🌟
             const datosValidos = [];
             let contadorNumeros = 0;
             let contadorTextos = 0;
 
             for (let r = rMin; r <= rMax; r++) {
+                const filaValores = [];
+                let tieneDatos = false;
+
                 for (let c = cMin; c <= cMax; c++) {
-                    const columnaLetra = getExcelChar(c);
-                    const rawVal = rowData[r]?.[columnaLetra];
+                    const rawVal = rowData[r]?.[getExcelChar(c)];
                     if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
-                        datosValidos.push(rawVal);
+                        filaValores.push(rawVal);
+                        tieneDatos = true;
                         if (isNaN(Number(rawVal))) {
                             contadorTextos++;
                         } else {
                             contadorNumeros++;
                         }
+                    } else {
+                        filaValores.push("");
+                    }
+                }
+
+                if (tieneDatos) {
+                    if (cMax > cMin) {
+                        datosValidos.push(filaValores.join(" | "));
+                    } else {
+                        datosValidos.push(filaValores[0]);
                     }
                 }
             }
 
+            // Decisión por mayoría
             let tipoDetectado = "Sin datos";
             if (datosValidos.length > 0) {
-                if (contadorNumeros > 0 && contadorTextos > 0) tipoDetectado = "Mixta (Error)";
-                else if (contadorNumeros > 0 && contadorTextos === 0) tipoDetectado = "Cuantitativa (Número)";
-                else tipoDetectado = "Cualitativa (Texto)";
+                if (contadorNumeros > 0 && contadorTextos > 0) {
+                    tipoDetectado = "Mixta (Error)";
+                } else if (contadorNumeros > 0 && contadorTextos === 0) {
+                    tipoDetectado = "Cuantitativa (Número)";
+                } else {
+                    tipoDetectado = "Cualitativa (Texto)";
+                }
             }
 
+            // NOMBRES DE COLUMNAS (Intento de leer la fila anterior como headers)
+            let nombresColumnas = [];
+            if (cMax > cMin) {
+                const headerRow = rMin > 0 ? rMin - 1 : rMin; 
+                for (let c = cMin; c <= cMax; c++) {
+                    const headerVal = rowData[headerRow]?.[getExcelChar(c)];
+                    nombresColumnas.push(headerVal !== undefined && headerVal !== "" ? String(headerVal) : `Col ${getExcelChar(c)}`);
+                }
+            }
+
+            // Actualizamos la variable inyectando los datos y el tipo
             actualizarVariable(id, {
                 rangoLabel: `${getExcelChar(cMin)}${rMin + 1}:${getExcelChar(cMax)}${rMax + 1}`,
                 coords: { rMin, rMax, cMin, cMax },
-                datos: datosValidos, 
+                datos: datosValidos, // 👈 Ahora esto ya no estará vacío
                 sheet: currentSheet,
-                tipo: tipoDetectado
+                tipo: tipoDetectado,
+                nombresColumnas: nombresColumnas
             });
 
             setSelection({ start: null, end: null, isDragging: false });
@@ -172,33 +257,80 @@ const SimuladorMAT251 = () => {
 
             if (inicio && fin) {
                 const coords = {
-                    rMin: Math.min(inicio.r, fin.r), rMax: Math.max(inicio.r, fin.r),
-                    cMin: Math.min(inicio.c, fin.c), cMax: Math.max(inicio.c, fin.c)
+                    rMin: Math.min(inicio.r, fin.r),
+                    rMax: Math.max(inicio.r, fin.r),
+                    cMin: Math.min(inicio.c, fin.c),
+                    cMax: Math.max(inicio.c, fin.c)
                 };
 
+                // 🌟 LA MISMA RED DE CAPTURA QUE USAMOS EN EL BOTÓN 🌟
                 const datosValidos = [];
                 let contadorNumeros = 0;
                 let contadorTextos = 0;
 
                 for (let r = coords.rMin; r <= coords.rMax; r++) {
+                    const filaValores = [];
+                    let tieneDatos = false;
+
                     for (let c = coords.cMin; c <= coords.cMax; c++) {
                         const rawVal = rowData[r]?.[getExcelChar(c)];
                         if (rawVal !== undefined && rawVal !== null && rawVal !== "") {
-                            datosValidos.push(rawVal);
-                            if (isNaN(Number(rawVal))) contadorTextos++; else contadorNumeros++;
+                            filaValores.push(rawVal);
+                            tieneDatos = true;
+                            if (isNaN(Number(rawVal))) {
+                                contadorTextos++;
+                            } else {
+                                contadorNumeros++;
+                            }
+                        } else {
+                            filaValores.push("");
+                        }
+                    }
+
+                    if (tieneDatos) {
+                        if (coords.cMax > coords.cMin) {
+                            datosValidos.push(filaValores.join(" | "));
+                        } else {
+                            datosValidos.push(filaValores[0]);
                         }
                     }
                 }
 
+                // Decisión de tipo
                 let tipoDetectado = "Sin datos";
+
                 if (datosValidos.length > 0) {
-                    if (contadorNumeros > 0 && contadorTextos > 0) tipoDetectado = "Mixta (Error)";
-                    else if (contadorNumeros > 0 && contadorTextos === 0) tipoDetectado = "Cuantitativa (Número)";
-                    else tipoDetectado = "Cualitativa (Texto)";
+                    // Si hay por lo menos 1 número Y por lo menos 1 texto en la misma selección:
+                    if (contadorNumeros > 0 && contadorTextos > 0) {
+                        tipoDetectado = "Mixta (Error)";
+                    }
+                    // Si SOLO hay números:
+                    else if (contadorNumeros > 0 && contadorTextos === 0) {
+                        tipoDetectado = "Cuantitativa (Número)";
+                    }
+                    // Si SOLO hay textos:
+                    else {
+                        tipoDetectado = "Cualitativa (Texto)";
+                    }
+                }
+
+                // NOMBRES DE COLUMNAS
+                let nombresColumnas = [];
+                if (coords.cMax > coords.cMin) {
+                    const headerRow = coords.rMin > 0 ? coords.rMin - 1 : coords.rMin; 
+                    for (let c = coords.cMin; c <= coords.cMax; c++) {
+                        const headerVal = rowData[headerRow]?.[getExcelChar(c)];
+                        nombresColumnas.push(headerVal !== undefined && headerVal !== "" ? String(headerVal) : `Col ${getExcelChar(c)}`);
+                    }
                 }
 
                 actualizarVariable(id, {
-                    rangoLabel: nuevoTexto, coords, datos: datosValidos, sheet: currentSheet, tipo: tipoDetectado
+                    rangoLabel: nuevoTexto,
+                    coords,
+                    datos: datosValidos,
+                    sheet: currentSheet,
+                    tipo: tipoDetectado, // Inyectamos el tipo también aquí
+                    nombresColumnas: nombresColumnas
                 });
             } else {
                 actualizarVariable(id, { rangoLabel: nuevoTexto });
@@ -206,52 +338,62 @@ const SimuladorMAT251 = () => {
         }
     };
 
-    // TUS COLUMNAS INTACTAS
     const columnDefs = useMemo(() => {
         if (rowData.length === 0) return [];
         const keys = Object.keys(rowData[0]);
         const rowNumberCol = {
             headerName: '', valueGetter: "node.rowIndex + 1", width: 45, pinned: 'left',
-            cellStyle: { backgroundColor: '#f8fafc', fontWeight: 'bold', textAlign: 'center', color: '#64748b', fontSize: '11px' }
+            cellStyle: { backgroundColor: 'var(--bg-input, #f8fafc)', fontWeight: 'bold', textAlign: 'center', color: 'var(--text-muted, #64748b)', fontSize: '11px' }
         };
 
         const dataCols = keys.map(key => ({
             headerName: key, field: key, width: 120, resizable: true,
             cellClassRules: {
                 'celda-azul-seleccion': params => {
-                    if (!selection.start || !selection.end) return false;
+                    const sel = selectionRef.current;
+                    if (!sel || !sel.start || !sel.end) return false;
                     const r = params.node.rowIndex, c = keyToNum(params.column.colId);
-                    const rMin = Math.min(selection.start.row, selection.end.row), rMax = Math.max(selection.start.row, selection.end.row);
-                    const cMin = Math.min(selection.start.col, selection.end.col), cMax = Math.max(selection.start.col, selection.end.col);
+                    const rMin = Math.min(sel.start.row, sel.end.row), rMax = Math.max(sel.start.row, sel.end.row);
+                    const cMin = Math.min(sel.start.col, sel.end.col), cMax = Math.max(sel.start.col, sel.end.col);
                     return r >= rMin && r <= rMax && c >= cMin && c <= cMax;
                 }
             },
             cellStyle: params => {
+                const vars = variablesRef.current || [];
                 const r = params.node.rowIndex, c = keyToNum(params.column.colId);
-                const v = variables.find(vItem => vItem.sheet === currentSheet && vItem.coords && r >= vItem.coords.rMin && r <= vItem.coords.rMax && c >= vItem.coords.cMin && c <= vItem.coords.cMax);
+                const v = vars.find(vItem => vItem.sheet === currentSheet && vItem.coords && r >= vItem.coords.rMin && r <= vItem.coords.rMax && c >= vItem.coords.cMin && c <= vItem.coords.cMax);
                 return v ? { backgroundColor: v.color, fontWeight: 'bold', fontSize: '10px' } : { fontSize: '11px' };
             }
         }));
         return [rowNumberCol, ...dataCols];
-    }, [rowData, variables, currentSheet, selection]);
+    }, [rowData, currentSheet]); // Se removió 'selection' y 'variables' para evitar re-renderizados completos de columnas
 
     return (
         <AgGridProvider modules={[AllCommunityModule]}>
-            <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)', minHeight: '100vh', fontFamily: 'sans-serif', marginTop: '5px' }}>
-                <header>
+            <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)', minHeight: '100vh', fontFamily: 'sans-serif', marginTop: '5px', padding:'10px' }}>
+            <div className="header-datos-upload" style={{ backgroundColor: 'var(--bg-body)', display: 'flex', justifyContent: 'center' }}>
                     <div className="upload-container">
-                        
-                        {/* 🆕 3. AQUÍ REEMPLAZAMOS EL SELECT VIEJO POR EL COMPONENTE NUEVO */}
-                        <div className="upload-column" style={{ minWidth: '300px' }}>
-                            {usuario ? (
-                                <SelectorNube usuario={usuario} onImportar={cargarDesdeAPI} />
-                            ) : (
-                                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                                    Debes iniciar sesión para importar archivos del servidor.
-                                </p>
-                            )}
+                        <div className="upload-column">
+                            <p className="upload-title">Archivos subidos</p>
+                            <select
+                                className="select-hoja"
+                                style={{ width: '60%', cursor: 'pointer' }}
+                                disabled={cargandoApi || archivosApi.length === 0}
+                                onChange={(e) => cargarDesdeAPI(e.target.value)}
+                            >
+                                <option value="">
+                                    {archivosApi.length === 0 ? "Buscando archivos..." : "Seleccionar Archivo"}
+                                </option>
+                                {archivosApi.map((archivo, index) => (
+                                    <option key={index} value={archivo.filename}>
+                                        {archivo.filename}
+                                    </option>
+                                ))}
+                            </select>
+                            <p style={{ fontSize: '11px', marginTop: '5px', color: 'var(--text-muted)' }}>
+                                {cargandoApi ? "⏳ Descargando y procesando..." : "Click para cargar"}
+                            </p>
                         </div>
-
                         <div className="column-divider"></div>
                         <div
                             className={`upload-box ${isDraggingFile ? 'drag-over' : ''}`}
@@ -278,52 +420,50 @@ const SimuladorMAT251 = () => {
                             </div>
                         </div>
                     </div >
-                    
-                    {/* TU BARRA DE HOJAS ORIGINAL */}
-                    {sheetNames.length > 0 && (
-                        <div style={{
-                            margin: '5px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                            padding: '10px 20px',
-                            backgroundColor: 'var(--bg-card)',
-                            borderRadius: '5px',
-                            border: '1px solid var(--border-color)'
-                        }}>
+                </div>
 
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                <strong>Archivo: </strong>
-                                <span style={{ color: '#3b82f6', marginRight: '8px' }}>
-                                    {archivoActivo ? archivoActivo.nombre : (workbook ? "Documento cargado" : "Sin archivo")}
+                {sheetNames.length > 0 && (
+                    <div style={{
+                        margin: '10px 10px 5px 10px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        padding: '10px 20px',
+                        backgroundColor: 'var(--bg-card)',
+                        borderRadius: '5px',
+                        border: '1px solid var(--border-color)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}>
+
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                            <strong>Archivo: </strong>
+                            <span style={{ color: '#3b82f6', marginRight: '8px' }}>
+                                {archivoActivo ? archivoActivo.nombre : (workbook ? "Documento cargado" : "Sin archivo")}
+                            </span>
+                            {archivoActivo && (
+                                <span style={{ color: 'var(--text-muted)' }}>
+                                    {archivoActivo.origen === 'API' ? '(Servidor)' : '(Local)'}
                                 </span>
-                                {archivoActivo && (
-                                    <span style={{ color: 'var(--text-muted)' }}>
-                                        {archivoActivo.origen === 'API' ? '(Servidor)' : '(Local)'}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div>
-                                <span style={{ marginRight: '10px', fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.8rem' }}>
-                                    Hoja activa del Excel:
-                                </span>
-                                <select
-                                    value={currentSheet}
-                                    onChange={(e) => cargarHoja(workbook, e.target.value)}
-                                    className="select-hoja"
-                                >
-                                    {sheetNames.map(name => <option key={name} value={name}>{name}</option>)}
-                                </select>
-                            </div>
-
+                            )}
                         </div>
-                    )}
 
-                </header>
+                        <div>
+                            <span style={{ marginRight: '10px', fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.8rem' }}>
+                                Hoja activa del Excel:
+                            </span>
+                            <select
+                                value={currentSheet}
+                                onChange={(e) => cargarHoja(workbook, e.target.value)}
+                                className="select-hoja"
+                            >
+                                {sheetNames.map(name => <option key={name} value={name}>{name}</option>)}
+                            </select>
+                        </div>
 
-                {/* TU DISEÑO DE PANEL Y TABLA ORIGINAL */}
+                    </div>
+                )}
+
                 <div className='main-layout-flex'>
                     <aside className='bloque-variables'>
                         <div className="header-variables">
@@ -372,6 +512,62 @@ const SimuladorMAT251 = () => {
                         )}
                     </section>
                 </div>
+
+                {/* MODAL MATRIZ DETALLES */}
+                {modalMatrizInfo && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999,
+                        display: 'flex', justifyContent: 'center', alignItems: 'center'
+                    }} onClick={() => setModalMatrizInfo(null)}>
+                        <div style={{
+                            backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '10px',
+                            maxWidth: '400px', width: '90%', border: '1px solid var(--border-color)',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                        }} onClick={e => e.stopPropagation()}>
+                            <h3 style={{ margin: '0 0 15px', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                                </svg>
+                                Detalles de la Matriz
+                            </h3>
+                            <p style={{ margin: '0 0 10px', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                                <strong>Variable:</strong> {modalMatrizInfo.nombre}
+                            </p>
+                            <p style={{ margin: '0 0 10px', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                                <strong>Dimensiones:</strong> {modalMatrizInfo.coords.rMax - modalMatrizInfo.coords.rMin + 1} filas × {modalMatrizInfo.coords.cMax - modalMatrizInfo.coords.cMin + 1} columnas
+                            </p>
+                            <div style={{ marginTop: '15px' }}>
+                                <strong style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Columnas detectadas:</strong>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '5px' }}>
+                                    {modalMatrizInfo.nombresColumnas && modalMatrizInfo.nombresColumnas.length > 0 ? (
+                                        modalMatrizInfo.nombresColumnas.map((col, idx) => (
+                                            <span key={idx} style={{ background: 'rgba(192, 132, 252, 0.1)', border: '1px solid #c084fc', color: '#9333ea', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                                [{col}]
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>[Columna 1] [Columna 2]</span>
+                                    )}
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setModalMatrizInfo(null)}
+                                style={{
+                                    marginTop: '20px', width: '100%', padding: '8px',
+                                    backgroundColor: 'var(--primary-color)', color: 'white', border: 'none',
+                                    borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold'
+                                }}
+                            >
+                                Cerrar
+                            </button>
+                        </div> 
+                    </div>
+                )}
             </div>
         </AgGridProvider>
     );

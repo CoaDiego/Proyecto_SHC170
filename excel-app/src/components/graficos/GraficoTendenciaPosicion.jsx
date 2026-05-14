@@ -4,8 +4,13 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine 
 } from 'recharts';
 
-export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores }) {
+export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, isMaximized = false }) {
   if (!graficos || graficos.length === 0) return null;
+
+  // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
+  const isMobile = window.innerWidth < 768;
+  const fontSizeAxis = isMaximized ? (isMobile ? 12 : 14) : 11;
+  const fontSizeRef = isMaximized ? (isMobile ? 18 : 24) : 18;
 
   // ------------------------------------------
   // 1. HISTOGRAMA CON LÍNEAS DE TENDENCIA
@@ -18,21 +23,35 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores }
       return match ? match.rango : graficos[0].rango;
     };
 
+    const maxFrecuencia = Math.max(...graficos.map(g => g.frecuencia));
+    const limiteEjeY = maxFrecuencia + 1;
+    const ticksEjeY = [];
+    for (let i = 0; i <= limiteEjeY; i += 0.5) {
+      ticksEjeY.push(i);
+    }
+
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <ComposedChart data={graficos} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="rango" />
-          <YAxis label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft' }} />
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={graficos} margin={{ top: 35, right: 20, left: 10, bottom: 25 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+          <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }} />
+          <YAxis
+            stroke="var(--text-variable)"
+            ticks={ticksEjeY}
+            domain={[0, limiteEjeY]}
+            tickFormatter={(valor) => valor.toString().replace('.', ',')}
+            tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
+            label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
+          />
           <Tooltip />
-          <Bar dataKey="frecuencia" fill="#3498db" name="Frecuencia" barSize={50} />
+          <Bar dataKey="frecuencia" fill="#3498db" name="Frecuencia" barSize={isMaximized ? 80 : 50} />
           
           {/* Líneas verticales mostrando la posición de la Media, Mediana y Moda */}
           {indicadores && (
             <>
-              <ReferenceLine x={getRangoForValue(indicadores.media)} stroke="#e74c3c" strokeDasharray="3 3" strokeWidth={2} label={{ value: 'x̄', position: 'top', fill: '#e74c3c', fontSize: 18 }} />
-              <ReferenceLine x={getRangoForValue(indicadores.mediana)} stroke="#2ecc71" strokeDasharray="3 3" strokeWidth={2} label={{ value: 'Me', position: 'insideTopLeft', fill: '#2ecc71', fontSize: 18 }} />
-              <ReferenceLine x={getRangoForValue(indicadores.moda)} stroke="#9b59b6" strokeDasharray="3 3" strokeWidth={2} label={{ value: 'Mo', position: 'insideTopRight', fill: '#9b59b6', fontSize: 18 }} />
+              <ReferenceLine x={getRangoForValue(indicadores.media)} stroke="#e74c3c" strokeDasharray="3 3" strokeWidth={isMaximized ? 3 : 2} label={{ value: 'x̄', position: 'top', fill: '#e74c3c', fontSize: fontSizeRef, fontWeight: 'bold' }} />
+              <ReferenceLine x={getRangoForValue(indicadores.mediana)} stroke="#2ecc71" strokeDasharray="3 3" strokeWidth={isMaximized ? 3 : 2} label={{ value: 'Me', position: 'insideTopLeft', fill: '#2ecc71', fontSize: fontSizeRef, fontWeight: 'bold' }} />
+              <ReferenceLine x={getRangoForValue(indicadores.moda)} stroke="#9b59b6" strokeDasharray="3 3" strokeWidth={isMaximized ? 3 : 2} label={{ value: 'Mo', position: 'insideTopRight', fill: '#9b59b6', fontSize: fontSizeRef, fontWeight: 'bold' }} />
             </>
           )}
         </ComposedChart>
@@ -51,15 +70,25 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores }
     ];
 
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={ojivaData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={ojivaData} margin={{ top: 10, right: 20, left: 10, bottom: 25 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="hasta" label={{ value: 'Límite Superior del Intervalo', position: 'insideBottom', offset: -10 }} />
-          <YAxis domain={[0, 100]} label={{ value: 'Frecuencia Acumulada (%)', angle: -90, position: 'insideLeft' }} />
+          <XAxis
+            dataKey="hasta"
+            stroke="var(--text-variable)"
+            tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
+            label={{ value: 'Límite Superior del Intervalo', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontWeight: 'bold', fill: 'var(--text-variable)' } }}
+          />
+          <YAxis
+            domain={[0, 100]}
+            stroke="var(--text-variable)"
+            tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
+            label={{ value: 'Frecuencia Acumulada (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontWeight: 'bold', fill: 'var(--text-variable)' } }}
+          />
           <Tooltip formatter={(value) => [`${value.toFixed(2)}%`, 'Acumulado']} />
           
           {/* La línea de la Ojiva */}
-          <Line type="linear" dataKey="P_i" stroke="#e67e22" strokeWidth={3} dot={{ r: 5 }} activeDot={{ r: 8 }} name="Ojiva Porcentual" />
+          <Line type="linear" dataKey="P_i" stroke="#e67e22" strokeWidth={isMaximized ? 5 : 3} dot={{ r: isMaximized ? 8 : 5 }} activeDot={{ r: isMaximized ? 12 : 8 }} name="Ojiva Porcentual" />
         </LineChart>
       </ResponsiveContainer>
     );

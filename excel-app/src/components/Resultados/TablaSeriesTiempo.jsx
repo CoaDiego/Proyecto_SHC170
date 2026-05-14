@@ -1,4 +1,6 @@
 import React from 'react';
+import { copiarTablaAExcel } from "../../utils/exportUtils";
+import { IconoCopiar } from "../ui/iconos";
 
 export default function TablaSeriesTiempo({ resultado }) {
   if (!resultado || resultado.tipo !== "series_tiempo") return null;
@@ -29,6 +31,16 @@ export default function TablaSeriesTiempo({ resultado }) {
       </div>
 
       {/* 2. TABLA CRONOLÓGICA */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <button 
+          className="btn-icon"
+          onClick={() => copiarTablaAExcel(resultado.datos, "series_tiempo")}
+          style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+          title="Copiar datos puros para Excel"
+        >
+          <IconoCopiar /> Copiar Tabla
+        </button>
+      </div>
       <div style={{ overflowX: "auto" }}>
         <table className="tabla-academica" style={{ width: '100%', color: 'var(--text-color)', textAlign: 'center' }}>
           <thead>

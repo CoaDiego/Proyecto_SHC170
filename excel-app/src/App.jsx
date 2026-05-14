@@ -76,7 +76,7 @@ function App() {
                   {/* 🆕 NUEVO: Si ya inició sesión y trata de registrarse, lo mandamos al inicio */}
                   <Route path="/registro" element={<Navigate to="/" />} />
                   
-                  <Route path="/MAT251" element={<MAT251 />} />
+                  <Route path="/MAT251" element={<MAT251 usuario={usuario} />} />
 
                   <Route path="/perfil" element={<Perfil usuario={usuario} setUsuario={setUsuario} />} />
                 </>

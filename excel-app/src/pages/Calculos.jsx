@@ -25,6 +25,7 @@ import TablaIndices from "../components/Resultados/TablaIndices";
 import { alerta } from "../utils/Notificaciones";
 
 import { generarPDFReporte } from "../utils/exportUtils"; // 🆕
+import { IconoGuardar, IconoPDF } from "../components/ui/iconos";
 
 function textEditor({ row, column, onRowChange, onClose }) {
   return (
@@ -56,11 +57,11 @@ export default function Calculos() {
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedSheet, setSelectedSheet] = useState(0);
 
-  const [modoCreacion, setModoCreacion] = useState(false);
   const [mostrarTabla, _setMostrarTabla] = useState(true);
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
   const [filtroFractil, setFiltroFractil] = useState("Cuartil");
   const [panelAbierto, setPanelAbierto] = useState(true);
+  const [modoCreacion, setModoCreacion] = useState(false);
 
   const {
     excelData,
@@ -112,7 +113,7 @@ export default function Calculos() {
 
 
 
-// 🆕 EFECTO PARA REABRIR HISTORIAL (VERSIÓN AUTOMÁTICA)
+  // 🆕 EFECTO PARA REABRIR HISTORIAL (VERSIÓN AUTOMÁTICA)
   // 1. EFECTO INICIAL: Saca los datos de la mochila y prepara el banderín
   useEffect(() => {
     if (location.state) {
@@ -138,14 +139,14 @@ export default function Calculos() {
   useEffect(() => {
     // Si hay un cálculo pendiente Y ya tenemos datos en la tabla (excelData)
     if (calculoPendiente.current && excelData && excelData.length > 0) {
-      
+
       const timer = setTimeout(() => {
         ejecutarCalculo();
         alerta.exito("Historial Cargado", "Se restauró el cálculo automáticamente.");
       }, 300); // Un pequeñísimo respiro de 300ms para que React pinte la tabla
-      
+
       calculoPendiente.current = false; // Bajamos el banderín
-      
+
       return () => clearTimeout(timer);
     }
   }, [excelData, ejecutarCalculo]); // React vigilará excelData constantemente
@@ -178,33 +179,36 @@ export default function Calculos() {
     cargarArchivos();
   }, [usuario]);
 
+
   useEffect(() => {
     cargarArchivos();
   }, [usuario]);
 
-// Dentro de export default function Calculos() { ...
+  useEffect(() => {
+    cargarArchivos();
+  }, [usuario]);
 
-// En src/pages/Calculos.jsx
-const handleGuardarResultado = async () => {
-  if (!usuario) return;
-  try {
-    alerta.success("Guardando...", "Registrando configuración del cálculo.");
-    
-    // Pasamos las variables de estado actuales: selectedColumn y selectedColumnY
-    await api.guardarEnHistorial(
-        usuario.nombre, 
-        calculo, 
-        selectedFile, 
-        selectedColumn, 
+
+  const handleGuardarResultado = async () => {
+    if (!usuario) return;
+    try {
+      alerta.success("Guardando...", "Registrando configuración del cálculo.");
+
+      // Pasamos las variables de estado actuales: selectedColumn y selectedColumnY
+      await api.guardarEnHistorial(
+        usuario.nombre,
+        calculo,
+        selectedFile,
+        selectedColumn,
         selectedColumnY,
         selectedSheet
-    );
-    
-    alerta.exito("¡Guardado!", "El historial ahora recordará las columnas usadas.");
-  } catch (error) {
-    alerta.error("Error", "No se pudo guardar la configuración.");
-  }
-};
+      );
+
+      alerta.exito("¡Guardado!", "El historial ahora recordará las columnas usadas.");
+    } catch (error) {
+      alerta.error("Error", "No se pudo guardar la configuración.");
+    }
+  };
 
   const esIntervalo = calculo === "distribucion_intervalos";
   const esUnidimensional = [
@@ -295,14 +299,23 @@ const handleGuardarResultado = async () => {
       className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`}
       style={{ position: "relative" }}
     >
-      <button
-        onClick={() => setPanelAbierto(!panelAbierto)}
-        className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
-        title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
-      >
-        <span className="icono-animado"></span>
+      <button onClick={() => setPanelAbierto(!panelAbierto)} className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`} title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}>
+        <span className={`icono-toggle ${panelAbierto ? 'abierto' : 'cerrado'}`} style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          color: '#ffffff',
+          transform: panelAbierto ? 'scaleX(1)' : 'scaleX(-1)',
+          transition: 'transform 0.3s ease',
+          lineHeight: 0,
+          marginTop: '-2px',
+          marginLeft: '-1px'
+        }}>
+          ❮
+        </span>
       </button>
-
       {/* ================= IZQUIERDA: CONTROLES ================= */}
       <div className="calculadora-datos">
         <div
@@ -571,38 +584,38 @@ const handleGuardarResultado = async () => {
                       {(esBivariada ||
                         calculo === "regresion_simple" ||
                         calculo === "series_tiempo") && (
-                        <div
-                          style={{
-                            padding: "10px",
-                            border: "1px solid var(--border-color)",
-                            borderRadius: "4px",
-                            marginBottom: "15px",
-                            backgroundColor: "var(--bg-card)",
-                          }}
-                        >
-                          <label
+                          <div
                             style={{
-                              display: "block",
-                              marginBottom: "5px",
-                              fontWeight: "bold",
+                              padding: "10px",
+                              border: "1px solid var(--border-color)",
+                              borderRadius: "4px",
+                              marginBottom: "15px",
+                              backgroundColor: "var(--bg-card)",
                             }}
                           >
-                            {calculo === "series_tiempo"
-                              ? "Valores Históricos Y (Demanda/Ventas):"
-                              : "Variable Y (Dependiente):"}
-                          </label>
-                          <select
-                            value={selectedColumnY}
-                            onChange={(e) => setSelectedColumnY(e.target.value)}
-                            style={{ width: "100%", padding: "5px" }}
-                          >
-                            <option value="">
-                              -- Seleccionar Variable Y --
-                            </option>
-                            {renderOpcionesColumnas()}
-                          </select>
-                        </div>
-                      )}
+                            <label
+                              style={{
+                                display: "block",
+                                marginBottom: "5px",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {calculo === "series_tiempo"
+                                ? "Valores Históricos Y (Demanda/Ventas):"
+                                : "Variable Y (Dependiente):"}
+                            </label>
+                            <select
+                              value={selectedColumnY}
+                              onChange={(e) => setSelectedColumnY(e.target.value)}
+                              style={{ width: "100%", padding: "5px" }}
+                            >
+                              <option value="">
+                                -- Seleccionar Variable Y --
+                              </option>
+                              {renderOpcionesColumnas()}
+                            </select>
+                          </div>
+                        )}
                     </>
                   )}
 
@@ -690,54 +703,54 @@ const handleGuardarResultado = async () => {
                           calculo === "tendencia_central" ||
                           calculo === "tendencia_y_posicion" ||
                           calculo === "variabilidad_y_forma") && (
-                          <>
-                            <label>Tipo Intervalo:</label>
-                            <select
-                              value={tipoIntervalo}
-                              onChange={(e) => setTipoIntervalo(e.target.value)}
-                              className="container_select"
-                            >
-                              <option value="semiabierto">[a, b)</option>
-                              <option value="cerrado">[a, b]</option>
-                              <option value="abierto">(a, b)</option>
-                            </select>
-                            <label>Método K:</label>
-                            <select
-                              value={metodoK}
-                              onChange={(e) => setMetodoK(e.target.value)}
-                              className="container_select"
-                            >
-                              <option value="sturges">Sturges</option>
-                              <option value="cuadratica">Cuadrática</option>
-                              <option value="logaritmica">Logarítmica</option>
-                              <option value="personalizada">Manual</option>
-                            </select>
-                            {metodoK === "personalizada" && (
-                              <input
-                                type="number"
-                                value={kPersonalizado}
-                                onChange={(e) =>
-                                  setKPersonalizado(e.target.value)
-                                }
-                                placeholder="Valor k"
-                                className="container_cal_input"
-                              />
-                            )}
-                          </>
-                        )}
+                            <>
+                              <label>Tipo Intervalo:</label>
+                              <select
+                                value={tipoIntervalo}
+                                onChange={(e) => setTipoIntervalo(e.target.value)}
+                                className="container_select"
+                              >
+                                <option value="semiabierto">[a, b)</option>
+                                <option value="cerrado">[a, b]</option>
+                                <option value="abierto">(a, b)</option>
+                              </select>
+                              <label>Método K:</label>
+                              <select
+                                value={metodoK}
+                                onChange={(e) => setMetodoK(e.target.value)}
+                                className="container_select"
+                              >
+                                <option value="sturges">Sturges</option>
+                                <option value="cuadratica">Cuadrática</option>
+                                <option value="logaritmica">Logarítmica</option>
+                                <option value="personalizada">Manual</option>
+                              </select>
+                              {metodoK === "personalizada" && (
+                                <input
+                                  type="number"
+                                  value={kPersonalizado}
+                                  onChange={(e) =>
+                                    setKPersonalizado(e.target.value)
+                                  }
+                                  placeholder="Valor k"
+                                  className="container_cal_input"
+                                />
+                              )}
+                            </>
+                          )}
                         {(calculo === "medidas_posicion" ||
                           calculo === "tendencia_y_posicion") && (
-                          <div className="container_cal_percentil">
-                            <label>Percentil (1 - 99):</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="99"
-                              value={percentilK}
-                              onChange={(e) => setPercentilK(e.target.value)}
-                            />
-                          </div>
-                        )}
+                            <div className="container_cal_percentil">
+                              <label>Percentil (1 - 99):</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="99"
+                                value={percentilK}
+                                onChange={(e) => setPercentilK(e.target.value)}
+                              />
+                            </div>
+                          )}
                       </div>
                     )}
 
@@ -778,6 +791,8 @@ const handleGuardarResultado = async () => {
               )}
             </div>
             <br />
+            <br />
+            <br />
             <button
               onClick={() => setModoCreacion(!modoCreacion)}
               className="button_resultados"
@@ -813,6 +828,7 @@ const handleGuardarResultado = async () => {
             }}
           />
         ) : !resultado && !errorNumerico ? (
+
           /* 🆕 ESTADO DE ESPERA: Ahora usa clases de CSS */
           <div className="contenedor-espera-logo">
             <img
@@ -822,54 +838,15 @@ const handleGuardarResultado = async () => {
             />
           </div>
         ) : (
+
           /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
           <div className="contenedor-resultados-vacio">
             <div className="frecuencias">
-              {/* 🆕 CABECERA CON BOTÓN EXPORTAR */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "15px",
-                }}
-              >
-                <h3 style={{ margin: 0 }}>
-                  Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
-                </h3>
-
-                
-<button 
-                      onClick={handleGuardarResultado}
-                      style={{
-                          backgroundColor: 'var(--primary-color)', /* Usa el azul/morado principal de tu app */
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 15px',
-                          borderRadius: '5px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                      }}
-                    >
-                      💾 Guardar Cálculo
-                    </button>
-
-                    {/* Botón 2: Generar el PDF */}
-                    <button 
-                      onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
-                      style={{
-                          backgroundColor: '#d9534f', /* Rojo clásico PDF */
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 15px',
-                          borderRadius: '5px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                      }}
-                    >
-                      📄 Exportar PDF
-                    </button>
-              </div>
+                <div style={{ marginBottom: "15px" }}>
+                  <h3 style={{ margin: 0 }}>
+                    Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
+                  </h3>
+                </div>
 
               {errorNumerico && (
                 <div
@@ -934,7 +911,26 @@ const handleGuardarResultado = async () => {
               )}
             </div>
 
-            <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} />
+            <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} calculo={calculo} />
+
+            {/* 🆕 BARRA DE ACCIONES FINAL (UNIFICADA) */}
+            <div className="barra-acciones-final">
+              <button
+                onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
+                className="btn-icon"
+                style={{ backgroundColor: '#d9534f', color: 'white', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                <IconoPDF /> Exportar PDF
+              </button>
+
+              <button
+                onClick={handleGuardarResultado}
+                className="btn-icon"
+                style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                <IconoGuardar /> Guardar Cálculo
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -942,7 +938,7 @@ const handleGuardarResultado = async () => {
       {/* ======================================================== */}
       {/* 🆕 AQUÍ PEGAS EL COMPONENTE OCULTO (Antes de cerrar el div principal) */}
       {/* ======================================================== */}
-      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+      <div style={{ position: "fixed", left: "200vw", top: "200vh", opacity: 0, pointerEvents: "none" }}>
         <div
           id="reporte-formal-pdf"
           style={{
@@ -956,6 +952,7 @@ const handleGuardarResultado = async () => {
         >
           {/* ENCABEZADO INSTITUCIONAL */}
           <div
+            className="pdf-section"
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -981,7 +978,7 @@ const handleGuardarResultado = async () => {
           </div>
 
           {/* DATOS DEL REPORTE */}
-          <div style={{ marginBottom: "20px" }}>
+          <div className="pdf-section" style={{ marginBottom: "20px" }}>
             <h1
               style={{
                 textAlign: "center",
@@ -1018,10 +1015,12 @@ const handleGuardarResultado = async () => {
 
           {/* CONTENIDO (Inyectamos las tablas) */}
           <div id="contenido-pdf-dinamico">
-            <p style={{ fontStyle: "italic", marginBottom: "15px" }}>
-              Este documento contiene el análisis estadístico detallado generado
-              por el sistema.
-            </p>
+            <div className="pdf-section">
+              <p style={{ fontStyle: "italic", marginBottom: "15px" }}>
+                Este documento contiene el análisis estadístico detallado generado
+                por el sistema.
+              </p>
+            </div>
 
             {/* Aquí repetimos los mismos if que dibujan las tablas, 
                       para que se rendericen dentro del PDF */}
@@ -1029,11 +1028,15 @@ const handleGuardarResultado = async () => {
               <>
                 {calculo === "regresion_simple" &&
                   resultado.tipo === "regresion" && (
-                    <TablaRegresion resultado={resultado} />
+                    <div className="pdf-section">
+                      <TablaRegresion resultado={resultado} />
+                    </div>
                   )}
                 {calculo === "series_tiempo" &&
                   resultado.tipo === "series_tiempo" && (
-                    <TablaSeriesTiempo resultado={resultado} />
+                    <div className="pdf-section">
+                      <TablaSeriesTiempo resultado={resultado} />
+                    </div>
                   )}
                 {calculo === "numeros_indices" &&
                   [
@@ -1041,13 +1044,17 @@ const handleGuardarResultado = async () => {
                     "operaciones_indices",
                     "deflacion_financiera",
                   ].includes(resultado.tipo) && (
-                    <TablaIndices resultado={resultado} />
+                    <div className="pdf-section">
+                      <TablaIndices resultado={resultado} />
+                    </div>
                   )}
                 {esBivariada && resultado.tipo === "distribucion_bivariada" && (
-                  <TablasBivariantes
-                    resultado={resultado}
-                    formatearCelda={formatearCelda}
-                  />
+                  <div className="pdf-section">
+                    <TablasBivariantes
+                      resultado={resultado}
+                      formatearCelda={formatearCelda}
+                    />
+                  </div>
                 )}
                 {esUnidimensional &&
                   (!resultado.tipo ||
@@ -1056,33 +1063,36 @@ const handleGuardarResultado = async () => {
                       "variabilidad_y_forma",
                       "estadistica_descriptiva",
                     ].includes(resultado.tipo)) && (
-                    <TablasUnidimensionales
-                      resultado={resultado}
-                      calculo={calculo}
-                      formatearCelda={formatearCelda}
-                      filtroFractil={filtroFractil}
-                      setFiltroFractil={setFiltroFractil}
-                    />
+                    <div className="pdf-section">
+                      <TablasUnidimensionales
+                        resultado={resultado}
+                        calculo={calculo}
+                        formatearCelda={formatearCelda}
+                        filtroFractil={filtroFractil}
+                        setFiltroFractil={setFiltroFractil}
+                      />
+                    </div>
                   )}
 
                 {/* También incluimos los gráficos para que salgan en el PDF */}
-                <PanelGraficos
-                  resultado={resultado}
-                  esIntervalo={esIntervalo}
-                />
+                <div>
+                  <PanelGraficos
+                    resultado={resultado}
+                    esIntervalo={esIntervalo}
+                    calculo={calculo}
+                  />
+                </div>
               </>
             )}
           </div>
 
           {/* PIE DE PÁGINA */}
           <div
+            className="pdf-section"
             style={{
-              position: "absolute",
-              bottom: "0.8in",
-              left: "0.8in",
-              right: "0.8in",
+              marginTop: "50px",
               borderTop: "1px solid #ccc",
-              paddingTop: "5px",
+              paddingTop: "10px",
               fontSize: "9pt",
               textAlign: "center",
             }}
@@ -1091,6 +1101,7 @@ const handleGuardarResultado = async () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

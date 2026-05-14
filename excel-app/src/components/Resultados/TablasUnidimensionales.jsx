@@ -1,6 +1,7 @@
 import React from "react";
 import Latex from "../excel/Latex";
 import { copiarTablaAExcel } from "../../utils/exportUtils";
+import { IconoCopiar } from "../ui/iconos";
 
 export default function TablasUnidimensionales({ 
   resultado, calculo, formatearCelda, filtroFractil, setFiltroFractil 
@@ -207,25 +208,13 @@ export default function TablasUnidimensionales({
         {/* 🆕 BOTÓN DE COPIADO ALINEADO A LA DERECHA */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
           <button 
-            /* Pasamos 'resultado' directo porque en este caso es un Array puro */
             data-html2canvas-ignore="true"
             onClick={() => copiarTablaAExcel(resultado, calculo)}
-            style={{
-              backgroundColor: '#107c41', /* Verde Excel */
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
+            className="btn-icon"
+            style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
             title="Copiar datos puros para Excel"
           >
-            <span style={{ fontSize: '1.1rem' }}>📋</span> Copiar Tabla
+            <IconoCopiar /> Copiar Tabla
           </button>
         </div>
 

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { copiarTablaAExcel } from "../../utils/exportUtils";
+import { IconoCopiar } from "../ui/iconos";
 
 export default function TablaRegresion({ resultado }) {
   const [mostrarTablasCalculo, setMostrarTablasCalculo] = useState(false);
@@ -49,7 +51,17 @@ export default function TablaRegresion({ resultado }) {
     <>
       {/* 1. TABLA COMPARATIVA */}
       <div style={{ padding: "15px", backgroundColor: "var(--bg-card)", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-        <h4 style={{ marginTop: 0, color: "var(--primary-color)" }}>Comparativa de Modelos de Ajuste (n = {resultado.comparativa[0].tablaCalculos.filas.length})</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, color: "var(--primary-color)" }}>Comparativa de Modelos de Ajuste (n = {resultado.comparativa[0].tablaCalculos.filas.length})</h4>
+          <button 
+            className="btn-icon"
+            onClick={() => copiarTablaAExcel(resultado.comparativa[0].tablaCalculos.filas, "regresion_simple")}
+            style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+            title="Copiar datos puros para Excel"
+          >
+            <IconoCopiar /> Copiar Tabla
+          </button>
+        </div>
         <div style={{ overflowX: "auto" }}>
           <table className="tabla-academica" style={{ width: "100%", textAlign: "center" }}>
             <thead>

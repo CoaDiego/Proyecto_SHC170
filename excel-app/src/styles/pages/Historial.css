@@ -1,0 +1,174 @@
+.historial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.historial-titulo {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.8rem;
+}
+
+.historial-usuario {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.historial-container {
+    margin-top: 20px;
+    background-color: var(--bg-card);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.historial-tabla {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.historial-tabla thead {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+html.dark .historial-tabla thead {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.historial-tabla th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-main);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.historial-fila {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.historial-fila:hover {
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+html.dark .historial-fila:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.historial-celda {
+    padding: 15px;
+    color: var(--text-main);
+}
+
+.fecha-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.tipo-calculo {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.archivo-origen {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.acciones-container {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-reabrir {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-reabrir:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-eliminar {
+    background: transparent;
+    border: 1px solid #d9534f;
+    color: #d9534f;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-eliminar:hover {
+    background-color: #d9534f;
+    color: white;
+}
+
+/* ========================================= */
+/* DISEÑO RESPONSIVO (MÓVIL)                */
+/* ========================================= */
+
+@media (max-width: 768px) {
+    .historial-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    /* Convertimos la tabla en tarjetas para móviles */
+    .historial-tabla thead {
+        display: none; /* Ocultamos los encabezados de la tabla */
+    }
+
+    .historial-fila {
+        display: block;
+        padding: 15px;
+        position: relative;
+        margin-bottom: 10px;
+        border-bottom: 4px solid var(--border-color);
+    }
+
+    .historial-celda {
+        display: block;
+        padding: 5px 0;
+        text-align: left !important;
+    }
+
+    .historial-celda::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
+    .acciones-container {
+        margin-top: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .acciones-container button {
+        flex: 1;
+        text-align: center;
+    }
+}

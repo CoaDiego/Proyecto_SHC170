@@ -4,6 +4,7 @@ import { api } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 
 import { useNavigate } from "react-router-dom";
+import "../styles/pages/Historial.css";
 
 export default function Historial() {
   const { usuario } = useData();
@@ -40,120 +41,77 @@ export default function Historial() {
   }, [usuario]);
 
   return (
-    <div className="page-container" style={{ padding: "30px" }}>
-      <h2
-        style={{
-          color: "var(--text-main)",
-          borderBottom: "2px solid var(--accent-color)",
-          paddingBottom: "10px",
-        }}
-      >
-         Historial de Cálculos
-      </h2>
-      <p style={{ color: "var(--text-muted)" }}>
-        Bienvenido, {usuario?.nombre}. Aquí puedes revisar tus análisis previos.
-      </p>
+    <div className="page-container">
+      <div className="historial-header">
+        <h2 className="historial-titulo">Historial de Cálculos</h2>
+        <p className="historial-usuario">
+          Bienvenido, <strong>{usuario?.nombre}</strong>.
+        </p>
+      </div>
 
       {cargando ? (
-        <p>Cargando registros...</p>
+        <p className="text-muted">Cargando registros...</p>
       ) : registros.length === 0 ? (
         <div className="container_reader_archivo">
           <p>No tienes cálculos guardados todavía.</p>
         </div>
       ) : (
-        <div
-          style={{
-            marginTop: "20px",
-            backgroundColor: "var(--bg-card)",
-            borderRadius: "8px",
-            border: "1px solid var(--border-color)",
-            overflow: "hidden",
-          }}
-        >
-          <table
-            className="tabla-academica"
-            style={{ width: "100%", borderCollapse: "collapse" }}
-          >
-            <thead style={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+        <div className="historial-container">
+          <table className="historial-tabla">
+            <thead>
               <tr>
-                <th style={{ padding: "15px" }}>Fecha / Hora</th>
+                <th>Fecha / Hora</th>
                 <th>Tipo de Cálculo</th>
                 <th>Archivo Fuente</th>
-                <th>Acciones</th>
+                <th style={{ textAlign: "center" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {registros.map((reg) => (
-                <tr
-                  key={reg.id}
-                  style={{ borderBottom: "1px solid var(--border-color)" }}
-                >
-                  <td style={{ padding: "12px", textAlign: "center" }}>
-                    <strong>{reg.fecha}</strong> <br />
-                    <small style={{ color: "var(--text-muted)" }}>
-                      {reg.hora}
-                    </small>
+                <tr key={reg.id} className="historial-fila">
+                  <td className="historial-celda" data-label="Fecha / Hora">
+                    <div className="fecha-col">
+                      <strong>{reg.fecha}</strong>
+                      <small className="text-muted">{reg.hora}</small>
+                    </div>
                   </td>
-                  <td
-                    style={{
-                      textAlign: "center",
-                      fontWeight: "bold",
-                      color: "var(--accent-color)",
-                    }}
-                  >
-                    {reg.calculo.replace(/_/g, " ").toUpperCase()}
+                  <td className="historial-celda" data-label="Tipo de Cálculo">
+                    <span className="tipo-calculo">
+                      {reg.calculo.replace(/_/g, " ").toUpperCase()}
+                    </span>
                   </td>
-                  <td style={{ textAlign: "center" }}>{reg.archivo_origen}</td>
+                  <td className="historial-celda" data-label="Archivo Fuente">
+                    <span className="archivo-origen">{reg.archivo_origen}</span>
+                  </td>
 
-                  {/* ZONA DE BOTONES ACTUALIZADA */}
-                  <td
-                    style={{
-                      textAlign: "center",
-                      display: "flex",
-                      gap: "10px",
-                      justifyContent: "center",
-                      padding: "10px",
-                    }}
-                  >
-                    <button
-                      style={{
-                        background: "none",
-                        border: "1px solid var(--primary-color)",
-                        color: "var(--primary-color)",
-                        padding: "5px 10px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        navigate("/calculadora", {
-                          state: {
-                            archivoReabrir: reg.archivo_origen,
-                            calculoReabrir: reg.calculo,
-                            colXReabrir: reg.columna_x, // 🆕 Mandamos X
-                            colYReabrir: reg.columna_y, // 🆕 Mandamos Y
-                            hojaReabrir: reg.hoja
-                          },
-                        });
-                      }}
-                      title="Cargar este cálculo"
-                    >
-                      Reabrir
-                    </button>
+                  <td className="historial-celda" data-label="Acciones">
+                    <div className="acciones-container">
+                      <button
+                        className="btn-reabrir"
+                        onClick={() => {
+                          navigate("/calculadora", {
+                            state: {
+                              archivoReabrir: reg.archivo_origen,
+                              calculoReabrir: reg.calculo,
+                              colXReabrir: reg.columna_x,
+                              colYReabrir: reg.columna_y,
+                              hojaReabrir: reg.hoja,
+                            },
+                          });
+                        }}
+                        title="Cargar este cálculo"
+                      >
+                        Reabrir
+                      </button>
 
-                    <button
-                      style={{
-                        background: "none",
-                        border: "1px solid #d9534f",
-                        color: "#d9534f",
-                        padding: "5px 10px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleEliminar(reg.id)}
-                      title="Eliminar registro"
-                    >
-                      Eliminar
-                    </button>
+                      <button
+                        className="btn-eliminar"
+                        onClick={() => handleEliminar(reg.id)}
+                        title="Eliminar registro"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

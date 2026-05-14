@@ -222,8 +222,12 @@ async def get_file(filename: str, autor: str = Query(...)):
 
 # ========= Ver contenido de una hoja específica ==========
 @app.get("/view/{filename}")
-async def view_excel(filename: str, hoja: int = 0):
-    file_path = os.path.join(EXCEL_FOLDER, filename)
+async def view_excel(filename: str, hoja: int = 0, autor: str = Query(None)):
+    if autor:
+        safe_author = urllib.parse.quote(autor)
+        file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
+    else:
+        file_path = os.path.join(EXCEL_FOLDER, filename)
     if not os.path.exists(file_path):
         return {"error": "Archivo no encontrado"}
 
@@ -256,8 +260,12 @@ async def view_excel(filename: str, hoja: int = 0):
 
 # ========= Listar hojas de un archivo ==========
 @app.get("/sheets/{filename}")
-async def list_sheets(filename: str):
-    file_path = os.path.join("excels", filename)
+async def list_sheets(filename: str, autor: str = Query(None)):
+    if autor:
+        safe_author = urllib.parse.quote(autor)
+        file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
+    else:
+        file_path = os.path.join(EXCEL_FOLDER, filename)
     if not os.path.exists(file_path):
         return {"error": "Archivo no encontrado"}
 
@@ -282,7 +290,7 @@ async def delete_file(filename: str, autor: str = Query(...)):
 # =======================
 
 @app.post("/create_table")
-async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_filas: int = 1):
+async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_filas: int = 1, autor: str = Query(None)):
     import pandas as pd
     import os
 
@@ -296,7 +304,16 @@ async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_fil
     df = pd.DataFrame([[0]*num_columnas for _ in range(num_filas)], columns=cols)
 
     filename = f"{nombre}.xlsx"
-    file_path = os.path.join(EXCEL_FOLDER, filename)
+    
+    # Soporte para la carpeta de autor
+    if autor:
+        safe_author = urllib.parse.quote(autor)
+        user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+        os.makedirs(user_folder, exist_ok=True)
+        file_path = os.path.join(user_folder, filename)
+    else:
+        file_path = os.path.join(EXCEL_FOLDER, filename)
+        
     df.to_excel(file_path, index=False, header= False)
 
     return {"message": "Tabla creada correctamente", "filename": filename}
@@ -319,31 +336,38 @@ async def save_table(body: dict = Body(...)):
     try:
         nombre = body.get("nombre", "Ejemplo")
         tabla = body.get("tabla", [])
+        autor = body.get("autor", "Desconocido") # 🆕 Extraer el autor enviado por React
 
         if not tabla:
             return {"error": "No se recibieron datos para la tabla"}
 
         # Convertir a DataFrame
         df = pd.DataFrame(tabla)
-        # Generar nombre de archivo
+        
+        # La limpieza de filas completamente vacías ya se hace en el frontend.
+        # No aplicamos dropna aquí para evitar pérdida de datos si hay ceros u otros valores.
 
-        df.replace("", pd.NA , inplace= True)
-        df.dropna(how="all", inplace= True)
 
+        # 1. Crear carpeta específica para el autor si no existe
+        import urllib.parse
+        safe_author = urllib.parse.quote(autor) 
+        user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+        os.makedirs(user_folder, exist_ok=True)
 
         contador = 1
         base_filename = f"{nombre}.xlsx"
-        filepath = os.path.join(EXCEL_FOLDER, base_filename)
+        filepath = os.path.join(user_folder, base_filename)
         while os.path.exists(filepath):
             contador += 1
-            filepath = os.path.join(EXCEL_FOLDER, f"{nombre}_{contador}.xlsx")
+            filepath = os.path.join(user_folder, f"{nombre}_{contador}.xlsx")
 
         # Guardar Excel
         df.to_excel(filepath, index=False, header= True)
 
-        # Guardar metadata
+        # No es estrictamente necesario guardar metadata si organizamos por carpetas,
+        # pero mantenemos el bloque adaptado a la nueva ruta por compatibilidad.
         meta_path = filepath + ".meta"
-        meta_data = {"filename": os.path.basename(filepath), "author": "Usuario"}
+        meta_data = {"filename": os.path.basename(filepath), "author": autor}
         with open(meta_path, "w") as f:
             import json
             json.dump(meta_data, f)
@@ -517,8 +541,15 @@ async def update_excel(body: dict = Body(...)):
         filename = body.get("filename")
         hoja_index = body.get("hoja_index", 0)
         datos = body.get("datos", [])
+        autor = body.get("autor")
 
-        file_path = os.path.join(EXCEL_FOLDER, filename)
+        if autor:
+            import urllib.parse
+            safe_author = urllib.parse.quote(autor)
+            file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
+        else:
+            file_path = os.path.join(EXCEL_FOLDER, filename)
+            
         
         df_nuevo = pd.DataFrame(datos)
 

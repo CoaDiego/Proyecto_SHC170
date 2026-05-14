@@ -9,15 +9,15 @@ import GraficoSeriesTiempo from "../graficos/GraficoSeriesTiempo";
 import GraficoIndices from "../graficos/GraficoIndices";
 import MarcoWidget from "../ui/MarcoWidget";
 
-export default function PanelGraficos({ resultado, esIntervalo }) {
+export default function PanelGraficos({ resultado, esIntervalo, calculo }) {
 
   if (!resultado) return null;
 
   const esBivariada = !Array.isArray(resultado) && resultado.tipo === "distribucion_bivariada";
 
   return (
-    <div className="graficos-grid">
-      
+    <div className="panel-graficos-grid">
+
       {/* 1. TEMA: REGRESIÓN E ÍNDICES */}
       {resultado.tipo === "regresion" && (
         <MarcoWidget id="reg-main" titulo="Análisis de Regresión y Correlación" anchoCompleto={true}>
@@ -61,7 +61,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       {/* TEMA: SERIES DE TIEMPO (TEMA 7) */}
       {resultado.tipo === "series_tiempo" && (
         <>
-          <MarcoWidget id="ser-1" titulo="Gráfico de Serie Cronológica Histórica">
+          <MarcoWidget id="ser-1" titulo="Gráfico de Serie Cronológica Histórica" anchoCompleto={true}>
             <GraficoSeriesTiempo resultado={resultado} tipo="historico" />
           </MarcoWidget>
           <MarcoWidget id="ser-2" titulo="Línea de Tendencia y Pronóstico" anchoCompleto={true}>
@@ -92,7 +92,7 @@ export default function PanelGraficos({ resultado, esIntervalo }) {
       )}
 
       {/* 5. TEMA: TABLAS SIMPLES (TEMA 1) */}
-      {Array.isArray(resultado) && !esIntervalo && resultado.length > 0 && (
+      {Array.isArray(resultado) && !esIntervalo && calculo === "frecuencias_completas" && resultado.length > 0 && (
         <>
           <MarcoWidget id="uni-1" titulo="Gráfico de Barras">
             <GraficoEstadistico datos={resultado} tipo="barras" />
