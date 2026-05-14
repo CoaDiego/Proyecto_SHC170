@@ -53,6 +53,7 @@ export default function Calculos() {
   const { variables, usuario } = useData();
 
   const [files, setFiles] = useState([]);
+  const [ordenGraficos, setOrdenGraficos] = useState([]); // 🆕 Nuestro nuevo estado
 
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedSheet, setSelectedSheet] = useState(0);
@@ -111,13 +112,17 @@ export default function Calculos() {
 
   const calculoPendiente = useRef(false);
 
-
-
   // 🆕 EFECTO PARA REABRIR HISTORIAL (VERSIÓN AUTOMÁTICA)
   // 1. EFECTO INICIAL: Saca los datos de la mochila y prepara el banderín
   useEffect(() => {
     if (location.state) {
-      const { archivoReabrir, calculoReabrir, colXReabrir, colYReabrir, hojaReabrir } = location.state;
+      const {
+        archivoReabrir,
+        calculoReabrir,
+        colXReabrir,
+        colYReabrir,
+        hojaReabrir,
+      } = location.state;
 
       if (archivoReabrir) setSelectedFile(archivoReabrir);
       if (calculoReabrir) setCalculo(calculoReabrir);
@@ -139,10 +144,12 @@ export default function Calculos() {
   useEffect(() => {
     // Si hay un cálculo pendiente Y ya tenemos datos en la tabla (excelData)
     if (calculoPendiente.current && excelData && excelData.length > 0) {
-
       const timer = setTimeout(() => {
         ejecutarCalculo();
-        alerta.exito("Historial Cargado", "Se restauró el cálculo automáticamente.");
+        alerta.exito(
+          "Historial Cargado",
+          "Se restauró el cálculo automáticamente.",
+        );
       }, 300); // Un pequeñísimo respiro de 300ms para que React pinte la tabla
 
       calculoPendiente.current = false; // Bajamos el banderín
@@ -179,7 +186,6 @@ export default function Calculos() {
     cargarArchivos();
   }, [usuario]);
 
-
   useEffect(() => {
     cargarArchivos();
   }, [usuario]);
@@ -187,7 +193,6 @@ export default function Calculos() {
   useEffect(() => {
     cargarArchivos();
   }, [usuario]);
-
 
   const handleGuardarResultado = async () => {
     if (!usuario) return;
@@ -201,10 +206,13 @@ export default function Calculos() {
         selectedFile,
         selectedColumn,
         selectedColumnY,
-        selectedSheet
+        selectedSheet,
       );
 
-      alerta.exito("¡Guardado!", "El historial ahora recordará las columnas usadas.");
+      alerta.exito(
+        "¡Guardado!",
+        "El historial ahora recordará las columnas usadas.",
+      );
     } catch (error) {
       alerta.error("Error", "No se pudo guardar la configuración.");
     }
@@ -234,7 +242,7 @@ export default function Calculos() {
         renderEditCell: textEditor,
         editable: true,
         resizable: true,
-        width: "auto",
+        /* width: "auto", ❌ 1. COMENTAMOS O BORRAMOS ESTA LÍNEA */
         cellClass: cssClass,
       });
     }
@@ -299,25 +307,41 @@ export default function Calculos() {
       className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`}
       style={{ position: "relative" }}
     >
-      <button onClick={() => setPanelAbierto(!panelAbierto)} className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`} title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}>
-        <span className={`icono-toggle ${panelAbierto ? 'abierto' : 'cerrado'}`} style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          color: '#ffffff',
-          transform: panelAbierto ? 'scaleX(1)' : 'scaleX(-1)',
-          transition: 'transform 0.3s ease',
-          lineHeight: 0,
-          marginTop: '-2px',
-          marginLeft: '-1px'
-        }}>
+      <button
+        onClick={() => setPanelAbierto(!panelAbierto)}
+        className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
+        title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
+      >
+        <span
+          className={`icono-toggle ${panelAbierto ? "abierto" : "cerrado"}`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: "bold",
+            fontSize: "14px",
+            color: "#ffffff",
+            transform: panelAbierto ? "scaleX(1)" : "scaleX(-1)",
+            transition: "transform 0.3s ease",
+            lineHeight: 0,
+            marginTop: "-2px",
+            marginLeft: "-1px",
+          }}
+        >
           ❮
         </span>
       </button>
+
       {/* ================= IZQUIERDA: CONTROLES ================= */}
-      <div className="calculadora-datos">
+      <div
+        className="calculadora-datos"
+        style={{
+          padding: "15px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px",
+        }}
+      >
         <div
           style={{
             borderBottom: panelAbierto
@@ -327,30 +351,49 @@ export default function Calculos() {
             marginBottom: panelAbierto ? "5px" : "0",
           }}
         >
-          {panelAbierto && <h3 style={{ margin: 0 }}> Datos </h3>}
+          {panelAbierto && (
+            <h3 style={{ margin: 0 }}> Configuración de Análisis </h3>
+          )}
         </div>
 
         {panelAbierto && (
           <>
-            <label className="etiqueta">Selecciona un archivo:</label>
-            <select
-              value={selectedFile}
-              onChange={(e) => {
-                setSelectedFile(e.target.value);
-                setModoCreacion(false);
-              }}
-              className="selector-archivo"
-            >
-              {/* Opción inicial neutra */}
-              <option value="">-- Selecciona un archivo para empezar --</option>
-
-              {files.map((file) => (
-                <option key={file.filename} value={file.filename}>
-                  {file.filename} ({file.author || "Desconocido"})
+            {/* 1. SECCIÓN DE ARCHIVO */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold",
+                }}
+              >
+                Selecciona un archivo:
+              </label>
+              <select
+                value={selectedFile}
+                onChange={(e) => {
+                  setSelectedFile(e.target.value);
+                  setModoCreacion(false);
+                }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid var(--border-color)",
+                }}
+              >
+                <option value="">
+                  -- Selecciona un archivo para empezar --
                 </option>
-              ))}
-            </select>
+                {files.map((file) => (
+                  <option key={file.filename} value={file.filename}>
+                    {file.filename} ({file.author || "Desconocido"})
+                  </option>
+                ))}
+              </select>
+            </div>
 
+            {/* 2. SECCIÓN DE LA HOJA */}
             <ExcelContent
               filename={selectedFile}
               autor={usuario?.nombre}
@@ -358,16 +401,38 @@ export default function Calculos() {
               onSheetChange={setSelectedSheet}
             />
 
-            <div className="panel-controles-excel">
-              <h3 className="panel-controles-excel_h3">Calculadora de Excel</h3>
-
-              {columns.length > 0 || variables.length > 0 ? (
-                <>
-                  <label>Operación:</label>
+            {/* 3. SECCIÓN DE OPERACIÓN Y VARIABLES (Todo en un solo bloque unificado) */}
+            {columns.length > 0 || variables.length > 0 ? (
+              <div
+                style={{
+                  background: "var(--bg-card)",
+                  padding: "15px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border-color)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "15px",
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Operación:
+                  </label>
                   <select
                     value={calculo}
                     onChange={(e) => setCalculo(e.target.value)}
-                    className="container_operaciones"
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      borderRadius: "4px",
+                      border: "1px solid var(--border-color)",
+                    }}
                   >
                     <optgroup label="Tema 2: Distribución de Frecuencias">
                       <option value="frecuencias_completas">
@@ -378,15 +443,9 @@ export default function Calculos() {
                       </option>
                     </optgroup>
                     <optgroup label="Tema 3: Tendencia y Posición">
-                      <option value="estadistica_descriptiva">
-                        Análisis Descriptivo
-                      </option>
-                      <option value="tendencia_central">
-                        Medidas de Tendencia Central
-                      </option>
-                      <option value="medidas_posicion">
-                        Medidas de Posición (Fractiles)
-                      </option>
+                      {/*  <option value="estadistica_descriptiva">Análisis Descriptivo</option>
+                      <option value="tendencia_central">Medidas de Tendencia Central</option>
+                      <option value="medidas_posicion">Medidas de Posición (Fractiles)</option> */}
                       <option value="tendencia_y_posicion">
                         Tendencia y Posición (Conjunto)
                       </option>
@@ -397,9 +456,7 @@ export default function Calculos() {
                       </option>
                     </optgroup>
                     <optgroup label="Tema 5: Distribuciones Bivariantes">
-                      <option value="distribucion_bivariada">
-                        Distribución Bivariante
-                      </option>
+                      {/*  <option value="distribucion_bivariada">Distribución Bivariante</option> */}
                       <option value="distribucion_bivariada_avanzada">
                         Análisis Bivariante Avanzado
                       </option>
@@ -420,379 +477,380 @@ export default function Calculos() {
                       </option>
                     </optgroup>
                   </select>
+                </div>
 
-                  {/* ================= CONTROLES TEMA 8: ÍNDICES ================= */}
-                  {calculo === "numeros_indices" ? (
-                    <div
+                {/* ================= CONTROLES TEMA 8: ÍNDICES ================= */}
+                {calculo === "numeros_indices" ? (
+                  <div
+                    style={{
+                      padding: "10px",
+                      backgroundColor: "var(--bg-card)",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "4px",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    <label
                       style={{
-                        padding: "10px",
-                        backgroundColor: "var(--bg-card)",
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "4px",
-                        marginBottom: "15px",
+                        fontWeight: "bold",
+                        color: "var(--primary-color)",
                       }}
                     >
-                      <label
+                      Módulo de Análisis:
+                    </label>
+                    <select
+                      value={subTemaIndices}
+                      onChange={(e) => setSubTemaIndices(e.target.value)}
+                      style={{
+                        width: "100%",
+                        marginBottom: "15px",
+                        padding: "5px",
+                      }}
+                    >
+                      <option value="compuestos">
+                        1. Índices Compuestos (Laspeyres/Paasche/Fisher)
+                      </option>
+                      <option value="empalme">
+                        2. Empalme y Cambio de Base
+                      </option>
+                      <option value="deflacion">
+                        3. Análisis Financiero (Deflación)
+                      </option>
+                    </select>
+
+                    {subTemaIndices === "compuestos" && (
+                      <>
+                        <label>Precio Base (P₀):</label>
+                        <select
+                          value={colPrecioBase}
+                          onChange={(e) => setColPrecioBase(e.target.value)}
+                          style={{ width: "100%", marginBottom: "5px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                        <label>Cantidad Base (Q₀):</label>
+                        <select
+                          value={colCantidadBase}
+                          onChange={(e) => setColCantidadBase(e.target.value)}
+                          style={{ width: "100%", marginBottom: "5px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                        <label>Precio Actual (Pt):</label>
+                        <select
+                          value={colPrecioActual}
+                          onChange={(e) => setColPrecioActual(e.target.value)}
+                          style={{ width: "100%", marginBottom: "5px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                        <label>Cantidad Actual (Qt):</label>
+                        <select
+                          value={colCantidadActual}
+                          onChange={(e) => setColCantidadActual(e.target.value)}
+                          style={{ width: "100%", marginBottom: "10px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                      </>
+                    )}
+                    {subTemaIndices === "empalme" && (
+                      <>
+                        <label>Eje de Tiempo (Años/Meses):</label>
+                        <select
+                          value={selectedColumn}
+                          onChange={(e) => setSelectedColumn(e.target.value)}
+                          style={{ width: "100%", marginBottom: "5px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                        <label>Serie de Índices (Original):</label>
+                        <select
+                          value={selectedColumnY}
+                          onChange={(e) => setSelectedColumnY(e.target.value)}
+                          style={{ width: "100%", marginBottom: "15px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                        <label>Valor para la Nueva Base:</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={nuevoIndiceBase}
+                          onChange={(e) => setNuevoIndiceBase(e.target.value)}
+                          className="container_cal_input"
+                          placeholder="Ej: 105.4"
+                        />
+                        <small
+                          style={{
+                            display: "block",
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          Ingresa el índice del año que será la nueva base.
+                        </small>
+                      </>
+                    )}
+                    {subTemaIndices === "deflacion" && (
+                      <>
+                        <label>Eje de Tiempo (Años/Meses):</label>
+                        <select
+                          value={selectedColumn}
+                          onChange={(e) => setSelectedColumn(e.target.value)}
+                          style={{ width: "100%", marginBottom: "5px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                        <label>Valor Nominal (Sueldos/Ventas):</label>
+                        <select
+                          value={selectedColumnY}
+                          onChange={(e) => setSelectedColumnY(e.target.value)}
+                          style={{ width: "100%", marginBottom: "5px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                        <label>Índice de Precios (IPC):</label>
+                        <select
+                          value={colPrecioBase}
+                          onChange={(e) => setColPrecioBase(e.target.value)}
+                          style={{ width: "100%", marginBottom: "5px" }}
+                        >
+                          {renderOpcionesColumnas()}
+                        </select>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <label>
+                      {calculo === "series_tiempo"
+                        ? "Eje de Tiempo X:"
+                        : esBivariada || calculo === "regresion_simple"
+                          ? "Variable X:"
+                          : "Columna Seleccionada:"}
+                    </label>
+                    <select
+                      value={selectedColumn}
+                      onChange={(e) => setSelectedColumn(e.target.value)}
+                      style={{ width: "100%", marginBottom: "10px" }}
+                    >
+                      {renderOpcionesColumnas()}
+                    </select>
+
+                    {(esBivariada ||
+                      calculo === "regresion_simple" ||
+                      calculo === "series_tiempo") && (
+                      <div
                         style={{
-                          fontWeight: "bold",
-                          color: "var(--primary-color)",
-                        }}
-                      >
-                        Módulo de Análisis:
-                      </label>
-                      <select
-                        value={subTemaIndices}
-                        onChange={(e) => setSubTemaIndices(e.target.value)}
-                        style={{
-                          width: "100%",
+                          padding: "10px",
+                          border: "1px solid var(--border-color)",
+                          borderRadius: "4px",
                           marginBottom: "15px",
-                          padding: "5px",
+                          backgroundColor: "var(--bg-card)",
                         }}
                       >
-                        <option value="compuestos">
-                          1. Índices Compuestos (Laspeyres/Paasche/Fisher)
-                        </option>
-                        <option value="empalme">
-                          2. Empalme y Cambio de Base
-                        </option>
-                        <option value="deflacion">
-                          3. Análisis Financiero (Deflación)
-                        </option>
-                      </select>
-
-                      {subTemaIndices === "compuestos" && (
-                        <>
-                          <label>Precio Base (P₀):</label>
-                          <select
-                            value={colPrecioBase}
-                            onChange={(e) => setColPrecioBase(e.target.value)}
-                            style={{ width: "100%", marginBottom: "5px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                          <label>Cantidad Base (Q₀):</label>
-                          <select
-                            value={colCantidadBase}
-                            onChange={(e) => setColCantidadBase(e.target.value)}
-                            style={{ width: "100%", marginBottom: "5px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                          <label>Precio Actual (Pt):</label>
-                          <select
-                            value={colPrecioActual}
-                            onChange={(e) => setColPrecioActual(e.target.value)}
-                            style={{ width: "100%", marginBottom: "5px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                          <label>Cantidad Actual (Qt):</label>
-                          <select
-                            value={colCantidadActual}
-                            onChange={(e) =>
-                              setColCantidadActual(e.target.value)
-                            }
-                            style={{ width: "100%", marginBottom: "10px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                        </>
-                      )}
-                      {subTemaIndices === "empalme" && (
-                        <>
-                          <label>Eje de Tiempo (Años/Meses):</label>
-                          <select
-                            value={selectedColumn}
-                            onChange={(e) => setSelectedColumn(e.target.value)}
-                            style={{ width: "100%", marginBottom: "5px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                          <label>Serie de Índices (Original):</label>
-                          <select
-                            value={selectedColumnY}
-                            onChange={(e) => setSelectedColumnY(e.target.value)}
-                            style={{ width: "100%", marginBottom: "15px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                          <label>Valor para la Nueva Base:</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={nuevoIndiceBase}
-                            onChange={(e) => setNuevoIndiceBase(e.target.value)}
-                            className="container_cal_input"
-                            placeholder="Ej: 105.4"
-                          />
-                          <small
-                            style={{
-                              display: "block",
-                              color: "var(--text-muted)",
-                            }}
-                          >
-                            Ingresa el índice del año que será la nueva base.
-                          </small>
-                        </>
-                      )}
-                      {subTemaIndices === "deflacion" && (
-                        <>
-                          <label>Eje de Tiempo (Años/Meses):</label>
-                          <select
-                            value={selectedColumn}
-                            onChange={(e) => setSelectedColumn(e.target.value)}
-                            style={{ width: "100%", marginBottom: "5px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                          <label>Valor Nominal (Sueldos/Ventas):</label>
-                          <select
-                            value={selectedColumnY}
-                            onChange={(e) => setSelectedColumnY(e.target.value)}
-                            style={{ width: "100%", marginBottom: "5px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                          <label>Índice de Precios (IPC):</label>
-                          <select
-                            value={colPrecioBase}
-                            onChange={(e) => setColPrecioBase(e.target.value)}
-                            style={{ width: "100%", marginBottom: "5px" }}
-                          >
-                            {renderOpcionesColumnas()}
-                          </select>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      <label>
-                        {calculo === "series_tiempo"
-                          ? "Eje de Tiempo X:"
-                          : esBivariada || calculo === "regresion_simple"
-                            ? "Variable X:"
-                            : "Columna Seleccionada:"}
-                      </label>
-                      <select
-                        value={selectedColumn}
-                        onChange={(e) => setSelectedColumn(e.target.value)}
-                        style={{ width: "100%", marginBottom: "10px" }}
-                      >
-                        {renderOpcionesColumnas()}
-                      </select>
-
-                      {(esBivariada ||
-                        calculo === "regresion_simple" ||
-                        calculo === "series_tiempo") && (
-                          <div
-                            style={{
-                              padding: "10px",
-                              border: "1px solid var(--border-color)",
-                              borderRadius: "4px",
-                              marginBottom: "15px",
-                              backgroundColor: "var(--bg-card)",
-                            }}
-                          >
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "5px",
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {calculo === "series_tiempo"
-                                ? "Valores Históricos Y (Demanda/Ventas):"
-                                : "Variable Y (Dependiente):"}
-                            </label>
-                            <select
-                              value={selectedColumnY}
-                              onChange={(e) => setSelectedColumnY(e.target.value)}
-                              style={{ width: "100%", padding: "5px" }}
-                            >
-                              <option value="">
-                                -- Seleccionar Variable Y --
-                              </option>
-                              {renderOpcionesColumnas()}
-                            </select>
-                          </div>
-                        )}
-                    </>
-                  )}
-
-                  {calculo === "series_tiempo" && (
-                    <div
-                      className="container_intervalos"
-                      style={{
-                        padding: "10px",
-                        backgroundColor: "var(--bg-card)",
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "4px",
-                        marginBottom: "15px",
-                      }}
-                    >
-                      <label
-                        style={{
-                          fontWeight: "bold",
-                          color: "var(--primary-color)",
-                        }}
-                      >
-                        Método de Pronóstico:
-                      </label>
-                      <select
-                        value={metodoSeries}
-                        onChange={(e) => setMetodoSeries(e.target.value)}
-                        className="container_select"
-                        style={{ marginBottom: "10px" }}
-                      >
-                        <option value="movil_simple">
-                          Promedios Móviles Simples
-                        </option>
-                        <option value="movil_ponderado">
-                          Promedios Móviles Ponderados
-                        </option>
-                        <option value="suavizamiento_exponencial">
-                          Suavizamiento Exponencial
-                        </option>
-                      </select>
-                      {metodoSeries === "movil_simple" && (
-                        <>
-                          <label>Periodos (k):</label>
-                          <input
-                            type="number"
-                            min="2"
-                            value={periodosK}
-                            onChange={(e) => setPeriodosK(e.target.value)}
-                            className="container_cal_input"
-                          />
-                        </>
-                      )}
-                      {metodoSeries === "movil_ponderado" && (
-                        <>
-                          <label>Pesos:</label>
-                          <input
-                            type="text"
-                            value={pesos}
-                            onChange={(e) => setPesos(e.target.value)}
-                            className="container_cal_input"
-                            placeholder="Ej: 0.5, 0.3, 0.2"
-                          />
-                        </>
-                      )}
-                      {metodoSeries === "suavizamiento_exponencial" && (
-                        <>
-                          <label>Alfa (α):</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="1"
-                            value={alfa}
-                            onChange={(e) => setAlfa(e.target.value)}
-                            className="container_cal_input"
-                          />
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {esUnidimensional &&
-                    calculo !== "frecuencias_completas" &&
-                    calculo !== "estadistica_descriptiva" && (
-                      <div className="container_intervalos">
-                        {(calculo === "distribucion_intervalos" ||
-                          calculo === "tendencia_central" ||
-                          calculo === "tendencia_y_posicion" ||
-                          calculo === "variabilidad_y_forma") && (
-                            <>
-                              <label>Tipo Intervalo:</label>
-                              <select
-                                value={tipoIntervalo}
-                                onChange={(e) => setTipoIntervalo(e.target.value)}
-                                className="container_select"
-                              >
-                                <option value="semiabierto">[a, b)</option>
-                                <option value="cerrado">[a, b]</option>
-                                <option value="abierto">(a, b)</option>
-                              </select>
-                              <label>Método K:</label>
-                              <select
-                                value={metodoK}
-                                onChange={(e) => setMetodoK(e.target.value)}
-                                className="container_select"
-                              >
-                                <option value="sturges">Sturges</option>
-                                <option value="cuadratica">Cuadrática</option>
-                                <option value="logaritmica">Logarítmica</option>
-                                <option value="personalizada">Manual</option>
-                              </select>
-                              {metodoK === "personalizada" && (
-                                <input
-                                  type="number"
-                                  value={kPersonalizado}
-                                  onChange={(e) =>
-                                    setKPersonalizado(e.target.value)
-                                  }
-                                  placeholder="Valor k"
-                                  className="container_cal_input"
-                                />
-                              )}
-                            </>
-                          )}
-                        {(calculo === "medidas_posicion" ||
-                          calculo === "tendencia_y_posicion") && (
-                            <div className="container_cal_percentil">
-                              <label>Percentil (1 - 99):</label>
-                              <input
-                                type="number"
-                                min="1"
-                                max="99"
-                                value={percentilK}
-                                onChange={(e) => setPercentilK(e.target.value)}
-                              />
-                            </div>
-                          )}
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "5px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {calculo === "series_tiempo"
+                            ? "Valores Históricos Y (Demanda/Ventas):"
+                            : "Variable Y (Dependiente):"}
+                        </label>
+                        <select
+                          value={selectedColumnY}
+                          onChange={(e) => setSelectedColumnY(e.target.value)}
+                          style={{ width: "100%", padding: "5px" }}
+                        >
+                          <option value="">-- Seleccionar Variable Y --</option>
+                          {renderOpcionesColumnas()}
+                        </select>
                       </div>
                     )}
+                  </>
+                )}
 
-                  {mostrarTabla && excelData.length > 0 && (
-                    <div
-                      className=".container_dataset"
-                      style={{ marginTop: "10px" }}
+                {calculo === "series_tiempo" && (
+                  <div
+                    className="container_intervalos"
+                    style={{
+                      padding: "10px",
+                      backgroundColor: "var(--bg-card)",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "4px",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    <label
+                      style={{
+                        fontWeight: "bold",
+                        color: "var(--primary-color)",
+                      }}
                     >
-                      <p className="info_vista">
-                        Vista Previa (Doble clic para editar):
-                      </p>
-                      <DataGrid
-                        columns={rdgColumns}
-                        rows={excelData}
-                        onRowsChange={handleGridChange}
-                        className="rdg-light"
-                        style={{
-                          blockSize: "100%",
-                          border: "1px solid var(--border-color)",
-                          height: "400px",
-                          textAlign: "center",
-                        }}
-                      />
+                      Método de Pronóstico:
+                    </label>
+                    <select
+                      value={metodoSeries}
+                      onChange={(e) => setMetodoSeries(e.target.value)}
+                      className="container_select"
+                      style={{ marginBottom: "10px" }}
+                    >
+                      <option value="movil_simple">
+                        Promedios Móviles Simples
+                      </option>
+                      <option value="movil_ponderado">
+                        Promedios Móviles Ponderados
+                      </option>
+                      <option value="suavizamiento_exponencial">
+                        Suavizamiento Exponencial
+                      </option>
+                    </select>
+                    {metodoSeries === "movil_simple" && (
+                      <>
+                        <label>Periodos (k):</label>
+                        <input
+                          type="number"
+                          min="2"
+                          value={periodosK}
+                          onChange={(e) => setPeriodosK(e.target.value)}
+                          className="container_cal_input"
+                        />
+                      </>
+                    )}
+                    {metodoSeries === "movil_ponderado" && (
+                      <>
+                        <label>Pesos:</label>
+                        <input
+                          type="text"
+                          value={pesos}
+                          onChange={(e) => setPesos(e.target.value)}
+                          className="container_cal_input"
+                          placeholder="Ej: 0.5, 0.3, 0.2"
+                        />
+                      </>
+                    )}
+                    {metodoSeries === "suavizamiento_exponencial" && (
+                      <>
+                        <label>Alfa (α):</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="1"
+                          value={alfa}
+                          onChange={(e) => setAlfa(e.target.value)}
+                          className="container_cal_input"
+                        />
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {esUnidimensional &&
+                  calculo !== "frecuencias_completas" &&
+                  calculo !== "estadistica_descriptiva" && (
+                    <div className="container_intervalos">
+                      {(calculo === "distribucion_intervalos" ||
+                        calculo === "tendencia_central" ||
+                        calculo === "tendencia_y_posicion" ||
+                        calculo === "variabilidad_y_forma") && (
+                        <>
+                          <label>Tipo Intervalo:</label>
+                          <select
+                            value={tipoIntervalo}
+                            onChange={(e) => setTipoIntervalo(e.target.value)}
+                            className="container_select"
+                          >
+                            <option value="semiabierto">[a, b)</option>
+                            <option value="cerrado">[a, b]</option>
+                            <option value="abierto">(a, b)</option>
+                          </select>
+                          <label>Método K:</label>
+                          <select
+                            value={metodoK}
+                            onChange={(e) => setMetodoK(e.target.value)}
+                            className="container_select"
+                          >
+                            <option value="sturges">Sturges</option>
+                            <option value="cuadratica">Cuadrática</option>
+                            <option value="logaritmica">Logarítmica</option>
+                            <option value="personalizada">Manual</option>
+                          </select>
+                          {metodoK === "personalizada" && (
+                            <input
+                              type="number"
+                              value={kPersonalizado}
+                              onChange={(e) =>
+                                setKPersonalizado(e.target.value)
+                              }
+                              placeholder="Valor k"
+                              className="container_cal_input"
+                            />
+                          )}
+                        </>
+                      )}
+                      {(calculo === "medidas_posicion" ||
+                        calculo === "tendencia_y_posicion") && (
+                        <div className="container_cal_percentil">
+                          <label>Percentil (1 - 99):</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="99"
+                            value={percentilK}
+                            onChange={(e) => setPercentilK(e.target.value)}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
-                  <button
-                    onClick={ejecutarCalculo}
-                    className="button_calcular"
-                    style={{ marginTop: "15px" }}
+
+                {mostrarTabla && excelData.length > 0 && (
+                  <div
+                    className=".container_dataset"
+                    style={{
+                      marginTop: "10px",
+                      width: "100%",
+                      overflowX: "hidden",
+                    }}
                   >
-                    CALCULAR
-                  </button>
-                </>
-              ) : (
-                <p className="info_cargando">
-                  Cargando datos o selecciona un archivo...
-                </p>
-              )}
-            </div>
-            <br />
-            <br />
-            <br />
+                    <p className="info_vista">
+                      Vista Previa (Doble clic para editar):
+                    </p>
+                    <DataGrid
+                      columns={rdgColumns}
+                      rows={excelData}
+                      onRowsChange={handleGridChange}
+                      className="rdg-light"
+                      style={{
+                        blockSize: "100%",
+                        border: "1px solid var(--border-color)",
+                        height: "400px",
+                        textAlign: "center",
+                        width: "100%",
+                      }}
+                    />
+                  </div>
+                )}
+
+                <button
+                  onClick={ejecutarCalculo}
+                  className="button_calcular"
+                  style={{ marginTop: "15px" }}
+                >
+                  CALCULAR
+                </button>
+              </div> /* 👈 ESTE ES EL DIV DE CIERRE QUE FALTABA */
+            ) : (
+              <p className="info_cargando">
+                Cargando datos o selecciona un archivo...
+              </p>
+            )}
+
+            {/* Botones inferiores (Limpios sin <br/>) */}
             <button
               onClick={() => setModoCreacion(!modoCreacion)}
               className="button_resultados"
@@ -800,14 +858,24 @@ export default function Calculos() {
                 backgroundColor: modoCreacion
                   ? "var(--text-muted)"
                   : "var(--accent-color)",
+                marginTop: "20px",
               }}
             >
               {modoCreacion ? "Volver a Resultados" : "Crear Tabla de Datos"}
             </button>
-            <br />
+
             <button
               onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
-              style={{ width: "100%", padding: "8px", background: "#6b7280" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                background: "#6b7280",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginTop: "10px",
+              }}
             >
               {mostrarCalculadora
                 ? "Ocultar Calculadora Manual"
@@ -828,7 +896,6 @@ export default function Calculos() {
             }}
           />
         ) : !resultado && !errorNumerico ? (
-
           /* 🆕 ESTADO DE ESPERA: Ahora usa clases de CSS */
           <div className="contenedor-espera-logo">
             <img
@@ -838,15 +905,14 @@ export default function Calculos() {
             />
           </div>
         ) : (
-
           /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
           <div className="contenedor-resultados-vacio">
             <div className="frecuencias">
-                <div style={{ marginBottom: "15px" }}>
-                  <h3 style={{ margin: 0 }}>
-                    Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
-                  </h3>
-                </div>
+              <div style={{ marginBottom: "15px" }}>
+                <h3 style={{ margin: 0 }}>
+                  Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
+                </h3>
+              </div>
 
               {errorNumerico && (
                 <div
@@ -911,24 +977,49 @@ export default function Calculos() {
               )}
             </div>
 
-            <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} calculo={calculo} />
+            <PanelGraficos
+              resultado={resultado}
+              esIntervalo={esIntervalo}
+              calculo={calculo}
+              orden={ordenGraficos}
+              setOrden={setOrdenGraficos}
+            />
 
             {/* 🆕 BARRA DE ACCIONES FINAL (UNIFICADA) */}
-            <div className="barra-acciones-final">
+            <div
+              className="barra-acciones-final"
+              style={{ display: "flex", gap: "10px", marginTop: "20px" }}
+            >
               <button
-                onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
+                onClick={() =>
+                  generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)
+                }
                 className="btn-icon"
-                style={{ backgroundColor: '#d9534f', color: 'white', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{
+                  backgroundColor: "#d9534f",
+                  color: "white",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  border: "none",
+                }}
               >
-                <IconoPDF /> Exportar PDF
+                📄 Exportar PDF
               </button>
 
               <button
                 onClick={handleGuardarResultado}
                 className="btn-icon"
-                style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  border: "none",
+                }}
               >
-                <IconoGuardar /> Guardar Cálculo
+                💾 Guardar Cálculo
               </button>
             </div>
           </div>
@@ -938,7 +1029,15 @@ export default function Calculos() {
       {/* ======================================================== */}
       {/* 🆕 AQUÍ PEGAS EL COMPONENTE OCULTO (Antes de cerrar el div principal) */}
       {/* ======================================================== */}
-      <div style={{ position: "fixed", left: "200vw", top: "200vh", opacity: 0, pointerEvents: "none" }}>
+      <div
+        style={{
+          position: "fixed",
+          left: "200vw",
+          top: "200vh",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      >
         <div
           id="reporte-formal-pdf"
           style={{
@@ -1017,8 +1116,8 @@ export default function Calculos() {
           <div id="contenido-pdf-dinamico">
             <div className="pdf-section">
               <p style={{ fontStyle: "italic", marginBottom: "15px" }}>
-                Este documento contiene el análisis estadístico detallado generado
-                por el sistema.
+                Este documento contiene el análisis estadístico detallado
+                generado por el sistema.
               </p>
             </div>
 
@@ -1080,6 +1179,7 @@ export default function Calculos() {
                     resultado={resultado}
                     esIntervalo={esIntervalo}
                     calculo={calculo}
+                    orden={ordenGraficos}
                   />
                 </div>
               </>
@@ -1101,7 +1201,6 @@ export default function Calculos() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

@@ -253,75 +253,64 @@ export default function ExcelContent({ filename, autor, onSheetChange, mostrarTa
   }; 
 
   return (
-    <div className="container_content" style={{
-      height: mostrarTabla ? '550px' : 'auto',
-    }}>
+    // Reducimos el contenedor al mínimo necesario
+    <div style={{ height: mostrarTabla ? '550px' : 'auto', width: '100%' }}>
 
-      {/* CABECERA DEL CONTENIDO (AHORA SÍ ES RESPONSIVA) */}
-      <div className="container_cabecera">
-
-        <div className="container_cabecera_info">
-          <h5 >Archivo en uso</h5>
-          <span>
-            {filename}
-          </span>
-          { permitirEdicion && huboCambios && <small>tiene cambios pendientes</small>}
+      {/* Si no estamos mostrando la tabla, SOLO dibujamos el selector limpio */}
+      {!mostrarTabla && sheets.length > 0 && (
+        <div style={{ marginBottom: "15px" }}> {/* Margen estándar para fluir con el resto */}
+          <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+            Hoja de Trabajo:
+          </label>
+          <select
+            value={selectedSheet}
+            onChange={handleSheetChange}
+            style={{ width: "100%", padding: "5px", borderRadius: "4px", border: "1px solid var(--border-color)" }}
+          >
+            {sheets.map((sheetName, index) => (
+              <option key={index} value={index}>{sheetName}</option>
+            ))}
+          </select>
         </div>
+      )}
 
-        {permitirEdicion && huboCambios && (
-
-          <div className="container_cabecera_botones">
-            <button
-              onClick={guardarExcel}
-              disabled={cargandoGuardado}
-            >
+      {/* CABECERA PARA CUANDO LA TABLA ESTÁ VISIBLE (Solo para la vista /archivos) */}
+      {mostrarTabla && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+          {sheets.length > 0 && (
+             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+               <label>Hoja:</label>
+               <select value={selectedSheet} onChange={handleSheetChange}>
+                 {sheets.map((sheetName, index) => (
+                   <option key={index} value={index}>{sheetName}</option>
+                 ))}
+               </select>
+             </div>
+          )}
+          {permitirEdicion && huboCambios && (
+            <button onClick={guardarExcel} disabled={cargandoGuardado} style={{ background: '#217346', color: 'white', border: 'none', padding: '5px 15px', borderRadius: '4px' }}>
               {cargandoGuardado ? "Guardando..." : "Actualizar"}
             </button>
-          </div>
+          )}
+        </div>
+      )}
 
-        )}
-
-        {sheets.length > 0 && (
-          <div className="container_edicion">
-              <span>
-                Edición Activa
-              </span>
-            <div className="container_edicion_datos">
-              <label>Hoja:</label>
-              <select
-                value={selectedSheet}
-                onChange={handleSheetChange}
-              >
-                {sheets.map((sheetName, index) => (
-                  <option key={index} value={index}>{sheetName}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* TABLA O ESTADO DE CARGA */}
+      {/* TABLA O ESTADO DE CARGA (Sin cambios) */}
       {mostrarTabla && (
         loading ? (
-          <div className="container_tablas">
-            <h3>Cargando datos desde el servidor...</h3>
-            <p>Esto puede tardar dependiendo del tamaño del archivo.</p>
+          <div className="container_tablas" style={{ textAlign: 'center', padding: '20px' }}>
+            <h3>Cargando datos...</h3>
           </div>
         ) : rows.length > 0 ? (
-          <div className="container_tablas_datos">
-            <DataGrid
-              columns={columns}
-              rows={rows}
-              onRowsChange={handleRowsChange}
-              rowKeyGetter={(row) => row._id}
-              className="rdg-light personalizado"
-            />
-          </div>
+          <DataGrid
+            columns={columns}
+            rows={rows}
+            onRowsChange={handleRowsChange}
+            rowKeyGetter={(row) => row._id}
+            className="rdg-light personalizado"
+          />
         ) : (
-          <div className="container_vacio">
-            <p>Hoja vacía.</p>
-          </div>
+          <div style={{ textAlign: 'center', padding: '20px', background: '#f8f9fa' }}>Hoja vacía.</div>
         )
       )}
     </div>
