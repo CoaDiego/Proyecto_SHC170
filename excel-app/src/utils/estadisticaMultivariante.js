@@ -135,6 +135,21 @@ export const calcularDistribucionBivariada = (dataX, dataY) => {
     ambosNumericos, // Útil por si quieres ocultar los paneles de Correlación en la UI
     covarianza,
     correlacion,
-    interpretacion
+    interpretacion,
+    // 🆕 Versión plana para Excel
+    matrizPura: [
+      // Fila de encabezados (X \ Y)
+      { "Variable X \\ Y": "", ...categoriasY.reduce((acc, col) => ({ ...acc, [col]: col }), {}), "Totales": "TOTAL X" },
+      ...categoriasX.map(f => ({
+        "Variable X \\ Y": f,
+        ...categoriasY.reduce((acc, c) => ({ ...acc, [c]: matriz[f][c] }), {}),
+        "Totales": totalFilas[f]
+      })),
+      {
+        "Variable X \\ Y": "TOTAL Y",
+        ...categoriasY.reduce((acc, c) => ({ ...acc, [c]: totalColumnas[c] }), {}),
+        "Totales": n
+      }
+    ]
   };
 };

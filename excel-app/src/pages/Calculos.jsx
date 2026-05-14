@@ -25,6 +25,7 @@ import TablaIndices from "../components/Resultados/TablaIndices";
 import { alerta } from "../utils/Notificaciones";
 
 import { generarPDFReporte } from "../utils/exportUtils"; // 🆕
+import { IconoGuardar, IconoPDF } from "../components/ui/iconos";
 
 function textEditor({ row, column, onRowChange, onClose }) {
   return (
@@ -112,7 +113,7 @@ export default function Calculos() {
 
 
 
-// 🆕 EFECTO PARA REABRIR HISTORIAL (VERSIÓN AUTOMÁTICA)
+  // 🆕 EFECTO PARA REABRIR HISTORIAL (VERSIÓN AUTOMÁTICA)
   // 1. EFECTO INICIAL: Saca los datos de la mochila y prepara el banderín
   useEffect(() => {
     if (location.state) {
@@ -138,14 +139,14 @@ export default function Calculos() {
   useEffect(() => {
     // Si hay un cálculo pendiente Y ya tenemos datos en la tabla (excelData)
     if (calculoPendiente.current && excelData && excelData.length > 0) {
-      
+
       const timer = setTimeout(() => {
         ejecutarCalculo();
         alerta.exito("Historial Cargado", "Se restauró el cálculo automáticamente.");
       }, 300); // Un pequeñísimo respiro de 300ms para que React pinte la tabla
-      
+
       calculoPendiente.current = false; // Bajamos el banderín
-      
+
       return () => clearTimeout(timer);
     }
   }, [excelData, ejecutarCalculo]); // React vigilará excelData constantemente
@@ -188,26 +189,26 @@ export default function Calculos() {
   }, [usuario]);
 
 
-const handleGuardarResultado = async () => {
-  if (!usuario) return;
-  try {
-    alerta.success("Guardando...", "Registrando configuración del cálculo.");
-    
-    // Pasamos las variables de estado actuales: selectedColumn y selectedColumnY
-    await api.guardarEnHistorial(
-        usuario.nombre, 
-        calculo, 
-        selectedFile, 
-        selectedColumn, 
+  const handleGuardarResultado = async () => {
+    if (!usuario) return;
+    try {
+      alerta.success("Guardando...", "Registrando configuración del cálculo.");
+
+      // Pasamos las variables de estado actuales: selectedColumn y selectedColumnY
+      await api.guardarEnHistorial(
+        usuario.nombre,
+        calculo,
+        selectedFile,
+        selectedColumn,
         selectedColumnY,
         selectedSheet
-    );
-    
-    alerta.exito("¡Guardado!", "El historial ahora recordará las columnas usadas.");
-  } catch (error) {
-    alerta.error("Error", "No se pudo guardar la configuración.");
-  }
-};
+      );
+
+      alerta.exito("¡Guardado!", "El historial ahora recordará las columnas usadas.");
+    } catch (error) {
+      alerta.error("Error", "No se pudo guardar la configuración.");
+    }
+  };
 
   const esIntervalo = calculo === "distribucion_intervalos";
   const esUnidimensional = [
@@ -298,14 +299,23 @@ const handleGuardarResultado = async () => {
       className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`}
       style={{ position: "relative" }}
     >
-      <button
-        onClick={() => setPanelAbierto(!panelAbierto)}
-        className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
-        title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
-      >
-        <span className="icono-animado"></span>
+      <button onClick={() => setPanelAbierto(!panelAbierto)} className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`} title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}>
+        <span className={`icono-toggle ${panelAbierto ? 'abierto' : 'cerrado'}`} style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          color: '#ffffff',
+          transform: panelAbierto ? 'scaleX(1)' : 'scaleX(-1)',
+          transition: 'transform 0.3s ease',
+          lineHeight: 0,
+          marginTop: '-2px',
+          marginLeft: '-1px'
+        }}>
+          ❮
+        </span>
       </button>
-
       {/* ================= IZQUIERDA: CONTROLES ================= */}
       <div className="calculadora-datos">
         <div
@@ -832,51 +842,11 @@ const handleGuardarResultado = async () => {
           /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
           <div className="contenedor-resultados-vacio">
             <div className="frecuencias">
-              {/* 🆕 CABECERA CON BOTÓN EXPORTAR */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "15px",
-                }}
-              >
-                <h3 style={{ margin: 0 }}>
-                  Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
-                </h3>
-
-                
-<button 
-                      onClick={handleGuardarResultado}
-                      style={{
-                          backgroundColor: 'var(--primary-color)', /* Usa el azul/morado principal de tu app */
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 15px',
-                          borderRadius: '5px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                      }}
-                    >
-                      💾 Guardar Cálculo
-                    </button>
-
-                    {/* Botón 2: Generar el PDF */}
-                    <button 
-                      onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
-                      style={{
-                          backgroundColor: '#d9534f', /* Rojo clásico PDF */
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 15px',
-                          borderRadius: '5px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold',
-                      }}
-                    >
-                      📄 Exportar PDF
-                    </button>
-              </div>
+                <div style={{ marginBottom: "15px" }}>
+                  <h3 style={{ margin: 0 }}>
+                    Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
+                  </h3>
+                </div>
 
               {errorNumerico && (
                 <div
@@ -942,6 +912,25 @@ const handleGuardarResultado = async () => {
             </div>
 
             <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} calculo={calculo} />
+
+            {/* 🆕 BARRA DE ACCIONES FINAL (UNIFICADA) */}
+            <div className="barra-acciones-final">
+              <button
+                onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
+                className="btn-icon"
+                style={{ backgroundColor: '#d9534f', color: 'white', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                <IconoPDF /> Exportar PDF
+              </button>
+
+              <button
+                onClick={handleGuardarResultado}
+                className="btn-icon"
+                style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                <IconoGuardar /> Guardar Cálculo
+              </button>
+            </div>
           </div>
         )}
       </div>

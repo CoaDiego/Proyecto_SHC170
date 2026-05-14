@@ -1,7 +1,7 @@
 import React from 'react';
-import {FONT, FS, RADIUS, cardStyle, labelStyle } from '../../../Principal/Constantes';
+import { FONT, FS, RADIUS, cardStyle, labelStyle } from '../../../Principal/Constantes';
 
-import {IconoCalculadora} from '../../../../ui/iconos';
+import { IconoCalculadora } from '../../../../ui/iconos';
 
 export default function ControlesConteo({ n, setN, r, setR, ajustar, ejecutar }) {
     return (
@@ -21,8 +21,8 @@ export default function ControlesConteo({ n, setN, r, setR, ajustar, ejecutar })
             </div>
 
             <button onClick={ejecutar} className="button_calcular btn-icon" style={{ width: 'fit-content', alignSelf: 'center', padding: '8px 35px', borderRadius: RADIUS, fontSize: FS.md, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <IconoCalculadora/>
-                CALCULAR 
+                <IconoCalculadora />
+                CALCULAR
             </button>
         </>
     )

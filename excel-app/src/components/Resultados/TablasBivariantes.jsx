@@ -1,6 +1,7 @@
-// src/components/resultados/TablasBivariantes.jsx
 import React from "react";
 import Latex from "../excel/Latex"; 
+import { copiarTablaAExcel } from "../../utils/exportUtils";
+import { IconoCopiar } from "../ui/iconos";
 
 export default function TablasBivariantes({ resultado, formatearCelda }) {
   // Atrapamos el nuevo nombre de la función unificada
@@ -36,10 +37,19 @@ export default function TablasBivariantes({ resultado, formatearCelda }) {
         </div>
       )}
 
-      {/* --- TABLA UNIFICADA (Frecuencias y Porcentajes combinados) --- */}
-      <h5 style={{ color: "var(--text-color)", marginBottom: "10px" }}>
-        Tabla de Frecuencias Conjuntas y Marginales
-      </h5>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h5 style={{ color: "var(--text-color)", margin: 0 }}>
+          Tabla de Frecuencias Conjuntas y Marginales
+        </h5>
+        <button 
+          className="btn-icon"
+          onClick={() => copiarTablaAExcel(resultado.matrizPura, "bivariada")}
+          style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+          title="Copiar datos puros para Excel"
+        >
+          <IconoCopiar /> Copiar Tabla
+        </button>
+      </div>
       <div style={{ overflowX: "auto", paddingBottom: "20px" }}>
         <table className="tabla-academica">
           <thead>

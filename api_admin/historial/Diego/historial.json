@@ -1,5 +1,55 @@
 [
     {
+        "id": "HIST_1778768829",
+        "fecha": "14/05/2026",
+        "hora": "10:27:09",
+        "calculo": "regresion_simple",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Datos 1",
+        "columna_y": "Datos 2",
+        "hoja": 0
+    },
+    {
+        "id": "HIST_1778768829",
+        "fecha": "14/05/2026",
+        "hora": "10:27:09",
+        "calculo": "regresion_simple",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Datos 1",
+        "columna_y": "Datos 2",
+        "hoja": 0
+    },
+    {
+        "id": "HIST_1778768829",
+        "fecha": "14/05/2026",
+        "hora": "10:27:09",
+        "calculo": "regresion_simple",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Datos 1",
+        "columna_y": "Datos 2",
+        "hoja": 0
+    },
+    {
+        "id": "HIST_1778768828",
+        "fecha": "14/05/2026",
+        "hora": "10:27:08",
+        "calculo": "regresion_simple",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Datos 1",
+        "columna_y": "Datos 2",
+        "hoja": 0
+    },
+    {
+        "id": "HIST_1778768828",
+        "fecha": "14/05/2026",
+        "hora": "10:27:08",
+        "calculo": "regresion_simple",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Datos 1",
+        "columna_y": "Datos 2",
+        "hoja": 0
+    },
+    {
         "id": "HIST_1778644822",
         "fecha": "13/05/2026",
         "hora": "00:00:22",
