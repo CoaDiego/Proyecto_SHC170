@@ -16,7 +16,7 @@ export default function Menu({ usuario }) {
        <img src={escudoAdmin} alt="Escudo Administración" className="nav-logo" />
       </div>
 
-      {/* 2. CONTENEDOR DESPLEGABLE (Solo enlaces) - Se posiciona absoluto en móvil */}
+      {/* 2. CONTENEDOR DESPLEGABLE - Se posiciona absoluto en móvil */}
       <div className={`nav-menu ${isOpen ? "active" : ""}`}>
         <ul className="nav-links">
           <li><NavLink to="/" onClick={closeMenu}>Inicio</NavLink></li>
@@ -26,11 +26,16 @@ export default function Menu({ usuario }) {
           <li><NavLink to="/historial" onClick={closeMenu}>Historial</NavLink></li>
           <li><NavLink to="/about" onClick={closeMenu}>Sobre la App</NavLink></li>
         </ul>
+
+        {/* MÓVIL: El tema se queda aquí dentro para ganar espacio arriba */}
+        <div className="nav-menu-mobile-extra mobile-only">
+          <OscuroClaro />
+        </div>
       </div>
 
-      {/* 3. ZONA DERECHA: Siempre visible (Tema + Usuario) */}
+      {/* 3. ZONA DERECHA: Siempre visible (Usuario) + Tema solo en Desktop */}
       <div className="menu-derecha">
-        <div className="nav-theme">
+        <div className="nav-theme desktop-only">
           <OscuroClaro />
         </div>
 
@@ -46,12 +51,14 @@ export default function Menu({ usuario }) {
             <div className="avatar-naranja">
               {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
             </div>
-            <span className="user-name-text">{usuario.nombre.split(' ')[0]}</span>
+            <span className="user-name-text">
+              {usuario.nombre?.split(' ')[0] || 'Usuario'}
+            </span>
           </div>
         )}
       </div>
 
-      {/* 4. BOTÓN DE HAMBURGUESA - Al final para que esté a la derecha en móvil */}
+      {/* 4. BOTÓN DE HAMBURGUESA */}
       <button 
         className={`hamburger-menu ${isOpen ? "open" : ""}`} 
         onClick={() => setIsOpen(!isOpen)}

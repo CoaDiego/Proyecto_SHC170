@@ -2,6 +2,10 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 //Base url de Render
 /* const BASE_URL = "https://api-admin-shc170.onrender.com"; */
 
+//uvicorn main:app --reload
+
+
+
 export const api = {
   // --- Función para leer la hoja de Excel ---
   // 🆕 Añadimos el parámetro 'autor'
