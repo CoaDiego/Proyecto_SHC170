@@ -13,11 +13,14 @@ import MAT251 from "./pages/MAT251/Pantalla";
 import Registro from "./pages/Registro";
 import Perfil from "./pages/Perfil";
 
+import SelectorRol from './components/ui/SelectorRol';
+
 // 👇 1. IMPORTAMOS EL DATAPROVIDER DE LA CARPETA EXCEL
 import { DataProvider } from "./components/excel/DataContext"; 
 
 import LtiTester from "./pages/LtiTester";
 import Historial from "./pages/Historial";
+import Grupos from './pages/Grupos';
 
 import "./App.css"; 
 
@@ -30,8 +33,9 @@ function App() {
 
   return (
     // 👇 2. ENVOLVEMOS TODA LA APLICACIÓN CON EL DATAPROVIDER
-    <DataProvider usuario={usuario}>
+    <DataProvider usuario={usuario} setUsuario={setUsuario}>
       <Router>
+        <SelectorRol />
         <div className="App">
 
           <>
@@ -69,6 +73,7 @@ function App() {
                   <Route path="/calculadora" element={<Calculadora />} />
                   <Route path="/historial" element={<Historial />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/grupos" element={<Grupos />} />
 
                   <Route path="/lti-tester" element={<Navigate to="/" />} />
                   <Route path="/login" element={<Navigate to="/" />} />

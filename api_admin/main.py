@@ -79,28 +79,27 @@ async def lti_launch(request: Request):
 USUARIOS_FILE = "usuarios.json"
 
 # Modelos de datos esperados
-# 1. Actualizamos el modelo para que sea más universal
 class UsuarioRegistro(BaseModel):
     nombre: str
-    usuario: str
-    email: str
-    perfil: str         # 🆕 Ej: Empresa, Investigador, Estudiante
-    institucion: str    # 🆕 Reemplaza a "carrera"
+    # ❌ Eliminamos "usuario: str" porque ya no lo usamos
+    email: str          # 👈 Ahora el email es el rey
     password: str
 
 class UsuarioLogin(BaseModel):
-    usuario: str
+    email: str          # 👈 Cambiamos usuario por email
     password: str
 
 # Función auxiliar para leer o crear el archivo JSON
 def cargar_usuarios():
     if not os.path.exists(USUARIOS_FILE):
-        # Si no existe, lo creamos e insertamos a tu usuario Admin por defecto
+        # Si no existe, creamos el admin usando un correo por defecto
         default_users = {
-            "admin": {
+            "admin@usfx.bo": {  # 👈 Ahora la "llave" es un correo
                 "nombre": "Diego (Administrador)",
                 "password": "123",
-                "rol": "Administrador"
+                "rol": "Administrador",
+                "perfil": "Administrador",
+                "institucion": "USFX"
             }
         }
         with open(USUARIOS_FILE, "w") as f:
@@ -115,21 +114,23 @@ def guardar_usuarios(usuarios_dict):
         json.dump(usuarios_dict, f)
 
 # Endpoint 1: Registrar nuevo usuario
-# 2. Actualizamos cómo se guarda en el diccionario
 @app.post("/registrar_usuario")
 async def registrar_usuario(user_data: UsuarioRegistro):
     usuarios = cargar_usuarios()
     
-    if user_data.usuario in usuarios:
-        return JSONResponse(status_code=400, content={"error": "El nombre de usuario ya está en uso"})
+    if user_data.email in usuarios:
+        return JSONResponse(status_code=400, content={"error": "Este correo electrónico ya está registrado."})
     
-    usuarios[user_data.usuario] = {
-        "nombre": user_data.nombre,
+    # Todo usuario nuevo nace estrictamente como Estudiante
+    nombre_completo = f"{user_data.nombres} {user_data.apellidos}"
+    
+    usuarios[user_data.email] = {
+        "nombres": user_data.nombres,
+        "apellidos": user_data.apellidos,
+        "nombre": nombre_completo, # Lo mantenemos por compatibilidad con el resto del sistema
         "email": user_data.email,
-        "perfil": user_data.perfil,           # Nuevo
-        "institucion": user_data.institucion, # Nuevo
         "password": user_data.password, 
-        "rol": "Usuario Externo" 
+        "rol": "Estudiante" # 🚀 ASIGNACIÓN AUTOMÁTICA Y SEGURA
     }
     guardar_usuarios(usuarios)
     return {"message": "Usuario registrado con éxito"}
@@ -139,16 +140,20 @@ async def registrar_usuario(user_data: UsuarioRegistro):
 async def login_local(credentials: UsuarioLogin):
     usuarios = cargar_usuarios()
     
-    user_info = usuarios.get(credentials.usuario)
+    # Buscamos en la base de datos usando el EMAIL
+    user_info = usuarios.get(credentials.email)
     
     if not user_info or user_info["password"] != credentials.password:
-        return JSONResponse(status_code=401, content={"error": "Credenciales incorrectas"})
+        return JSONResponse(status_code=401, content={"error": "Correo o contraseña incorrectos"})
     
-    # Si todo está bien, devolvemos el perfil para React
+    # Si todo está bien, devolvemos el perfil completo para React
     return {
-        "id": credentials.usuario,
-        "nombre": user_info["nombre"],
-        "rol": user_info["rol"]
+        "id": credentials.email,
+        "nombre": user_info.get("nombre"),
+        "rol": user_info.get("rol"),
+        "email": credentials.email,
+        "perfil": user_info.get("perfil", "Estudiante Externo"),
+        "institucion": user_info.get("institucion", "")
     }
 
     

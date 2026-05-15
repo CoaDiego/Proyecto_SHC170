@@ -1,0 +1,12 @@
+[
+    {
+        "id": "HIST_1778811664",
+        "fecha": "14/05/2026",
+        "hora": "22:21:04",
+        "calculo": "distribucion_intervalos",
+        "archivo_origen": "Datos_Ejemplos 2.xlsx",
+        "columna_x": "Datos",
+        "columna_y": "Datos",
+        "hoja": 0
+    }
+]

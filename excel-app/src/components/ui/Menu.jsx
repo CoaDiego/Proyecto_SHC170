@@ -24,7 +24,9 @@ export default function Menu({ usuario }) {
           <li><NavLink to="/calculadora" onClick={closeMenu}>Calculadora</NavLink></li>
           <li><NavLink to="/MAT251" onClick={closeMenu}>MAT-251</NavLink></li>
           <li><NavLink to="/historial" onClick={closeMenu}>Historial</NavLink></li>
+          <li><NavLink to="/grupos" onClick={closeMenu}>Grupos</NavLink></li>
          {/*  <li><NavLink to="/about" onClick={closeMenu}>Sobre la App</NavLink></li> */}
+         
         </ul>
 
         {/* MÓVIL: El tema se queda aquí dentro para ganar espacio arriba */}

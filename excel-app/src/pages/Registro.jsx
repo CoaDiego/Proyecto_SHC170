@@ -4,11 +4,9 @@ import logoCarrera from "../assets/images/Logo-Adm.png";
 import { alerta } from '../utils/Notificaciones';
 
 export default function Registro() {
-  const [nombre, setNombre] = useState("");
-  const [user, setUser] = useState("");
+  const [nombres, setNombres] = useState("");
+  const [apellidos, setApellidos] = useState("");
   const [email, setEmail] = useState("");
-  const [perfil, setPerfil] = useState("Estudiante Externo"); // 🆕 Estado por defecto
-  const [institucion, setInstitucion] = useState("");
   const [pass, setPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const navigate = useNavigate();
@@ -21,23 +19,21 @@ export default function Registro() {
       return;
     }
 
-    if (nombre && user && email && institucion && pass) {
+    if (nombres && apellidos && email && pass) {
       try {
-        const response = await fetch("http://localhost:8000/registrar_usuario", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/registrar_usuario`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
-            nombre: nombre, 
-            usuario: user, 
-            email: email,
-            perfil: perfil,           // 🆕 Enviamos el perfil seleccionado
-            institucion: institucion, // 🆕 Enviamos la empresa/universidad
+            nombres: nombres, 
+            apellidos: apellidos,
+            email: email,             
             password: pass 
           })
         });
 
         if (response.ok) {
-          alerta.success("Cuenta creada", "Tu usuario ha sido registrado correctamente.");
+          alerta.success("Cuenta creada", "Tu cuenta ha sido registrada exitosamente.");
           navigate("/login"); 
         } else {
           const errorData = await response.json();
@@ -53,60 +49,39 @@ export default function Registro() {
 
   return (
     <div className="login-container" style={{ padding: '20px' }}>
-      <div className="login-card" style={{ maxWidth: '550px', width: '100%' }}>
+      <div className="login-card" style={{ maxWidth: '500px', width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <img src={logoCarrera} alt="Logo" style={{ width: '150px', height: 'auto' }} />
-          <h3 style={{ marginTop: '15px', color: '#333' }}>Únete al Software Estadístico</h3>
-          <p style={{ fontSize: '0.9rem', color: '#666' }}>Crea tu cuenta para acceder a las herramientas de análisis.</p>
+          <h3 style={{ marginTop: '15px', color: '#333' }}>Registro de Usuario</h3>
+          <p style={{ fontSize: '0.9rem', color: '#666' }}>Crea tu cuenta para acceder al sistema.</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           
+          <div style={{ display: 'flex', gap: '15px' }}>
+            <div style={{ textAlign: 'left', flex: 1 }}>
+              <label className="etiqueta">Nombres</label>
+              <input type="text" value={nombres} onChange={(e) => setNombres(e.target.value)} placeholder="Ej. Juan Carlos" style={{ width: '100%' }} />
+            </div>
+            <div style={{ textAlign: 'left', flex: 1 }}>
+              <label className="etiqueta">Apellidos</label>
+              <input type="text" value={apellidos} onChange={(e) => setApellidos(e.target.value)} placeholder="Ej. Pérez Gómez" style={{ width: '100%' }} />
+            </div>
+          </div>
+
           <div style={{ textAlign: 'left' }}>
-            <label className="etiqueta">Nombre Completo</label>
-            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Juan Pérez" />
-          </div>
-
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <div style={{ textAlign: 'left', flex: 1 }}>
-              <label className="etiqueta">Usuario</label>
-              <input type="text" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Ej. juanp" />
-            </div>
-            <div style={{ textAlign: 'left', flex: 1 }}>
-              <label className="etiqueta">Correo Electrónico</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
-            </div>
-          </div>
-
-          {/* 🆕 Nueva fila para Perfil y Organización */}
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <div style={{ textAlign: 'left', flex: 1 }}>
-              <label className="etiqueta">Perfil de Uso</label>
-              <select 
-                value={perfil} 
-                onChange={(e) => setPerfil(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', marginTop: '5px' }}
-              >
-                <option value="Estudiante Externo">Estudiante Externo</option>
-                <option value="Investigador">Investigador Independiente</option>
-                <option value="Empresa">Empresa / Negocio</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-            <div style={{ textAlign: 'left', flex: 1 }}>
-              <label className="etiqueta">Organización / Universidad</label>
-              <input type="text" value={institucion} onChange={(e) => setInstitucion(e.target.value)} placeholder="Nombre de tu institución" />
-            </div>
+            <label className="etiqueta">Correo Electrónico</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@ejemplo.com" style={{ width: '100%' }} />
           </div>
 
           <div style={{ display: 'flex', gap: '15px' }}>
             <div style={{ textAlign: 'left', flex: 1 }}>
               <label className="etiqueta">Contraseña</label>
-              <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Crea una contraseña" />
+              <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Crea una contraseña" style={{ width: '100%' }} />
             </div>
             <div style={{ textAlign: 'left', flex: 1 }}>
               <label className="etiqueta">Confirmar Contraseña</label>
-              <input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder="Repite la contraseña" />
+              <input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder="Repite la contraseña" style={{ width: '100%' }} />
             </div>
           </div>
 
