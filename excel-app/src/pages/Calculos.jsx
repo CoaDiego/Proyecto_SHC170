@@ -1,63 +1,26 @@
 import { useEffect, useState, useRef } from "react";
-import { DataGrid } from "react-data-grid";
-import "react-data-grid/lib/styles.css";
-
-// --- IMPORTS ---
-import escudoAdmin from "../assets/images/escudoAdmin.png";
 import { useLocation } from "react-router-dom";
+import "react-data-grid/lib/styles.css";
+import "../styles/pages/Calculos.css";
 
-import Calculator from "../components/excel/Calculator";
-import ExcelContent from "../components/excel/ExcelContent";
-import TablaDinamica from "../components/excel/TablaDinamica";
+// --- IMPORTS DE SERVICIOS Y CONTEXTO ---
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 import { useData } from "../components/excel/DataContext";
 import { api } from "../services/api";
-
-import "../styles/pages/Calculos.css";
-
-import TablasBivariantes from "../components/Resultados/TablasBivariantes";
-import TablasUnidimensionales from "../components/Resultados/TablasUnidimensionales";
-import PanelGraficos from "../components/Resultados/PanelGraficos";
-import TablaRegresion from "../components/Resultados/TablaRegresion";
-import TablaSeriesTiempo from "../components/Resultados/TablaSeriesTiempo";
-import TablaIndices from "../components/Resultados/TablaIndices";
-
 import { alerta } from "../utils/Notificaciones";
 
-import { generarPDFReporte } from "../utils/exportUtils"; // 🆕
-import { IconoGuardar, IconoPDF } from "../components/ui/iconos";
-
-function textEditor({ row, column, onRowChange, onClose }) {
-  return (
-    <input
-      className="editor_text"
-      autoFocus
-      value={row[column.key]}
-      onChange={(e) => onRowChange({ ...row, [column.key]: e.target.value })}
-      onBlur={() => onClose(true)}
-      onKeyDown={(e) => {
-        if (
-          e.key === "ArrowLeft" ||
-          e.key === "ArrowRight" ||
-          e.key === "ArrowUp" ||
-          e.key === "ArrowDown"
-        ) {
-          e.stopPropagation();
-        }
-      }}
-    />
-  );
-}
+// --- IMPORTS DE LOS 3 NUEVOS PANELES MODULARES ---
+import ReportePDF from "../components/Resultados/ReportePDF";
+import PanelResultados from "../components/Resultados/PanelResultados";
+import PanelConfiguracion from "../components/Resultados/PanelConfiguracion"; // (O la ruta donde lo hayas guardado)
 
 export default function Calculos() {
   const { variables, usuario } = useData();
 
   const [files, setFiles] = useState([]);
-  const [ordenGraficos, setOrdenGraficos] = useState([]); // 🆕 Nuestro nuevo estado
-
+  const [ordenGraficos, setOrdenGraficos] = useState([]);
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedSheet, setSelectedSheet] = useState(0);
-
   const [mostrarTabla, _setMostrarTabla] = useState(true);
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
   const [filtroFractil, setFiltroFractil] = useState("Cuartil");
@@ -65,64 +28,26 @@ export default function Calculos() {
   const [modoCreacion, setModoCreacion] = useState(false);
 
   const {
-    excelData,
-    columns,
-    selectedColumn,
-    setSelectedColumn,
-    selectedColumnY,
-    setSelectedColumnY,
-    resultado,
-    calculo,
-    setCalculo,
-    tipoIntervalo,
-    setTipoIntervalo,
-    metodoK,
-    setMetodoK,
-    kPersonalizado,
-    setKPersonalizado,
-    percentilK,
-    setPercentilK,
-    handleChangeDato,
-    ejecutarCalculo,
-    errorNumerico,
-
-    metodoSeries,
-    setMetodoSeries,
-    periodosK,
-    setPeriodosK,
-    pesos,
-    setPesos,
-    alfa,
-    setAlfa,
-    subTemaIndices,
-    setSubTemaIndices,
-    colPrecioBase,
-    setColPrecioBase,
-    colCantidadBase,
-    setColCantidadBase,
-    colPrecioActual,
-    setColPrecioActual,
-    colCantidadActual,
-    setColCantidadActual,
-    nuevoIndiceBase,
-    setNuevoIndiceBase,
+    excelData, columns,
+    selectedColumn, setSelectedColumn,
+    selectedColumnY, setSelectedColumnY,
+    resultado, calculo, setCalculo,
+    tipoIntervalo, setTipoIntervalo,
+    metodoK, setMetodoK, kPersonalizado, setKPersonalizado, percentilK, setPercentilK,
+    handleChangeDato, ejecutarCalculo, errorNumerico,
+    metodoSeries, setMetodoSeries, periodosK, setPeriodosK, pesos, setPesos, alfa, setAlfa,
+    subTemaIndices, setSubTemaIndices,
+    colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
+    colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual,
+    nuevoIndiceBase, setNuevoIndiceBase,
   } = useCalculadoraExcel(selectedFile, selectedSheet);
 
-  const location = useLocation(); // 🆕 Leemos la ruta actual
-
+  const location = useLocation(); 
   const calculoPendiente = useRef(false);
 
-  // 🆕 EFECTO PARA REABRIR HISTORIAL (VERSIÓN AUTOMÁTICA)
-  // 1. EFECTO INICIAL: Saca los datos de la mochila y prepara el banderín
   useEffect(() => {
     if (location.state) {
-      const {
-        archivoReabrir,
-        calculoReabrir,
-        colXReabrir,
-        colYReabrir,
-        hojaReabrir,
-      } = location.state;
+      const { archivoReabrir, calculoReabrir, colXReabrir, colYReabrir, hojaReabrir } = location.state;
 
       if (archivoReabrir) setSelectedFile(archivoReabrir);
       if (calculoReabrir) setCalculo(calculoReabrir);
@@ -130,37 +55,27 @@ export default function Calculos() {
       if (colYReabrir) setSelectedColumnY(colYReabrir);
       if (hojaReabrir !== undefined) setSelectedSheet(hojaReabrir);
 
-      // Si tenemos los datos principales, levantamos el banderín de cálculo
       if (archivoReabrir && calculoReabrir && colXReabrir) {
         calculoPendiente.current = true;
       }
-
-      // Limpiamos la mochila del navegador para que no se repita en bucle si recargamos la página
       window.history.replaceState({}, document.title);
     }
   }, [location.state, setCalculo, setSelectedColumn, setSelectedColumnY]);
 
-  // 2. EFECTO OBSERVADOR: Espera a que el Excel termine de cargar
   useEffect(() => {
-    // Si hay un cálculo pendiente Y ya tenemos datos en la tabla (excelData)
     if (calculoPendiente.current && excelData && excelData.length > 0) {
       const timer = setTimeout(() => {
         ejecutarCalculo();
-        alerta.exito(
-          "Historial Cargado",
-          "Se restauró el cálculo automáticamente.",
-        );
-      }, 300); // Un pequeñísimo respiro de 300ms para que React pinte la tabla
+        alerta.exito("Historial Cargado", "Se restauró el cálculo automáticamente.");
+      }, 300); 
 
-      calculoPendiente.current = false; // Bajamos el banderín
-
+      calculoPendiente.current = false; 
       return () => clearTimeout(timer);
     }
-  }, [excelData, ejecutarCalculo]); // React vigilará excelData constantemente
+  }, [excelData, ejecutarCalculo]); 
 
   const formatearCelda = (valor) => {
-    if (typeof valor === "number")
-      return Number.isInteger(valor) ? valor : Number(valor).toFixed(2);
+    if (typeof valor === "number") return Number.isInteger(valor) ? valor : Number(valor).toFixed(2);
     if (!isNaN(parseFloat(valor)) && isFinite(valor)) {
       const num = Number(valor);
       return Number.isInteger(num) ? num : num.toFixed(2);
@@ -170,13 +85,9 @@ export default function Calculos() {
 
   const cargarArchivos = async () => {
     if (!usuario) return;
-
     try {
       const data = await api.obtenerArchivos(usuario.nombre);
-      if (data && data.files) {
-        setFiles(data.files);
-        // Eliminamos la línea que seleccionaba el primer archivo automáticamente
-      }
+      if (data && data.files) setFiles(data.files);
     } catch (error) {
       console.error("Error al cargar archivos:", error);
     }
@@ -186,95 +97,31 @@ export default function Calculos() {
     cargarArchivos();
   }, [usuario]);
 
-  useEffect(() => {
-    cargarArchivos();
-  }, [usuario]);
-
-  useEffect(() => {
-    cargarArchivos();
-  }, [usuario]);
-
   const handleGuardarResultado = async () => {
     if (!usuario) return;
     try {
-      alerta.success("Guardando...", "Registrando configuración del cálculo.");
+      alerta.success("Guardando...", "Registrando cálculo y resultados (Snapshot).");
+      const snapshotCompleto = {
+        tipoIntervalo, metodoK, kPersonalizado, percentilK,
+        metodoSeries, periodosK, pesos, alfa,
+        subTemaIndices, colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual, nuevoIndiceBase,
+        resultadoFinal: resultado 
+      };
 
-      // Pasamos las variables de estado actuales: selectedColumn y selectedColumnY
       await api.guardarEnHistorial(
-        usuario.nombre,
-        calculo,
-        selectedFile,
-        selectedColumn,
-        selectedColumnY,
-        selectedSheet,
+        usuario.nombre, calculo, selectedFile, selectedColumn, selectedColumnY, selectedSheet, snapshotCompleto 
       );
 
-      alerta.exito(
-        "¡Guardado!",
-        "El historial ahora recordará las columnas usadas.",
-      );
+      alerta.exito("¡Guardado Permanentemente!", "El cálculo completo está en el historial y no dependerá del Excel.");
     } catch (error) {
-      alerta.error("Error", "No se pudo guardar la configuración.");
+      console.error(error);
+      alerta.error("Error", "No se pudo guardar el snapshot.");
     }
   };
 
   const esIntervalo = calculo === "distribucion_intervalos";
-  const esUnidimensional = [
-    "frecuencias_completas",
-    "distribucion_intervalos",
-    "estadistica_descriptiva",
-    "tendencia_central",
-    "medidas_posicion",
-    "tendencia_y_posicion",
-    "variabilidad_y_forma",
-  ].includes(calculo);
-  const esBivariada = [
-    "distribucion_bivariada",
-    "distribucion_bivariada_avanzada",
-  ].includes(calculo);
-
-  const rdgColumns = [];
-  const addCol = (colKey, name, cssClass) => {
-    if (colKey && !rdgColumns.some((c) => c.key === colKey)) {
-      rdgColumns.push({
-        key: colKey,
-        name,
-        renderEditCell: textEditor,
-        editable: true,
-        resizable: true,
-        /* width: "auto", ❌ 1. COMENTAMOS O BORRAMOS ESTA LÍNEA */
-        cellClass: cssClass,
-      });
-    }
-  };
-
-  if (calculo === "numeros_indices" && subTemaIndices === "compuestos") {
-    addCol(colPrecioBase, `${colPrecioBase} (P₀)`, "celda-editable");
-    addCol(colCantidadBase, `${colCantidadBase} (Q₀)`, "celda-editable-y");
-    addCol(colPrecioActual, `${colPrecioActual} (Pt)`, "celda-editable");
-    addCol(colCantidadActual, `${colCantidadActual} (Qt)`, "celda-editable-y");
-  } else if (calculo === "numeros_indices" && subTemaIndices === "deflacion") {
-    addCol(selectedColumn, `${selectedColumn} (Tiempo)`, "celda-editable");
-    addCol(selectedColumnY, `${selectedColumnY} (Nominal)`, "celda-editable-y");
-    addCol(colPrecioBase, `${colPrecioBase} (IPC)`, "celda-editable");
-  } else {
-    addCol(selectedColumn, `${selectedColumn} (Var X)`, "celda-editable");
-    if (
-      (esBivariada ||
-        calculo === "regresion_simple" ||
-        calculo === "series_tiempo" ||
-        calculo === "numeros_indices") &&
-      selectedColumnY
-    ) {
-      if (selectedColumn !== selectedColumnY) {
-        addCol(
-          selectedColumnY,
-          `${selectedColumnY} (Var Y)`,
-          "celda-editable-y",
-        );
-      }
-    }
-  }
+  const esUnidimensional = ["frecuencias_completas", "distribucion_intervalos", "estadistica_descriptiva", "tendencia_central", "medidas_posicion", "tendencia_y_posicion", "variabilidad_y_forma"].includes(calculo);
+  const esBivariada = ["distribucion_bivariada", "distribucion_bivariada_avanzada"].includes(calculo);
 
   const handleGridChange = (newRows, { indexes, column }) => {
     indexes.forEach((index) => {
@@ -282,925 +129,56 @@ export default function Calculos() {
     });
   };
 
-  // --- RENDERIZADOR DE OPCIONES CON VARIABLES ---
-  const renderOpcionesColumnas = () => (
-    <>
-      <optgroup label="Columnas del Excel">
-        {columns.map((col) => (
-          <option key={col} value={col}>
-            {col}
-          </option>
-        ))}
-      </optgroup>
-      <optgroup label="Variables Capturadas">
-        {variables.map((v) => (
-          <option key={v.id} value={v.nombre}>
-            {v.nombre}
-          </option>
-        ))}
-      </optgroup>
-    </>
-  );
-
   return (
-    <div
-      className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`}
-      style={{ position: "relative" }}
-    >
-      <button
-        onClick={() => setPanelAbierto(!panelAbierto)}
-        className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
-        title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
-      >
-        <span
-          className={`icono-toggle ${panelAbierto ? "abierto" : "cerrado"}`}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: "bold",
-            fontSize: "14px",
-            color: "#ffffff",
-            transform: panelAbierto ? "scaleX(1)" : "scaleX(-1)",
-            transition: "transform 0.3s ease",
-            lineHeight: 0,
-            marginTop: "-2px",
-            marginLeft: "-1px",
-          }}
-        >
-          ❮
-        </span>
-      </button>
+    <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: "relative" }}>
+      
+      {/* 1. EL PANEL IZQUIERDO (CONTROLES) */}
+      <PanelConfiguracion
+        panelAbierto={panelAbierto} setPanelAbierto={setPanelAbierto}
+        files={files} selectedFile={selectedFile} setSelectedFile={setSelectedFile}
+        usuario={usuario} setSelectedSheet={setSelectedSheet}
+        columns={columns} variables={variables}
+        calculo={calculo} setCalculo={setCalculo}
+        subTemaIndices={subTemaIndices} setSubTemaIndices={setSubTemaIndices}
+        colPrecioBase={colPrecioBase} setColPrecioBase={setColPrecioBase}
+        colCantidadBase={colCantidadBase} setColCantidadBase={setColCantidadBase}
+        colPrecioActual={colPrecioActual} setColPrecioActual={setColPrecioActual}
+        colCantidadActual={colCantidadActual} setColCantidadActual={setColCantidadActual}
+        nuevoIndiceBase={nuevoIndiceBase} setNuevoIndiceBase={setNuevoIndiceBase}
+        selectedColumn={selectedColumn} setSelectedColumn={setSelectedColumn}
+        selectedColumnY={selectedColumnY} setSelectedColumnY={setSelectedColumnY}
+        esBivariada={esBivariada} esUnidimensional={esUnidimensional}
+        metodoSeries={metodoSeries} setMetodoSeries={setMetodoSeries}
+        periodosK={periodosK} setPeriodosK={setPeriodosK} pesos={pesos} setPesos={setPesos} alfa={alfa} setAlfa={setAlfa}
+        tipoIntervalo={tipoIntervalo} setTipoIntervalo={setTipoIntervalo}
+        metodoK={metodoK} setMetodoK={setMetodoK} kPersonalizado={kPersonalizado} setKPersonalizado={setKPersonalizado} percentilK={percentilK} setPercentilK={setPercentilK}
+        mostrarTabla={mostrarTabla} excelData={excelData} handleGridChange={handleGridChange}
+        ejecutarCalculo={ejecutarCalculo} modoCreacion={modoCreacion} setModoCreacion={setModoCreacion}
+        mostrarCalculadora={mostrarCalculadora} setMostrarCalculadora={setMostrarCalculadora}
+      />
 
-      {/* ================= IZQUIERDA: CONTROLES ================= */}
-      <div
-        className="calculadora-datos"
-        style={{
-          padding: "15px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "15px",
+      {/* 2. EL PANEL DERECHO (TABLAS Y GRÁFICOS) */}
+      <PanelResultados 
+        modoCreacion={modoCreacion} setModoCreacion={setModoCreacion} cargarArchivos={cargarArchivos}
+        resultado={resultado} errorNumerico={errorNumerico} calculo={calculo}
+        esBivariada={esBivariada} esUnidimensional={esUnidimensional} esIntervalo={esIntervalo}
+        formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil}
+        ordenGraficos={ordenGraficos} setOrdenGraficos={setOrdenGraficos}
+        handleGuardarResultado={handleGuardarResultado}
+      />
+
+      {/* 3. EL REPORTE INVISIBLE (PDF) */}
+      <ReportePDF 
+        usuario={usuario} calculo={calculo} selectedFile={selectedFile} selectedSheet={selectedSheet} selectedColumn={selectedColumn}
+        resultado={resultado} esBivariada={esBivariada} esUnidimensional={esUnidimensional} esIntervalo={esIntervalo}
+        formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil}
+        ordenGraficos={ordenGraficos}
+        parametros={{
+          tipoIntervalo, metodoK, kPersonalizado, percentilK,
+          metodoSeries, periodosK, pesos, alfa,
+          subTemaIndices, colPrecioBase, colCantidadBase, nuevoIndiceBase
         }}
-      >
-        <div
-          style={{
-            borderBottom: panelAbierto
-              ? "1px solid var(--border-color)"
-              : "none",
-            paddingBottom: "5px",
-            marginBottom: panelAbierto ? "5px" : "0",
-          }}
-        >
-          {panelAbierto && (
-            <h3 style={{ margin: 0 }}> Configuración de Análisis </h3>
-          )}
-        </div>
-
-        {panelAbierto && (
-          <>
-            {/* 1. SECCIÓN DE ARCHIVO */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "5px",
-                  fontWeight: "bold",
-                }}
-              >
-                Selecciona un archivo:
-              </label>
-              <select
-                value={selectedFile}
-                onChange={(e) => {
-                  setSelectedFile(e.target.value);
-                  setModoCreacion(false);
-                }}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid var(--border-color)",
-                }}
-              >
-                <option value="">
-                  -- Selecciona un archivo para empezar --
-                </option>
-                {files.map((file) => (
-                  <option key={file.filename} value={file.filename}>
-                    {file.filename} ({file.author || "Desconocido"})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 2. SECCIÓN DE LA HOJA */}
-            <ExcelContent
-              filename={selectedFile}
-              autor={usuario?.nombre}
-              mostrarTabla={false}
-              onSheetChange={setSelectedSheet}
-            />
-
-            {/* 3. SECCIÓN DE OPERACIÓN Y VARIABLES (Todo en un solo bloque unificado) */}
-            {columns.length > 0 || variables.length > 0 ? (
-              <div
-                style={{
-                  background: "var(--bg-card)",
-                  padding: "15px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "15px",
-                }}
-              >
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "5px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Operación:
-                  </label>
-                  <select
-                    value={calculo}
-                    onChange={(e) => setCalculo(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "8px",
-                      borderRadius: "4px",
-                      border: "1px solid var(--border-color)",
-                    }}
-                  >
-                    <optgroup label="Tema 2: Distribución de Frecuencias">
-                      <option value="frecuencias_completas">
-                        Tabla de Frecuencias
-                      </option>
-                      <option value="distribucion_intervalos">
-                        Distribución por Intervalos
-                      </option>
-                    </optgroup>
-                    <optgroup label="Tema 3: Tendencia y Posición">
-                      {/*  <option value="estadistica_descriptiva">Análisis Descriptivo</option>
-                      <option value="tendencia_central">Medidas de Tendencia Central</option>
-                      <option value="medidas_posicion">Medidas de Posición (Fractiles)</option> */}
-                      <option value="tendencia_y_posicion">
-                        Tendencia y Posición (Conjunto)
-                      </option>
-                    </optgroup>
-                    <optgroup label="Tema 4: Dispersión y Forma">
-                      <option value="variabilidad_y_forma">
-                        Análisis de Variabilidad y Forma
-                      </option>
-                    </optgroup>
-                    <optgroup label="Tema 5: Distribuciones Bivariantes">
-                      {/*  <option value="distribucion_bivariada">Distribución Bivariante</option> */}
-                      <option value="distribucion_bivariada_avanzada">
-                        Análisis Bivariante Avanzado
-                      </option>
-                    </optgroup>
-                    <optgroup label="Tema 6: Regresión">
-                      <option value="regresion_simple">
-                        Análisis de Regresión
-                      </option>
-                    </optgroup>
-                    <optgroup label="Tema 7: Series de Tiempo">
-                      <option value="series_tiempo">
-                        Pronósticos (Series de Tiempo)
-                      </option>
-                    </optgroup>
-                    <optgroup label="Tema 8: Números Índices">
-                      <option value="numeros_indices">
-                        Análisis de Índices y Deflación
-                      </option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                {/* ================= CONTROLES TEMA 8: ÍNDICES ================= */}
-                {calculo === "numeros_indices" ? (
-                  <div
-                    style={{
-                      padding: "10px",
-                      backgroundColor: "var(--bg-card)",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "4px",
-                      marginBottom: "15px",
-                    }}
-                  >
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "var(--primary-color)",
-                      }}
-                    >
-                      Módulo de Análisis:
-                    </label>
-                    <select
-                      value={subTemaIndices}
-                      onChange={(e) => setSubTemaIndices(e.target.value)}
-                      style={{
-                        width: "100%",
-                        marginBottom: "15px",
-                        padding: "5px",
-                      }}
-                    >
-                      <option value="compuestos">
-                        1. Índices Compuestos (Laspeyres/Paasche/Fisher)
-                      </option>
-                      <option value="empalme">
-                        2. Empalme y Cambio de Base
-                      </option>
-                      <option value="deflacion">
-                        3. Análisis Financiero (Deflación)
-                      </option>
-                    </select>
-
-                    {subTemaIndices === "compuestos" && (
-                      <>
-                        <label>Precio Base (P₀):</label>
-                        <select
-                          value={colPrecioBase}
-                          onChange={(e) => setColPrecioBase(e.target.value)}
-                          style={{ width: "100%", marginBottom: "5px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                        <label>Cantidad Base (Q₀):</label>
-                        <select
-                          value={colCantidadBase}
-                          onChange={(e) => setColCantidadBase(e.target.value)}
-                          style={{ width: "100%", marginBottom: "5px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                        <label>Precio Actual (Pt):</label>
-                        <select
-                          value={colPrecioActual}
-                          onChange={(e) => setColPrecioActual(e.target.value)}
-                          style={{ width: "100%", marginBottom: "5px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                        <label>Cantidad Actual (Qt):</label>
-                        <select
-                          value={colCantidadActual}
-                          onChange={(e) => setColCantidadActual(e.target.value)}
-                          style={{ width: "100%", marginBottom: "10px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                      </>
-                    )}
-                    {subTemaIndices === "empalme" && (
-                      <>
-                        <label>Eje de Tiempo (Años/Meses):</label>
-                        <select
-                          value={selectedColumn}
-                          onChange={(e) => setSelectedColumn(e.target.value)}
-                          style={{ width: "100%", marginBottom: "5px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                        <label>Serie de Índices (Original):</label>
-                        <select
-                          value={selectedColumnY}
-                          onChange={(e) => setSelectedColumnY(e.target.value)}
-                          style={{ width: "100%", marginBottom: "15px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                        <label>Valor para la Nueva Base:</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={nuevoIndiceBase}
-                          onChange={(e) => setNuevoIndiceBase(e.target.value)}
-                          className="container_cal_input"
-                          placeholder="Ej: 105.4"
-                        />
-                        <small
-                          style={{
-                            display: "block",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          Ingresa el índice del año que será la nueva base.
-                        </small>
-                      </>
-                    )}
-                    {subTemaIndices === "deflacion" && (
-                      <>
-                        <label>Eje de Tiempo (Años/Meses):</label>
-                        <select
-                          value={selectedColumn}
-                          onChange={(e) => setSelectedColumn(e.target.value)}
-                          style={{ width: "100%", marginBottom: "5px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                        <label>Valor Nominal (Sueldos/Ventas):</label>
-                        <select
-                          value={selectedColumnY}
-                          onChange={(e) => setSelectedColumnY(e.target.value)}
-                          style={{ width: "100%", marginBottom: "5px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                        <label>Índice de Precios (IPC):</label>
-                        <select
-                          value={colPrecioBase}
-                          onChange={(e) => setColPrecioBase(e.target.value)}
-                          style={{ width: "100%", marginBottom: "5px" }}
-                        >
-                          {renderOpcionesColumnas()}
-                        </select>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <label>
-                      {calculo === "series_tiempo"
-                        ? "Eje de Tiempo X:"
-                        : esBivariada || calculo === "regresion_simple"
-                          ? "Variable X:"
-                          : "Columna Seleccionada:"}
-                    </label>
-                    <select
-                      value={selectedColumn}
-                      onChange={(e) => setSelectedColumn(e.target.value)}
-                      style={{ width: "100%", marginBottom: "10px" }}
-                    >
-                      {renderOpcionesColumnas()}
-                    </select>
-
-                    {(esBivariada ||
-                      calculo === "regresion_simple" ||
-                      calculo === "series_tiempo") && (
-                      <div
-                        style={{
-                          padding: "10px",
-                          border: "1px solid var(--border-color)",
-                          borderRadius: "4px",
-                          marginBottom: "15px",
-                          backgroundColor: "var(--bg-card)",
-                        }}
-                      >
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "5px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {calculo === "series_tiempo"
-                            ? "Valores Históricos Y (Demanda/Ventas):"
-                            : "Variable Y (Dependiente):"}
-                        </label>
-                        <select
-                          value={selectedColumnY}
-                          onChange={(e) => setSelectedColumnY(e.target.value)}
-                          style={{ width: "100%", padding: "5px" }}
-                        >
-                          <option value="">-- Seleccionar Variable Y --</option>
-                          {renderOpcionesColumnas()}
-                        </select>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {calculo === "series_tiempo" && (
-                  <div
-                    className="container_intervalos"
-                    style={{
-                      padding: "10px",
-                      backgroundColor: "var(--bg-card)",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "4px",
-                      marginBottom: "15px",
-                    }}
-                  >
-                    <label
-                      style={{
-                        fontWeight: "bold",
-                        color: "var(--primary-color)",
-                      }}
-                    >
-                      Método de Pronóstico:
-                    </label>
-                    <select
-                      value={metodoSeries}
-                      onChange={(e) => setMetodoSeries(e.target.value)}
-                      className="container_select"
-                      style={{ marginBottom: "10px" }}
-                    >
-                      <option value="movil_simple">
-                        Promedios Móviles Simples
-                      </option>
-                      <option value="movil_ponderado">
-                        Promedios Móviles Ponderados
-                      </option>
-                      <option value="suavizamiento_exponencial">
-                        Suavizamiento Exponencial
-                      </option>
-                    </select>
-                    {metodoSeries === "movil_simple" && (
-                      <>
-                        <label>Periodos (k):</label>
-                        <input
-                          type="number"
-                          min="2"
-                          value={periodosK}
-                          onChange={(e) => setPeriodosK(e.target.value)}
-                          className="container_cal_input"
-                        />
-                      </>
-                    )}
-                    {metodoSeries === "movil_ponderado" && (
-                      <>
-                        <label>Pesos:</label>
-                        <input
-                          type="text"
-                          value={pesos}
-                          onChange={(e) => setPesos(e.target.value)}
-                          className="container_cal_input"
-                          placeholder="Ej: 0.5, 0.3, 0.2"
-                        />
-                      </>
-                    )}
-                    {metodoSeries === "suavizamiento_exponencial" && (
-                      <>
-                        <label>Alfa (α):</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="1"
-                          value={alfa}
-                          onChange={(e) => setAlfa(e.target.value)}
-                          className="container_cal_input"
-                        />
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {esUnidimensional &&
-                  calculo !== "frecuencias_completas" &&
-                  calculo !== "estadistica_descriptiva" && (
-                    <div className="container_intervalos">
-                      {(calculo === "distribucion_intervalos" ||
-                        calculo === "tendencia_central" ||
-                        calculo === "tendencia_y_posicion" ||
-                        calculo === "variabilidad_y_forma") && (
-                        <>
-                          <label>Tipo Intervalo:</label>
-                          <select
-                            value={tipoIntervalo}
-                            onChange={(e) => setTipoIntervalo(e.target.value)}
-                            className="container_select"
-                          >
-                            <option value="semiabierto">[a, b)</option>
-                            <option value="cerrado">[a, b]</option>
-                            <option value="abierto">(a, b)</option>
-                          </select>
-                          <label>Método K:</label>
-                          <select
-                            value={metodoK}
-                            onChange={(e) => setMetodoK(e.target.value)}
-                            className="container_select"
-                          >
-                            <option value="sturges">Sturges</option>
-                            <option value="cuadratica">Cuadrática</option>
-                            <option value="logaritmica">Logarítmica</option>
-                            <option value="personalizada">Manual</option>
-                          </select>
-                          {metodoK === "personalizada" && (
-                            <input
-                              type="number"
-                              value={kPersonalizado}
-                              onChange={(e) =>
-                                setKPersonalizado(e.target.value)
-                              }
-                              placeholder="Valor k"
-                              className="container_cal_input"
-                            />
-                          )}
-                        </>
-                      )}
-                      {(calculo === "medidas_posicion" ||
-                        calculo === "tendencia_y_posicion") && (
-                        <div className="container_cal_percentil">
-                          <label>Percentil (1 - 99):</label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="99"
-                            value={percentilK}
-                            onChange={(e) => setPercentilK(e.target.value)}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                {mostrarTabla && excelData.length > 0 && (
-                  <div
-                    className=".container_dataset"
-                    style={{
-                      marginTop: "10px",
-                      width: "100%",
-                      overflowX: "hidden",
-                    }}
-                  >
-                    <p className="info_vista">
-                      Vista Previa (Doble clic para editar):
-                    </p>
-                    <DataGrid
-                      columns={rdgColumns}
-                      rows={excelData}
-                      onRowsChange={handleGridChange}
-                      className="rdg-light"
-                      style={{
-                        blockSize: "100%",
-                        border: "1px solid var(--border-color)",
-                        height: "400px",
-                        textAlign: "center",
-                        width: "100%",
-                      }}
-                    />
-                  </div>
-                )}
-
-                <button
-                  onClick={ejecutarCalculo}
-                  className="button_calcular"
-                  style={{ marginTop: "15px" }}
-                >
-                  CALCULAR
-                </button>
-              </div> /* 👈 ESTE ES EL DIV DE CIERRE QUE FALTABA */
-            ) : (
-              <p className="info_cargando">
-                Cargando datos o selecciona un archivo...
-              </p>
-            )}
-
-            {/* Botones inferiores (Limpios sin <br/>) */}
-            <button
-              onClick={() => setModoCreacion(!modoCreacion)}
-              className="button_resultados"
-              style={{
-                backgroundColor: modoCreacion
-                  ? "var(--text-muted)"
-                  : "var(--accent-color)",
-                marginTop: "20px",
-              }}
-            >
-              {modoCreacion ? "Volver a Resultados" : "Crear Tabla de Datos"}
-            </button>
-
-            <button
-              onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
-              style={{
-                width: "100%",
-                padding: "8px",
-                background: "#6b7280",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                marginTop: "10px",
-              }}
-            >
-              {mostrarCalculadora
-                ? "Ocultar Calculadora Manual"
-                : "Mostrar Calculadora Manual"}
-            </button>
-            {mostrarCalculadora && <Calculator />}
-          </>
-        )}
-      </div>
-
-      {/* ================= DERECHA: RESULTADOS ================= */}
-      <div className="calculadora-resultados">
-        {modoCreacion ? (
-          <TablaDinamica
-            onTablaCreada={() => {
-              cargarArchivos();
-              setModoCreacion(false);
-            }}
-          />
-        ) : !resultado && !errorNumerico ? (
-          /* 🆕 ESTADO DE ESPERA: Ahora usa clases de CSS */
-          <div className="contenedor-espera-logo">
-            <img
-              src={escudoAdmin}
-              alt="Escudo Administración de Empresas"
-              className="logo-espera"
-            />
-          </div>
-        ) : (
-          /* 🆕 ESTADO CON DATOS: Muestra las tablas cuando ya hay un cálculo */
-          <div className="contenedor-resultados-vacio">
-            <div className="frecuencias">
-              <div style={{ marginBottom: "15px" }}>
-                <h3 style={{ margin: 0 }}>
-                  Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
-                </h3>
-              </div>
-
-              {errorNumerico && (
-                <div
-                  style={{
-                    padding: "20px",
-                    textAlign: "center",
-                    color: "#d9534f",
-                    backgroundColor: "rgba(217, 83, 79, 0.1)",
-                    borderRadius: "8px",
-                    border: "1px solid #d9534f",
-                    marginBottom: "15px",
-                  }}
-                >
-                  <p style={{ margin: "0" }}>
-                    ⚠️ Error: Faltan datos numéricos o hay celdas de texto en el
-                    cálculo actual.
-                  </p>
-                </div>
-              )}
-
-              {resultado && (
-                <>
-                  {calculo === "regresion_simple" &&
-                    resultado.tipo === "regresion" && (
-                      <TablaRegresion resultado={resultado} />
-                    )}
-                  {calculo === "series_tiempo" &&
-                    resultado.tipo === "series_tiempo" && (
-                      <TablaSeriesTiempo resultado={resultado} />
-                    )}
-                  {calculo === "numeros_indices" &&
-                    [
-                      "indices_compuestos",
-                      "operaciones_indices",
-                      "deflacion_financiera",
-                    ].includes(resultado.tipo) && (
-                      <TablaIndices resultado={resultado} />
-                    )}
-                  {esBivariada &&
-                    resultado.tipo === "distribucion_bivariada" && (
-                      <TablasBivariantes
-                        resultado={resultado}
-                        formatearCelda={formatearCelda}
-                      />
-                    )}
-                  {esUnidimensional &&
-                    (!resultado.tipo ||
-                      [
-                        "tendencia_y_posicion",
-                        "variabilidad_y_forma",
-                        "estadistica_descriptiva",
-                      ].includes(resultado.tipo)) && (
-                      <TablasUnidimensionales
-                        resultado={resultado}
-                        calculo={calculo}
-                        formatearCelda={formatearCelda}
-                        filtroFractil={filtroFractil}
-                        setFiltroFractil={setFiltroFractil}
-                      />
-                    )}
-                </>
-              )}
-            </div>
-
-            <PanelGraficos
-              resultado={resultado}
-              esIntervalo={esIntervalo}
-              calculo={calculo}
-              orden={ordenGraficos}
-              setOrden={setOrdenGraficos}
-            />
-
-            {/* 🆕 BARRA DE ACCIONES FINAL (UNIFICADA) */}
-            <div
-              className="barra-acciones-final"
-              style={{ display: "flex", gap: "10px", marginTop: "20px" }}
-            >
-              <button
-                onClick={() =>
-                  generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)
-                }
-                className="btn-icon"
-                style={{
-                  backgroundColor: "#d9534f",
-                  color: "white",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                  border: "none",
-                }}
-              >
-                📄 Exportar PDF
-              </button>
-
-              <button
-                onClick={handleGuardarResultado}
-                className="btn-icon"
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                  border: "none",
-                }}
-              >
-                💾 Guardar Cálculo
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ======================================================== */}
-      {/* 🆕 AQUÍ PEGAS EL COMPONENTE OCULTO (Antes de cerrar el div principal) */}
-      {/* ======================================================== */}
-      <div
-        style={{
-          position: "fixed",
-          left: "200vw",
-          top: "200vh",
-          opacity: 0,
-          pointerEvents: "none",
-        }}
-      >
-        <div
-          id="reporte-formal-pdf"
-          style={{
-            width: "8.5in",
-            minHeight: "11in",
-            padding: "0.8in",
-            backgroundColor: "white",
-            color: "black",
-            fontFamily: "Arial, sans-serif",
-          }}
-        >
-          {/* ENCABEZADO INSTITUCIONAL */}
-          <div
-            className="pdf-section"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "2px solid #000",
-              paddingBottom: "10px",
-              marginBottom: "20px",
-            }}
-          >
-            <img src={escudoAdmin} style={{ width: "1in" }} alt="USFX" />
-            <div style={{ textAlign: "center", flex: 1 }}>
-              <h2 style={{ margin: 0, fontSize: "16pt" }}>
-                UNIVERSIDAD DE SAN FRANCISCO XAVIER
-              </h2>
-              <h3 style={{ margin: 0, fontSize: "14pt" }}>
-                Facultad de Ciencias Económicas y Empresariales
-              </h3>
-              <p style={{ margin: 0, fontSize: "10pt" }}>
-                Carrera: Administración de Empresas
-              </p>
-            </div>
-            <div style={{ width: "1in" }}></div>
-          </div>
-
-          {/* DATOS DEL REPORTE */}
-          <div className="pdf-section" style={{ marginBottom: "20px" }}>
-            <h1
-              style={{
-                textAlign: "center",
-                textDecoration: "underline",
-                fontSize: "18pt",
-              }}
-            >
-              REPORTE ESTADÍSTICO
-            </h1>
-            <div
-              style={{
-                marginTop: "20px",
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "10px",
-                fontSize: "11pt",
-              }}
-            >
-              <p>
-                <strong>Responsable:</strong> Diego Armando Coa Veliz
-              </p>
-              <p>
-                <strong>Fecha:</strong> {new Date().toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Cálculo:</strong>{" "}
-                {calculo.replace(/_/g, " ").toUpperCase()}
-              </p>
-              <p>
-                <strong>Sede:</strong> Sucre, Bolivia
-              </p>
-            </div>
-          </div>
-
-          {/* CONTENIDO (Inyectamos las tablas) */}
-          <div id="contenido-pdf-dinamico">
-            <div className="pdf-section">
-              <p style={{ fontStyle: "italic", marginBottom: "15px" }}>
-                Este documento contiene el análisis estadístico detallado
-                generado por el sistema.
-              </p>
-            </div>
-
-            {/* Aquí repetimos los mismos if que dibujan las tablas, 
-                      para que se rendericen dentro del PDF */}
-            {resultado && (
-              <>
-                {calculo === "regresion_simple" &&
-                  resultado.tipo === "regresion" && (
-                    <div className="pdf-section">
-                      <TablaRegresion resultado={resultado} />
-                    </div>
-                  )}
-                {calculo === "series_tiempo" &&
-                  resultado.tipo === "series_tiempo" && (
-                    <div className="pdf-section">
-                      <TablaSeriesTiempo resultado={resultado} />
-                    </div>
-                  )}
-                {calculo === "numeros_indices" &&
-                  [
-                    "indices_compuestos",
-                    "operaciones_indices",
-                    "deflacion_financiera",
-                  ].includes(resultado.tipo) && (
-                    <div className="pdf-section">
-                      <TablaIndices resultado={resultado} />
-                    </div>
-                  )}
-                {esBivariada && resultado.tipo === "distribucion_bivariada" && (
-                  <div className="pdf-section">
-                    <TablasBivariantes
-                      resultado={resultado}
-                      formatearCelda={formatearCelda}
-                    />
-                  </div>
-                )}
-                {esUnidimensional &&
-                  (!resultado.tipo ||
-                    [
-                      "tendencia_y_posicion",
-                      "variabilidad_y_forma",
-                      "estadistica_descriptiva",
-                    ].includes(resultado.tipo)) && (
-                    <div className="pdf-section">
-                      <TablasUnidimensionales
-                        resultado={resultado}
-                        calculo={calculo}
-                        formatearCelda={formatearCelda}
-                        filtroFractil={filtroFractil}
-                        setFiltroFractil={setFiltroFractil}
-                      />
-                    </div>
-                  )}
-
-                {/* También incluimos los gráficos para que salgan en el PDF */}
-                <div>
-                  <PanelGraficos
-                    resultado={resultado}
-                    esIntervalo={esIntervalo}
-                    calculo={calculo}
-                    orden={ordenGraficos}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* PIE DE PÁGINA */}
-          <div
-            className="pdf-section"
-            style={{
-              marginTop: "50px",
-              borderTop: "1px solid #ccc",
-              paddingTop: "10px",
-              fontSize: "9pt",
-              textAlign: "center",
-            }}
-          >
-            Software Estadístico - Trabajo Dirigido USFX © 2026
-          </div>
-        </div>
-      </div>
+      />
     </div>
   );
 }
