@@ -1,43 +1,75 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 //Base url de Render
 /* const BASE_URL = "https://api-admin-shc170.onrender.com"; */
 
-//uvicorn main:app --reload
-
-
-
 export const api = {
-  // --- Función para leer la hoja de Excel ---
-  // 🆕 Añadimos el parámetro 'autor'
-  obtenerDatosHoja: async (filename, hojaIndex, autor) => {
-    try {
-      const res = await fetch(
-        `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hojaIndex}&autor=${encodeURIComponent(autor)}`,
-      );
-      if (!res.ok) throw new Error("Error al leer la hoja del servidor");
-      return await res.json();
-    } catch (error) {
-      console.error("Error en api.obtenerDatosHoja:", error);
-      throw error;
-    }
-  },
-
   // --- Función para obtener las hojas de un Excel ---
-  // 🆕 Añadimos el parámetro 'autor'
-  obtenerHojas: async (filename, autor) => {
-    try {
-      const res = await fetch(
-        `${BASE_URL}/sheets/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`,
-      );
-      if (!res.ok) throw new Error("Error al obtener las hojas");
-      return await res.json();
-    } catch (error) {
-      console.error("Error en api.obtenerHojas:", error);
-      throw error;
-    }
+  obtenerHojas: async (filename, autor = "", curso = "") => {
+    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    let url = `${BASE_URL}/sheets/${encodeURIComponent(filename)}?`;
+    if (autor) url += `autor=${encodeURIComponent(autor)}&`;
+    if (curso) url += `curso=${encodeURIComponent(curso)}`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Error al obtener las hojas del archivo");
+    return response.json();
   },
 
-  // --- Funciones para la Calculadora Manual (Se mantienen igual) ---
+  // --- Función unificada para leer los datos de la hoja ---
+  obtenerDatosHoja: async (filename, hoja, autor = "", curso = "") => {
+    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL y eliminamos el duplicado viejo
+    let url = `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hoja}`;
+    if (autor) url += `&autor=${encodeURIComponent(autor)}`;
+    if (curso) url += `&curso=${encodeURIComponent(curso)}`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Error al visualizar el archivo");
+    return response.json();
+  },
+
+  // --- OBTENER LISTA DE ARCHIVOS ---
+  obtenerArchivos: async (autor, visibilidad = "personal", curso = "") => {
+    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    let url = `${BASE_URL}/files?autor=${encodeURIComponent(autor)}&visibilidad=${visibilidad}`;
+    if (curso) url += `&curso=${encodeURIComponent(curso)}`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Error al obtener archivos");
+    return response.json();
+  },
+
+  // --- VER EXCEL (Solo metadatos/estructura) ---
+  verExcel: async (filename, hoja = 0, autor = "", curso = "") => {
+    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    let url = `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hoja}`;
+    if (autor) url += `&autor=${encodeURIComponent(autor)}`;
+    if (curso) url += `&curso=${encodeURIComponent(curso)}`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Error al visualizar el archivo");
+    return response.json();
+  },
+
+  // --- ACTUALIZAR EXCEL ---
+  actualizarExcel: async (filename, hoja, datos, autor = "", curso = "") => {
+    const payload = { datos, autor, curso };
+    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    const response = await fetch(
+      `${BASE_URL}/update/${encodeURIComponent(filename)}?hoja=${hoja}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    if (!response.ok) throw new Error("Error al actualizar el archivo");
+    return response.json();
+  },
+
+  // =================================================================
+  // LAS FUNCIONES DE ABAJO SE MANTIENEN EXACTAMENTE IGUAL
+  // =================================================================
+
   calcularUnivariada: async (bodyData) => {
     try {
       const res = await fetch(`${BASE_URL}/calcular`, {
@@ -98,8 +130,6 @@ export const api = {
     }
   },
 
-  // --- SUBIR ARCHIVO ---
-  // (Esta queda casi igual, porque el 'autor' se lo agregaremos al formData desde el componente visual)
   subirArchivo: async (formData) => {
     try {
       const res = await fetch(`${BASE_URL}/upload`, {
@@ -116,15 +146,11 @@ export const api = {
     }
   },
 
-  // --- ELIMINAR ARCHIVO ---
-  // 🆕 Añadimos el parámetro 'autor'
   eliminarArchivo: async (filename, autor) => {
     try {
       const res = await fetch(
         `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`,
-        {
-          method: "DELETE",
-        },
+        { method: "DELETE" },
       );
       if (!res.ok) throw new Error("Error al eliminar el archivo");
       return true;
@@ -134,7 +160,6 @@ export const api = {
     }
   },
 
-  // --- DESCARGAR BINARIO (Para la Calculadora) ---
   descargarArchivoBinario: async (filename, autor) => {
     try {
       const res = await fetch(
@@ -142,8 +167,6 @@ export const api = {
       );
       if (!res.ok)
         throw new Error("No se pudo obtener el archivo del servidor");
-
-      // 🆕 Devolvemos el arrayBuffer (los bytes puros del archivo)
       return await res.arrayBuffer();
     } catch (error) {
       console.error("Error en api.descargarArchivoBinario:", error);
@@ -151,49 +174,14 @@ export const api = {
     }
   },
 
-  // --- OBTENER LISTA DE ARCHIVOS ---
-  // 🆕 Añadimos el parámetro 'autor'
-  obtenerArchivos: async (autor) => {
-    try {
-      const res = await fetch(
-        `${BASE_URL}/files?autor=${encodeURIComponent(autor)}`,
-      );
-      if (!res.ok) throw new Error("Error al obtener la lista de archivos");
-      return await res.json();
-    } catch (error) {
-      console.error("Error en api.obtenerArchivos:", error);
-      throw error;
-    }
-  },
-
-  // --- ACTUALIZAR EXCEL ---
-  actualizarExcel: async (filename, hojaindex, datos, autor) => {
-    try {
-      const res = await fetch(`${BASE_URL}/update_excel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: filename,
-          hoja_index: hojaindex, // ✅ CORREGIDO: Ahora coincide con el backend
-          datos: datos,
-          autor: autor,
-        }),
-      });
-      if (!res.ok) throw new Error("Error al actualizar el excel");
-      return await res.json();
-    } catch (error) {
-      console.error("Error en api.actualizarExcel", error);
-      throw error;
-    }
-  },
-
   descargarArchivoExcel: async (filename) => {
     try {
-      const res = await fetch(`${BASE_URL}/files/${encodeURIComponent(filename)}`, {
-        cache: 'no-store'
-      });
-      if (!res.ok) throw new Error("No se pudo descargar el archivo del servidor.");
-      // Retornamos directamente el ArrayBuffer
+      const res = await fetch(
+        `${BASE_URL}/files/${encodeURIComponent(filename)}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok)
+        throw new Error("No se pudo descargar el archivo del servidor.");
       return await res.arrayBuffer();
     } catch (error) {
       console.error("Error en api.descargarArchivoExcel:", error);
@@ -201,7 +189,6 @@ export const api = {
     }
   },
 
-  // --- GUARDAR EN HISTORIAL ---
   guardarEnHistorial: async (autor, calculo, archivo, colX, colY, hoja) => {
     try {
       const res = await fetch(`${BASE_URL}/guardar_historial`, {
@@ -213,7 +200,7 @@ export const api = {
           archivo_origen: archivo,
           columna_x: colX,
           columna_y: colY,
-          hoja: hoja
+          hoja: hoja,
         }),
       });
       return await res.json();
@@ -223,7 +210,6 @@ export const api = {
     }
   },
 
-  // --- OBTENER HISTORIAL ---
   obtenerHistorial: async (autor) => {
     try {
       const res = await fetch(
@@ -238,14 +224,11 @@ export const api = {
     }
   },
 
-  // --- ELIMINAR DEL HISTORIAL ---
   eliminarHistorial: async (registro_id, autor) => {
     try {
       const res = await fetch(
         `${BASE_URL}/eliminar_historial/${registro_id}?autor=${encodeURIComponent(autor)}`,
-        {
-          method: "DELETE",
-        },
+        { method: "DELETE" },
       );
       if (!res.ok) throw new Error("Error al eliminar el registro");
       return await res.json();

@@ -164,102 +164,104 @@ EXCEL_FOLDER = "excels"
 os.makedirs(EXCEL_FOLDER, exist_ok=True)
 
 # =======================
-# Subir archivo Excel
-# =======================
-# =======================
-# Subir archivo Excel (PRIVADO POR USUARIO)
+# Subir archivo Excel (Soporta Personales y Cursos)
 # =======================
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...), autor: str = Form(...)):
-    # 1. Crear carpeta específica para el autor (ej. excels/Diego/)
-    # Usamos urllib para limpiar el nombre y evitar errores en carpetas con espacios
-    safe_author = urllib.parse.quote(autor) 
-    user_folder = os.path.join(EXCEL_FOLDER, safe_author)
-    os.makedirs(user_folder, exist_ok=True)
+async def upload_file(
+    file: UploadFile = File(...), 
+    autor: str = Form(...),
+    visibilidad: str = Form("personal"), # 🆕 Recibimos si es personal o privado(curso)
+    curso: str = Form(None)              # 🆕 Recibimos el ID del curso
+):
+    import urllib.parse
+    
+    # 1. Decidir dónde guardar basado en la visibilidad
+    if visibilidad == "privado" and curso:
+        # Ruta para Cursos: excels/_cursos/EST-101/
+        safe_curso = urllib.parse.quote(curso)
+        target_folder = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso)
+    else:
+        # Ruta Personal: excels/Diego/
+        safe_author = urllib.parse.quote(autor)
+        target_folder = os.path.join(EXCEL_FOLDER, safe_author)
 
-    # 2. Guardar el archivo dentro de SU carpeta
-    file_path = os.path.join(user_folder, file.filename)
+    os.makedirs(target_folder, exist_ok=True)
+    
+    # 2. Guardar el archivo
+    file_path = os.path.join(target_folder, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return {"message": f"Archivo {file.filename} subido correctamente a la carpeta de {autor}!"}
+    return {"message": f"Archivo subido correctamente a {target_folder}"}
 
 # =======================
 # Listar archivos Excel
 # =======================
-""" @app.get("/files")
-async def list_files():
-    return {"files": os.listdir(EXCEL_FOLDER)}
- """
-
-# =======================
-# Listar archivos Excel (SOLO DEL USUARIO)
-# =======================
 @app.get("/files")
-def list_files(autor: str = Query("Desconocido")):
-    safe_author = urllib.parse.quote(autor)
-    user_folder = os.path.join(EXCEL_FOLDER, safe_author)
-    
+def list_files(
+    autor: str = Query(None), 
+    visibilidad: str = Query("personal"), 
+    curso: str = Query(None)
+):
+    import urllib.parse
     files_list = []
-    
-    # Si la carpeta no existe (el usuario es nuevo), devolvemos lista vacía
-    if not os.path.exists(user_folder):
-        return {"files": files_list}
 
-    # Si existe, listamos solo SUS archivos
-    for fname in os.listdir(user_folder):
-        if fname.endswith(".xlsx"):
-            files_list.append({"filename": fname, "author": autor})
+    # 1. Definir en qué carpeta buscar
+    if visibilidad == "privado" and curso:
+        safe_curso = urllib.parse.quote(curso)
+        target_folder = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso)
+    else:
+        if not autor:
+            return {"files": []}
+        safe_author = urllib.parse.quote(autor)
+        target_folder = os.path.join(EXCEL_FOLDER, safe_author)
+    
+    # 2. Leer los archivos si la carpeta existe
+    if os.path.exists(target_folder):
+        for fname in os.listdir(target_folder):
+            if fname.endswith(".xlsx"):
+                files_list.append({"filename": fname, "autor": autor, "curso": curso})
             
     return {"files": files_list}
 
-# =======================
-# Descargar archivo Excel
-# =======================
-@app.get("/files/{filename}")
-async def get_file(filename: str, autor: str = Query(...)):
-    safe_author = urllib.parse.quote(autor)
-    file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    return {"error": "Archivo no encontrado o no tienes permiso"}
-
-
 # ========= Ver contenido de una hoja específica ==========
 @app.get("/view/{filename}")
-async def view_excel(filename: str, hoja: int = 0, autor: str = Query(None)):
-    if autor:
+async def view_excel(
+    filename: str, 
+    hoja: int = 0, 
+    autor: str = Query(None),
+    curso: str = Query(None) # 🆕 Ahora puede buscar dentro de un curso
+):
+    import urllib.parse
+    
+    # ¿Buscamos en la carpeta de un curso o en la del autor?
+    if curso:
+        safe_curso = urllib.parse.quote(curso)
+        file_path = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso, filename)
+    elif autor:
         safe_author = urllib.parse.quote(autor)
         file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
     else:
         file_path = os.path.join(EXCEL_FOLDER, filename)
+        
     if not os.path.exists(file_path):
-        return {"error": "Archivo no encontrado"}
+        return {"error": "Archivo no encontrado en el servidor"}
 
     try:
+        import pandas as pd
         with pd.ExcelFile(file_path) as xls:
-            # Leer hoja sin asumir encabezados (header=None) para ver datos crudos
             df = pd.read_excel(xls, sheet_name=hoja)
-            
-            # Eliminar filas totalmente vacías
             df = df.dropna(how="all")
-            
-            # 🛠️ CORRECCIÓN CRÍTICA: Reemplazar NaN (vacíos) con None (null en JSON)
-            # Esto arregla el problema de las columnas con diferente cantidad de datos
             df = df.where(pd.notnull(df), None)
-
+            
             if df.empty:
                 return {"error": "Archivo sin datos detectables"}
             
-            # Renombrar columnas genéricamente para evitar problemas de llaves duplicadas
             df.columns = [str(c) for c in df.columns]
-            
             json_data = df.to_dict(orient="records")
 
         return JSONResponse(content=json_data)
-
     except Exception as e:
-        print(f"Error leyendo Excel: {e}") # Log para debug
         return {"error": f"Error al leer el Excel: {str(e)}"}
 
 
