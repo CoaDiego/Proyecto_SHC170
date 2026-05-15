@@ -37,11 +37,24 @@ export default function Grupos() {
     localStorage.setItem("cursos_docente", JSON.stringify(misCursos));
   }, [misCursos]);
 
-  // 2. MOCHILA DEL ESTUDIANTE (Cursos en los que está matriculado)
-  // Lo empezamos con un curso de ejemplo para que la pantalla no se vea vacía
-  const [cursosInscritos, setCursosInscritos] = useState([
-    { id: "EST-101", nombre: "Estadística Empresarial I", codigo: "EST-101" },
-  ]);
+  // 1. LA MOCHILA DEL ESTUDIANTE (Ahora con memoria localStorage)
+  const [cursosInscritos, setCursosInscritos] = useState(() => {
+    const guardados = localStorage.getItem("cursos_estudiante");
+    return guardados
+      ? JSON.parse(guardados)
+      : [
+          {
+            id: "EST-101",
+            nombre: "Estadística Empresarial I",
+            codigo: "EST-101",
+          },
+        ];
+  });
+
+  // Guardamos en memoria cada vez que el estudiante se inscribe a uno nuevo
+  React.useEffect(() => {
+    localStorage.setItem("cursos_estudiante", JSON.stringify(cursosInscritos));
+  }, [cursosInscritos]);
 
   // Estado para el buscador del estudiante
   const [codigoBusqueda, setCodigoBusqueda] = useState("");
@@ -400,7 +413,11 @@ export default function Grupos() {
                     <strong>Código:</strong> {curso.codigo}
                   </p>
                   <button
-                    onClick={() => navigate("/archivos")}
+                    onClick={() =>
+                      navigate("/archivos", {
+                        state: { cursoIdSeleccionado: curso.codigo },
+                      })
+                    }
                     style={{
                       width: "100%",
                       padding: "10px",

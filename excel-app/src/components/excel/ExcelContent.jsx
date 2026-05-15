@@ -242,8 +242,10 @@ export default function ExcelContent({ filename, autor, curso = "", onSheetChang
   }; 
 
   return (
-    <div style={{ height: mostrarTabla ? '550px' : 'auto', width: '100%' }}>
+    // 1. EL CONTENEDOR MAESTRO: Inicia la cadena Flex
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, width: '100%' }}>
 
+      {/* Si no estamos mostrando la tabla, SOLO dibujamos el selector limpio */}
       {!mostrarTabla && sheets.length > 0 && (
         <div style={{ marginBottom: "15px" }}> 
           <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
@@ -261,6 +263,7 @@ export default function ExcelContent({ filename, autor, curso = "", onSheetChang
         </div>
       )}
 
+      {/* CABECERA PARA CUANDO LA TABLA ESTÁ VISIBLE */}
       {mostrarTabla && (
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
           {sheets.length > 0 && (
@@ -282,19 +285,26 @@ export default function ExcelContent({ filename, autor, curso = "", onSheetChang
         </div>
       )}
 
+      {/* TABLA O ESTADO DE CARGA */}
       {mostrarTabla && (
         loading ? (
           <div className="container_tablas" style={{ textAlign: 'center', padding: '20px' }}>
             <h3>Cargando datos...</h3>
           </div>
         ) : rows.length > 0 ? (
-          <DataGrid
-            columns={columns}
-            rows={rows}
-            onRowsChange={handleRowsChange}
-            rowKeyGetter={(row) => row._id}
-            className="rdg-light personalizado"
-          />
+          
+          /* 2. EL CONTENEDOR DE LA TABLA: Continúa la cadena Flex */
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, width: '100%' }}>
+            <DataGrid
+              columns={columns}
+              rows={rows}
+              onRowsChange={handleRowsChange}
+              rowKeyGetter={(row) => row._id}
+              className="rdg-light personalizado"
+              style={{ flex: 1, minHeight: 0 }} /* 👈 3. EL TOQUE FINAL: La tabla recibe la instrucción exacta */
+            />
+          </div>
+
         ) : (
           <div style={{ textAlign: 'center', padding: '20px', background: '#f8f9fa' }}>Hoja vacía.</div>
         )

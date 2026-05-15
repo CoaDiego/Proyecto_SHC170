@@ -32,30 +32,45 @@ export default function Archivos({ usuario }) {
   // Estados para la lógica de Cursos
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
   // (Mockup de cursos - esto luego vendrá del backend)
-  const misCursos = [
-    { id: "EST-101", nombre: "Estadística Empresarial I" },
-    { id: "DAT-205", nombre: "Análisis de Datos Avanzado" },
-  ];
+  const [misCursos, setMisCursos] = useState([]);
 
- const loadFiles = async () => {
-  if (!usuario) return;
-  try {
-    const esPestañaCursos = tabActiva === 'cursos';
-    const visibilidad = esPestañaCursos ? 'privado' : 'personal';
+  useEffect(() => {
+    if (!usuario) return;
 
-    // Para el estudiante, el "autor" de los archivos de curso es el servidor/docente
-    // así que enviamos el cursoSeleccionado con prioridad.
-    const data = await api.obtenerArchivos(usuario.nombre, visibilidad, cursoSeleccionado);
-    
-    if (data.files) setFiles(data.files);
-  } catch (err) {
-    console.error("Error al cargar:", err);
-  }
-};
+    if (usuario.rol === "Estudiante") {
+      // Si es estudiante, cargamos su mochila
+      const inscritos = localStorage.getItem("cursos_estudiante");
+      if (inscritos) setMisCursos(JSON.parse(inscritos));
+    } else {
+      // Si es docente/admin, cargamos los cursos creados
+      const creados = localStorage.getItem("cursos_docente");
+      if (creados) setMisCursos(JSON.parse(creados));
+    }
+  }, [usuario]);
+
+  const loadFiles = async () => {
+    if (!usuario) return;
+    try {
+      const esPestañaCursos = tabActiva === "cursos";
+      const visibilidad = esPestañaCursos ? "privado" : "personal";
+
+      // Para el estudiante, el "autor" de los archivos de curso es el servidor/docente
+      // así que enviamos el cursoSeleccionado con prioridad.
+      const data = await api.obtenerArchivos(
+        usuario.nombre,
+        visibilidad,
+        cursoSeleccionado,
+      );
+
+      if (data.files) setFiles(data.files);
+    } catch (err) {
+      console.error("Error al cargar:", err);
+    }
+  };
 
   // 🚀 CRÍTICO: Este useEffect debe observar estos 3 cambios
-  useEffect(() => { 
-    loadFiles(); 
+  useEffect(() => {
+    loadFiles();
   }, [usuario, tabActiva, cursoSeleccionado]);
 
   const handleUploadFile = async (fileObj) => {
@@ -238,7 +253,7 @@ export default function Archivos({ usuario }) {
               </div>
             )}
 
-            {/* AVISO VISUAL DE CURSO SELECCIONADO */}
+            {/* AVISO VISUAL DE CURSO SELECCIONADO CON LÓGICA DE ROL */}
             {tabActiva === "cursos" && cursoSeleccionado && (
               <div
                 style={{
@@ -250,7 +265,10 @@ export default function Archivos({ usuario }) {
                 }}
               >
                 <p style={{ margin: 0, fontSize: "0.95rem", color: "#0056b3" }}>
-                  📍 Estás gestionando el material del curso:{" "}
+                  {" "}
+                  {["Docente", "Administrador"].includes(usuario?.rol)
+                    ? "Estás gestionando el material del curso:"
+                    : "Viendo material de estudio del curso:"}{" "}
                   <strong>{cursoSeleccionado}</strong>
                 </p>
               </div>
@@ -306,11 +324,15 @@ export default function Archivos({ usuario }) {
         <div
           style={{
             flex: "1",
+            minWidth: 0, /* 👈 El truco mágico que evita el desborde */
+            display: "flex",
+            flexDirection: "column",
             background: "var(--bg-card)",
             padding: "20px",
             borderRadius: "8px",
             border: "1px solid var(--border-color)",
             minHeight: "600px",
+            maxHeight: "800px"
           }}
         >
           <h3
@@ -324,7 +346,7 @@ export default function Archivos({ usuario }) {
             Vista Previa de Datos
           </h3>
           {selectedFile ? (
-            <div style={{ height: "100%", overflow: "auto" }}>
+            <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <ExcelContent
                 filename={selectedFile}
                 autor={usuario.nombre}
@@ -332,6 +354,8 @@ export default function Archivos({ usuario }) {
               />
             </div>
           ) : (
+
+        
             <div
               style={{
                 display: "flex",

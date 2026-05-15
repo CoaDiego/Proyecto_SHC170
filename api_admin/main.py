@@ -274,21 +274,37 @@ async def view_excel(
 
 
 # ========= Listar hojas de un archivo ==========
+# =======================
+# Obtener nombres de las hojas
+# =======================
 @app.get("/sheets/{filename}")
-async def list_sheets(filename: str, autor: str = Query(None)):
-    if autor:
+async def get_sheets(
+    filename: str, 
+    autor: str = Query(None),
+    curso: str = Query(None) # 🆕 Ahora también recibe el curso
+):
+    import urllib.parse
+    import pandas as pd
+    
+    # ¿Dónde buscamos el archivo? Misma lógica que al visualizar
+    if curso:
+        safe_curso = urllib.parse.quote(curso)
+        file_path = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso, filename)
+    elif autor:
         safe_author = urllib.parse.quote(autor)
         file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
     else:
         file_path = os.path.join(EXCEL_FOLDER, filename)
+
     if not os.path.exists(file_path):
-        return {"error": "Archivo no encontrado"}
+        return {"error": "Archivo no encontrado en el servidor"}
 
     try:
-        with pd.ExcelFile(file_path) as xls:
-            return {"sheets": xls.sheet_names}
+        # Abrimos el Excel solo para leer los nombres de las pestañas
+        xls = pd.ExcelFile(file_path)
+        return {"sheets": xls.sheet_names}
     except Exception as e:
-        return {"error": f"No se pudieron obtener las hojas: {e}"}
+        return {"error": f"Error al leer hojas: {str(e)}"}
     
     
 @app.delete("/files/{filename}")

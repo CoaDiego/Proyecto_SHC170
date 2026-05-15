@@ -1,1 +1,12 @@
-[]
+[
+    {
+        "id": "HIST_1778869803",
+        "fecha": "15/05/2026",
+        "hora": "14:30:03",
+        "calculo": "frecuencias_completas",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "columna_x": "Datos 1",
+        "columna_y": "Datos 2",
+        "hoja": 0
+    }
+]
