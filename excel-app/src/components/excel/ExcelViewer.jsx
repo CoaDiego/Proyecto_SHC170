@@ -4,7 +4,7 @@ import Modal from "../../utils/Modal";
 
 import "../../styles/components/excel/ExcelViewer.css";
 
-export default function ExcelViewer({ files, onSelect, onDelete }) {
+export default function ExcelViewer({ files, onSelect, onDelete, rol }) {
 
   // --- ESTADOS PARA EL MODAL ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +41,7 @@ export default function ExcelViewer({ files, onSelect, onDelete }) {
         </div>
       ) : (
         /* LISTA DE ARCHIVOS */
+        /* LISTA DE ARCHIVOS */
         <ul className="container_lista">
           {files.map((f, index) => (
             <li
@@ -68,19 +69,24 @@ export default function ExcelViewer({ files, onSelect, onDelete }) {
                   Ver
                 </button>
 
-                <button
-                  onClick={() => openDeleteModal(f.filename)}
-                  className="container_button_2"
-                  title="Eliminar archivo"
-                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#ef4444"; e.currentTarget.style.color = "white"; }}
-                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#ef4444"; }}
-                >
-                  Eliminar
-                </button>
+                {/* 🚀 2. EL CAMBIO: Envolvemos el botón con esta validación de seguridad */}
+                {['Docente', 'Administrador'].includes(rol) && (
+                  <button
+                    onClick={() => openDeleteModal(f.filename)}
+                    className="container_button_2"
+                    title="Eliminar archivo"
+                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#ef4444"; e.currentTarget.style.color = "white"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#ef4444"; }}
+                  >
+                    Eliminar
+                  </button>
+                )}
+                
               </div>
             </li>
           ))}
         </ul>
+        
       )}
       <Modal
         isOpen={isModalOpen}

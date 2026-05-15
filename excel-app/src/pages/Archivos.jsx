@@ -7,6 +7,8 @@ import { api } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 import "../styles/pages/Archivos.css";
 
+import { useLocation } from "react-router-dom";
+
 export default function Archivos({ usuario }) {
   // Estados para Archivos Personales
   const [files, setFiles] = useState([]);
@@ -14,6 +16,18 @@ export default function Archivos({ usuario }) {
 
   // 🆕 ESTADO PARA LAS PESTAÑAS
   const [tabActiva, setTabActiva] = useState("personales"); // 'personales' o 'cursos'
+
+  const location = useLocation();
+
+  // EFECTO PARA DETECTAR SI VENIMOS DE LA PÁGINA DE GRUPOS
+  useEffect(() => {
+    if (location.state && location.state.cursoIdSeleccionado) {
+      // Si recibimos un código, saltamos a la pestaña de cursos y lo seleccionamos
+      setTabActiva("cursos");
+      setCursoSeleccionado(location.state.cursoIdSeleccionado);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   // Estados para la lógica de Cursos
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
@@ -23,35 +37,25 @@ export default function Archivos({ usuario }) {
     { id: "DAT-205", nombre: "Análisis de Datos Avanzado" },
   ];
 
-  const loadFiles = async () => {
-    if (!usuario) return;
-    try {
-      // 🆕 Le decimos a la API qué pestaña estamos viendo
-      const visibilidad = tabActiva === "cursos" ? "privado" : "personal";
+ const loadFiles = async () => {
+  if (!usuario) return;
+  try {
+    const esPestañaCursos = tabActiva === 'cursos';
+    const visibilidad = esPestañaCursos ? 'privado' : 'personal';
 
-      // Si estamos en la pestaña de cursos pero no hay curso seleccionado, limpiamos la lista
-      if (tabActiva === "cursos" && !cursoSeleccionado) {
-        setFiles([]);
-        return;
-      }
+    // Para el estudiante, el "autor" de los archivos de curso es el servidor/docente
+    // así que enviamos el cursoSeleccionado con prioridad.
+    const data = await api.obtenerArchivos(usuario.nombre, visibilidad, cursoSeleccionado);
+    
+    if (data.files) setFiles(data.files);
+  } catch (err) {
+    console.error("Error al cargar:", err);
+  }
+};
 
-      // Pedimos los archivos específicos a la API
-      const data = await api.obtenerArchivos(
-        usuario.nombre,
-        visibilidad,
-        cursoSeleccionado,
-      );
-      if (data.files) setFiles(data.files);
-    } catch (err) {
-      console.error("Error cargando archivos:", err);
-      alerta.error("Error", "No se pudo cargar la lista de archivos.");
-    }
-  };
-
-  // 🆕 Agregamos tabActiva y cursoSeleccionado a las dependencias para que se recargue solo
-  useEffect(() => {
-    loadFiles();
-    setSelectedFile(null);
+  // 🚀 CRÍTICO: Este useEffect debe observar estos 3 cambios
+  useEffect(() => { 
+    loadFiles(); 
   }, [usuario, tabActiva, cursoSeleccionado]);
 
   const handleUploadFile = async (fileObj) => {
@@ -234,6 +238,24 @@ export default function Archivos({ usuario }) {
               </div>
             )}
 
+            {/* AVISO VISUAL DE CURSO SELECCIONADO */}
+            {tabActiva === "cursos" && cursoSeleccionado && (
+              <div
+                style={{
+                  backgroundColor: "#e8f4fd",
+                  padding: "12px",
+                  borderRadius: "6px",
+                  marginBottom: "15px",
+                  borderLeft: "4px solid var(--primary-color)",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "0.95rem", color: "#0056b3" }}>
+                  📍 Estás gestionando el material del curso:{" "}
+                  <strong>{cursoSeleccionado}</strong>
+                </p>
+              </div>
+            )}
+
             {/* Subida de archivos: Oculta para estudiantes en la pestaña de cursos */}
             {!(tabActiva === "cursos" && usuario?.rol === "Estudiante") && (
               <div
@@ -272,6 +294,7 @@ export default function Archivos({ usuario }) {
                 files={files}
                 onSelect={setSelectedFile}
                 onDelete={handleDeleteFile}
+                rol={usuario?.rol}
               />
             )}
           </div>

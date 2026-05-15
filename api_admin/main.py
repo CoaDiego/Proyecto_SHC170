@@ -1,5 +1,4 @@
 import pandas as pd
-import { useLocation } from 'react-router-dom';
 from fastapi import FastAPI, File, UploadFile, Form, Query, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -197,7 +196,6 @@ async def upload_file(
 
 # =======================
 # Listar archivos Excel
-# =======================
 @app.get("/files")
 def list_files(
     autor: str = Query(None), 
@@ -207,21 +205,30 @@ def list_files(
     import urllib.parse
     files_list = []
 
-    # 1. Definir en qué carpeta buscar
+    # 1. Decidimos la ruta base
     if visibilidad == "privado" and curso:
+        # IMPORTANTE: Para cursos, ignoramos quién es el autor, buscamos en la carpeta del curso
         safe_curso = urllib.parse.quote(curso)
         target_folder = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso)
     else:
-        if not autor:
-            return {"files": []}
+        # Para personales, buscamos en la carpeta del usuario
+        if not autor: return {"files": []}
         safe_author = urllib.parse.quote(autor)
         target_folder = os.path.join(EXCEL_FOLDER, safe_author)
     
-    # 2. Leer los archivos si la carpeta existe
+    # 2. DEBUG: Imprime en tu terminal de Python para ver qué está buscando
+    print(f"DEBUG: Buscando archivos en: {target_folder}")
+
+    # 3. Verificamos si existe, si no, devolvemos lista vacía en lugar de error
     if os.path.exists(target_folder):
         for fname in os.listdir(target_folder):
-            if fname.endswith(".xlsx"):
-                files_list.append({"filename": fname, "autor": autor, "curso": curso})
+            if fname.endswith(".xlsx") or fname.endswith(".xls"):
+                # Enviamos metadatos extra para que React sepa qué es
+                files_list.append({
+                    "filename": fname, 
+                    "autor": autor, 
+                    "es_curso": visibilidad == "privado"
+                })
             
     return {"files": files_list}
 
