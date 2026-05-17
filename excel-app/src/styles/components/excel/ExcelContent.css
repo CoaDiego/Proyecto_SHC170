@@ -3,6 +3,7 @@
     border: none;
     padding: 0 5px;
     outline: none;
+    text-align: center;
 }
 
 .text_error {
@@ -157,4 +158,19 @@
 }
 .container_vacio p{
     font-Style: italic", color: "var(--text-muted);
+}
+
+/* Centrado premium de celdas y cabeceras en react-data-grid */
+.personalizado .rdg-cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.personalizado .rdg-header-cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
 }

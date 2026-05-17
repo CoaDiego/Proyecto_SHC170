@@ -5,7 +5,7 @@ import "../styles/pages/Calculos.css";
 
 // --- IMPORTS DE SERVICIOS Y CONTEXTO ---
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
-import { useData } from "../components/excel/DataContext";
+import { useModuleData } from "../components/excel/DataContext";
 import { api } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 
@@ -15,7 +15,7 @@ import PanelResultados from "../components/Resultados/PanelResultados";
 import PanelConfiguracion from "../components/Resultados/PanelConfiguracion"; // (O la ruta donde lo hayas guardado)
 
 export default function Calculos() {
-  const { variables, usuario } = useData();
+  const { variables, usuario } = useModuleData();
 
   const [files, setFiles] = useState([]);
   const [ordenGraficos, setOrdenGraficos] = useState([]);

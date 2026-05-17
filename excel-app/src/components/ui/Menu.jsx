@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
 import escudoAdmin from "../../assets/images/Logo-Adm.png";
 
@@ -7,6 +7,38 @@ export default function Menu({ usuario }) {
   const [isOpen, setIsOpen] = useState(false);
   const closeMenu = () => setIsOpen(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const navLinksRef = useRef(null);
+  const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0, opacity: 0 });
+
+  useEffect(() => {
+    const updateUnderline = () => {
+      const activeLink = navLinksRef.current?.querySelector('a.active');
+      if (activeLink) {
+        setUnderlineStyle({
+          left: activeLink.offsetLeft,
+          width: activeLink.offsetWidth,
+          opacity: 1
+        });
+      } else {
+        setUnderlineStyle(prev => ({ ...prev, opacity: 0 }));
+      }
+    };
+
+    // Actualiza inmediatamente
+    updateUnderline();
+
+    // Actualiza cuando la ventana cambia de tamaño
+    window.addEventListener("resize", updateUnderline);
+
+    // Un pequeño retraso para asegurar que las fuentes y layouts terminen de cargar
+    const timer = setTimeout(updateUnderline, 100);
+
+    return () => {
+      window.removeEventListener("resize", updateUnderline);
+      clearTimeout(timer);
+    };
+  }, [location.pathname]);
 
   return (
     <nav className="main-navbar">
@@ -18,15 +50,17 @@ export default function Menu({ usuario }) {
 
       {/* 2. CONTENEDOR DESPLEGABLE - Se posiciona absoluto en móvil */}
       <div className={`nav-menu ${isOpen ? "active" : ""}`}>
-        <ul className="nav-links">
+        <ul className="nav-links" ref={navLinksRef}>
           <li><NavLink to="/" onClick={closeMenu}>Inicio</NavLink></li>
           <li><NavLink to="/archivos" onClick={closeMenu}>Archivos</NavLink></li>
-          <li><NavLink to="/calculadora" onClick={closeMenu}>Calculadora</NavLink></li>
-          <li><NavLink to="/MAT251" onClick={closeMenu}>MAT-251</NavLink></li>
+          <li><NavLink to="/calculadora" onClick={closeMenu}>Estadística General</NavLink></li>
+          <li><NavLink to="/MAT251" onClick={closeMenu}>Estadística Matemática</NavLink></li>
           <li><NavLink to="/historial" onClick={closeMenu}>Historial</NavLink></li>
           <li><NavLink to="/grupos" onClick={closeMenu}>Grupos</NavLink></li>
          {/*  <li><NavLink to="/about" onClick={closeMenu}>Sobre la App</NavLink></li> */}
          
+         {/* Línea deslizante inteligente */}
+         <span className="nav-underline" style={underlineStyle} />
         </ul>
 
         {/* MÓVIL: El tema se queda aquí dentro para ganar espacio arriba */}

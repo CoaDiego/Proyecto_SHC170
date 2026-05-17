@@ -115,13 +115,16 @@ export default function Archivos({ usuario }) {
       return;
     }
 
+    const confirmar = window.confirm(`¿Eliminar "${filename}" de forma permanente?`);
+    if (!confirmar) return;
+
     try {
       await api.eliminarArchivo(filename, usuario.nombre);
       setFiles((prev) => prev.filter((f) => f.filename !== filename));
       if (selectedFile === filename) setSelectedFile(null);
-      alerta.success("Archivo eliminado");
+      alerta.success("Archivo eliminado correctamente");
     } catch (err) {
-      alerta.error(`Error al eliminar: ${err.message}`);
+      alerta.error("Error al eliminar", err.message || "No se pudo eliminar el archivo.");
     }
   };
 

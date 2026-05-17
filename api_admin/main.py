@@ -41,6 +41,30 @@ async def favicon():
 
 
 # =======================
+# 🆕 CONTADOR DE VISITAS PERSISTENTE
+# =======================
+VISITAS_FILE = "visitas.txt"
+
+@app.get("/visitas")
+async def visitas():
+    count = 1
+    if os.path.exists(VISITAS_FILE):
+        try:
+            with open(VISITAS_FILE, "r") as f:
+                content = f.read().strip()
+                if content:
+                    count = int(content) + 1
+        except Exception:
+            pass
+    try:
+        with open(VISITAS_FILE, "w") as f:
+            f.write(str(count))
+    except Exception:
+        pass
+    return {"visitas": count}
+
+
+# =======================
 # 🆕 SIMULADOR DE INGRESO LTI (Integración Moodle)
 # =======================
 @app.post("/lti/launch")
@@ -260,16 +284,21 @@ async def view_excel(
         with pd.ExcelFile(file_path) as xls:
             df = pd.read_excel(xls, sheet_name=hoja)
             df = df.dropna(how="all")
-            df = df.where(pd.notnull(df), None)
-            
+
             if df.empty:
                 return {"error": "Archivo sin datos detectables"}
-            
+
             df.columns = [str(c) for c in df.columns]
+
+            # Reemplazar NaN con "" para evitar errores de serializaci\u00f3n JSON
+            df = df.fillna("")
+
             json_data = df.to_dict(orient="records")
 
         return JSONResponse(content=json_data)
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return {"error": f"Error al leer el Excel: {str(e)}"}
 
 
@@ -307,14 +336,129 @@ async def get_sheets(
         return {"error": f"Error al leer hojas: {str(e)}"}
     
     
+@app.get("/files/{filename}")
+async def download_file(filename: str, autor: str = Query(None)):
+    """Descarga el archivo Excel binario del servidor."""
+    import urllib.parse
+    if autor:
+        safe_author = urllib.parse.quote(autor)
+        file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
+    else:
+        file_path = os.path.join(EXCEL_FOLDER, filename)
+
+    if not os.path.exists(file_path):
+        return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
+
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
 @app.delete("/files/{filename}")
 async def delete_file(filename: str, autor: str = Query(...)):
+    import urllib.parse, gc, time, traceback
     safe_author = urllib.parse.quote(autor)
     file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        return {"message": f"Archivo {filename} eliminado correctamente"}
-    return {"error": "Archivo no encontrado"}
+
+    if not os.path.exists(file_path):
+        return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
+
+    # Forzar liberaci\u00f3n de handles abiertos por pandas/openpyxl
+    gc.collect()
+
+    last_error = None
+    for intento in range(3):  # 3 intentos con delay
+        try:
+            os.remove(file_path)
+            # Eliminar el .meta si existe
+            meta_path = file_path + ".meta"
+            if os.path.exists(meta_path):
+                try:
+                    os.remove(meta_path)
+                except Exception:
+                    pass
+            return {"message": f"Archivo {filename} eliminado correctamente"}
+        except PermissionError as e:
+            last_error = e
+            time.sleep(0.3)  # Esperar 300ms y reintentar
+        except Exception as e:
+            print(traceback.format_exc())
+            return JSONResponse(status_code=500, content={"error": str(e)})
+
+    # Si llegamos aqu\u00ed, fallaron los 3 intentos por archivo bloqueado
+    print(traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={"error": f"No se puede eliminar '{filename}': el archivo está en uso. Cierra cualquier aplicaci\u00f3n que lo tenga abierto e intenta de nuevo."}
+    )
+
+@app.post("/save_table_hojas")
+async def save_table_hojas(body: dict = Body(...)):
+    """
+    Recibe JSON con múltiples hojas:
+    {
+        "nombre": "MiArchivo",
+        "autor": "NombreUsuario",
+        "hojas": [
+            { "nombre": "Hoja 1", "columnas": ["Edad", "Peso"], "datos": [{...}, {...}] },
+            { "nombre": "Hoja 2", "columnas": [], "datos": [] }
+        ]
+    }
+    Guarda cada hoja como una pestaña separada en el Excel.
+    """
+    try:
+        import urllib.parse
+        nombre = body.get("nombre", "Ejemplo")
+        autor  = body.get("autor", "Desconocido")
+        hojas  = body.get("hojas", [])
+
+        if not hojas:
+            return {"error": "No se recibieron hojas para guardar"}
+
+        safe_author = urllib.parse.quote(autor)
+        user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+        os.makedirs(user_folder, exist_ok=True)
+
+        # Evitar sobreescribir archivos existentes
+        contador = 1
+        base_filename = f"{nombre}.xlsx"
+        filepath = os.path.join(user_folder, base_filename)
+        while os.path.exists(filepath):
+            contador += 1
+            filepath = os.path.join(user_folder, f"{nombre}_{contador}.xlsx")
+
+        # Escribir cada hoja en el Excel
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            for hoja in hojas:
+                nombre_hoja = hoja.get("nombre", "Hoja")[:31]  # Excel limita a 31 chars
+                datos       = hoja.get("datos", [])
+                columnas    = hoja.get("columnas", [])  # nombres de columnas como respaldo
+
+                if datos:
+                    df = pd.DataFrame(datos)
+                elif columnas:
+                    # Hoja sin datos pero con encabezados definidos
+                    df = pd.DataFrame(columns=columnas)
+                else:
+                    df = pd.DataFrame()
+
+                df.to_excel(writer, sheet_name=nombre_hoja, index=False)
+
+        # Guardar metadata
+        meta_path = filepath + ".meta"
+        meta_data = {"filename": os.path.basename(filepath), "author": autor}
+        with open(meta_path, "w") as f:
+            json.dump(meta_data, f)
+
+        return {"filename": os.path.basename(filepath), "hojas": len(hojas)}
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"error": str(e)}
+
 
 # =======================
 # CREAR TABLA DE CÁLCULO NUEVA

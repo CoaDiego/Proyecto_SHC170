@@ -14,9 +14,17 @@ export default function Perfil({ usuario, setUsuario }) {
   // Función UX para sacar las iniciales (ej: "Juan Pérez" -> "JP")
   const getIniciales = (nombre) => {
     if (!nombre) return '👤';
-    const partes = nombre.trim().split(' ');
-    if (partes.length > 1) return (partes[0][0] + partes[1][0]).toUpperCase();
-    return nombre.substring(0, 2).toUpperCase();
+    // Removemos cualquier texto entre paréntesis o corchetes para limpiar el nombre
+    const nombreLimpio = nombre.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim();
+    const partes = nombreLimpio.split(/\s+/).filter(Boolean);
+    
+    if (partes.length > 1) {
+      return (partes[0][0] + partes[1][0]).toUpperCase();
+    }
+    if (partes.length === 1) {
+      return partes[0][0].toUpperCase();
+    }
+    return '👤';
   };
 
   return (
