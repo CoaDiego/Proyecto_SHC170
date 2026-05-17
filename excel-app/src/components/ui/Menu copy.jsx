@@ -2,30 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
 import escudoAdmin from "../../assets/images/Logo-Adm.png";
-import '../../styles/components/ui/Menu.css';
 
 export default function Menu({ usuario }) {
   const [isOpen, setIsOpen] = useState(false);
-  // 🚀 1. Nuevo estado para controlar cuándo se abre el submenú (útil para móviles)
-  const [dropdownOpen, setDropdownOpen] = useState(false); 
-  
-  const closeMenu = () => {
-    setIsOpen(false);
-    setDropdownOpen(false); // 🚀 Cerramos también el submenú
-  };
-  
+  const closeMenu = () => setIsOpen(false);
   const navigate = useNavigate();
   const location = useLocation();
   const navLinksRef = useRef(null);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
-  // 🚀 2. Detectamos si estamos en alguna de las páginas de la calculadora
-  const isCalculadoraActive = location.pathname === '/calculadora' || location.pathname === '/MAT251';
-
   useEffect(() => {
     const updateUnderline = () => {
-      // 🚀 3. Modificamos la búsqueda para que también detecte nuestro "span" activo del submenú
-      const activeLink = navLinksRef.current?.querySelector('a.active, span.active');
+      const activeLink = navLinksRef.current?.querySelector('a.active');
       if (activeLink) {
         setUnderlineStyle({
           left: activeLink.offsetLeft,
@@ -37,8 +25,13 @@ export default function Menu({ usuario }) {
       }
     };
 
+    // Actualiza inmediatamente
     updateUnderline();
+
+    // Actualiza cuando la ventana cambia de tamaño
     window.addEventListener("resize", updateUnderline);
+
+    // Un pequeño retraso para asegurar que las fuentes y layouts terminen de cargar
     const timer = setTimeout(updateUnderline, 100);
 
     return () => {
@@ -50,52 +43,33 @@ export default function Menu({ usuario }) {
   return (
     <nav className="main-navbar">
       
+      {/* 1. ZONA DEL LOGO */}
       <div className="nav-brand">
        <img src={escudoAdmin} alt="Escudo Administración" className="nav-logo" />
       </div>
 
+      {/* 2. CONTENEDOR DESPLEGABLE - Se posiciona absoluto en móvil */}
       <div className={`nav-menu ${isOpen ? "active" : ""}`}>
         <ul className="nav-links" ref={navLinksRef}>
           <li><NavLink to="/" onClick={closeMenu}>Inicio</NavLink></li>
           <li><NavLink to="/archivos" onClick={closeMenu}>Archivos</NavLink></li>
-          
-          {/* 🚀 4. EL NUEVO CONTENEDOR DESPLEGABLE */}
-          <li 
-            className="nav-item dropdown-container"
-            onMouseEnter={() => setDropdownOpen(true)}
-            onMouseLeave={() => setDropdownOpen(false)}
-            onClick={() => setDropdownOpen(!dropdownOpen)} // Para clics en móvil
-          >
-            {/* El título "Calculadora" se marca como activo si estamos en esas rutas */}
-            <span className={`nav-link-dropdown ${isCalculadoraActive ? 'active' : ''}`}>
-              Calculadora ▾
-            </span>
-
-            <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
-              <li>
-                <NavLink to="/calculadora" onClick={closeMenu} className="dropdown-item">
-                  Estadística General
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/MAT251" onClick={closeMenu} className="dropdown-item">
-                  Estadística Matemática
-                </NavLink>
-              </li>
-            </ul>
-          </li>
-
+          <li><NavLink to="/calculadora" onClick={closeMenu}>Estadística General</NavLink></li>
+          <li><NavLink to="/MAT251" onClick={closeMenu}>Estadística Matemática</NavLink></li>
           <li><NavLink to="/historial" onClick={closeMenu}>Historial</NavLink></li>
           <li><NavLink to="/grupos" onClick={closeMenu}>Grupos</NavLink></li>
+         {/*  <li><NavLink to="/about" onClick={closeMenu}>Sobre la App</NavLink></li> */}
          
+         {/* Línea deslizante inteligente */}
          <span className="nav-underline" style={underlineStyle} />
         </ul>
 
+        {/* MÓVIL: El tema se queda aquí dentro para ganar espacio arriba */}
         <div className="nav-menu-mobile-extra mobile-only">
           <OscuroClaro />
         </div>
       </div>
 
+      {/* 3. ZONA DERECHA: Siempre visible (Usuario) + Tema solo en Desktop */}
       <div className="menu-derecha">
         <div className="nav-theme desktop-only">
           <OscuroClaro />
@@ -120,6 +94,7 @@ export default function Menu({ usuario }) {
         )}
       </div>
 
+      {/* 4. BOTÓN DE HAMBURGUESA */}
       <button 
         className={`hamburger-menu ${isOpen ? "open" : ""}`} 
         onClick={() => setIsOpen(!isOpen)}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom"; 
 import logoCarrera from "../assets/images/Logo-Adm.png";
 import { alerta } from '../utils/Notificaciones';
+import '../styles/components/ui/Login.css';
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState(""); // 🆕 Ahora usamos email
@@ -12,7 +13,8 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/login_local`, {
+      /* const response = await fetch(`${import.meta.env.VITE_API_URL}/login_local`, { */
+      const response = await fetch("http://127.0.0.1:8000/login_local", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email, password: pass }) // 🆕 Enviamos el email al backend

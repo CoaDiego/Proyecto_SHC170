@@ -1,6 +1,8 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+/* const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"; */
 //Base url de Render
 /* const BASE_URL = "https://api-admin-shc170.onrender.com"; */
+
+const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export const api = {
   // --- OBTENER CONTADOR DE VISITAS ---

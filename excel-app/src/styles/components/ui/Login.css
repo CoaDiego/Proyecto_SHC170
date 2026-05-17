@@ -1,0 +1,34 @@
+/* =========================================
+   ESTILOS DE LA PANTALLA DE LOGIN
+   ========================================= */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 20px;
+}
+
+.login-card {
+  background: linear-gradient(180deg, var(--accent-color) 0%, #ff9e2e 60%, #dfb687 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 30px;
+  width: 100%;
+  max-width: 350px;
+}
+
+.login-card input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 5px;
+  padding: 10px;
+  font-size: 1rem;
+  outline: none;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 20px;
+  }
+}
