@@ -1,10 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 // 1. VOLVEMOS A USAR TU ARCHIVO ORIGINAL QUE SÍ EXISTE
 import logoUsfx from "../../assets/images/logo_usfx.png";
 import logo4Siglos from "../../assets/images/4_siglos.png";
 import "../../styles/components/ui/Pie_pagina.css";   
+import { api } from "../../services/api";
 
 export default function Pie_pagina() {
+  const [visitas, setVisitas] = useState(null);
+
+  useEffect(() => {
+    const cargarVisitas = async () => {
+      const numVisitas = await api.obtenerVisitas();
+      if (numVisitas !== null) {
+        setVisitas(numVisitas);
+      }
+    };
+    cargarVisitas();
+  }, []);
+
   return (
     <footer className="pie-pagina-institucional">
       
@@ -24,7 +37,9 @@ export default function Pie_pagina() {
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
-          <span className="texto-vistas">Gracias por visitarnos</span>
+          <span className="texto-vistas">
+            {visitas !== null ? `${visitas.toLocaleString()} visitas registradas` : "Gracias por visitarnos"}
+          </span>
         </div>
       </div>
 

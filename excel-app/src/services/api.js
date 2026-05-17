@@ -3,6 +3,19 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 /* const BASE_URL = "https://api-admin-shc170.onrender.com"; */
 
 export const api = {
+  // --- OBTENER CONTADOR DE VISITAS ---
+  obtenerVisitas: async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/visitas`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.visitas;
+    } catch (error) {
+      console.error("Error en api.obtenerVisitas:", error);
+      return null;
+    }
+  },
+
   // --- Función para obtener las hojas de un Excel ---
   obtenerHojas: async (filename, autor = "", curso = "") => {
     // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
@@ -126,6 +139,22 @@ export const api = {
       return await res.json();
     } catch (error) {
       console.error("Error en api.guardarTabla:", error);
+      throw error;
+    }
+  },
+
+  // Guardar múltiples hojas en un solo archivo Excel
+  guardarTablaHojas: async (nombre, hojas, autor) => {
+    try {
+      const res = await fetch(`${BASE_URL}/save_table_hojas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, hojas, autor }),
+      });
+      if (!res.ok) throw new Error("Error al guardar las hojas");
+      return await res.json();
+    } catch (error) {
+      console.error("Error en api.guardarTablaHojas:", error);
       throw error;
     }
   },

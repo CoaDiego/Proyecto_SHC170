@@ -8,6 +8,7 @@ import TablasBivariantes from "./TablasBivariantes";
 import TablasUnidimensionales from "./TablasUnidimensionales";
 import PanelGraficos from "./PanelGraficos";
 import { generarPDFReporte } from "../../utils/exportUtils";
+import { IconoPDF, IconoGuardar } from "../ui/iconos";
 
 export default function PanelResultados({
   modoCreacion, setModoCreacion, cargarArchivos,
@@ -101,27 +102,33 @@ export default function PanelResultados({
           />
 
           {/* BARRA DE ACCIONES FINAL */}
-          <div className="barra-acciones-final" style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+          <div className="barra-acciones-final" style={{ display: "flex", gap: "12px", marginTop: "25px" }}>
             <button
               onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
-              className="btn-icon"
+              className="btn-icon btn-export-pdf"
               style={{
-                backgroundColor: "#d9534f", color: "white", padding: "10px 20px",
-                borderRadius: "6px", cursor: "pointer", fontWeight: "bold", border: "none",
+                backgroundColor: "var(--accent-red, #dc3545)", color: "white", padding: "11px 22px",
+                borderRadius: "8px", cursor: "pointer", fontWeight: "bold", border: "none",
+                display: "inline-flex", alignItems: "center", gap: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                transition: "all 0.2s ease"
               }}
             >
-              📄 Exportar PDF
+              <IconoPDF /> Exportar PDF
             </button>
 
             <button
               onClick={handleGuardarResultado}
-              className="btn-icon"
+              className="btn-icon btn-save-calculo"
               style={{
-                padding: "10px 20px", borderRadius: "6px", cursor: "pointer",
-                fontWeight: "bold", border: "none",
+                backgroundColor: "var(--primary-color, #f97316)", color: "white", padding: "11px 22px",
+                borderRadius: "8px", cursor: "pointer", fontWeight: "bold", border: "none",
+                display: "inline-flex", alignItems: "center", gap: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                transition: "all 0.2s ease"
               }}
             >
-              💾 Guardar Cálculo
+              <IconoGuardar /> Guardar Cálculo
             </button>
           </div>
         </div>

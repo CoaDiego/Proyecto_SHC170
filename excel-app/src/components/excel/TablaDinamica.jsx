@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { DataGrid } from "react-data-grid";
 import "react-data-grid/lib/styles.css";
 
@@ -125,36 +125,96 @@ export default function TablaDinamica({ onTablaCreada }) {
   const [inputFilas, setInputFilas] = useState("");
   const [inputColumnas, setInputColumnas] = useState("");
 
-  const [columns, setColumns] = useState([
-    {
-      key: "obs",
-      name: "Obs",
-      width: 50,
-      renderCell: (props) => (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          <strong style={{ color: "#666" }}>{props.rowIdx + 1}</strong>
-        </div>
-      ),
-      editable: false,
-      resizable: false
-    },
-    {
-      key: "0", name: "Var 1", renderEditCell: textEditor, editable: true, resizable: true,
-      width: 150, minWidth: 150
-    },
-    {
-      key: "1", name: "Var 2", renderEditCell: textEditor, editable: true, resizable: true,
-      width: 150, minWidth: 150
-    },
-  ]);
+  // Estados para el generador de distribuciones
+  const [genDistribucion, setGenDistribucion] = useState('uniforme'); // 'uniforme' | 'normal'
+  const [genTipo, setGenTipo] = useState('flotante');               // 'entero' | 'flotante'
+  const [genMedia, setGenMedia] = useState('');                     // Para distribución normal
+  const [genDesvStd, setGenDesvStd] = useState('');                 // Para distribución normal
+  const [genMin, setGenMin] = useState('');                         // Para distribución uniforme
+  const [genMax, setGenMax] = useState('');                         // Para distribución uniforme
 
-  const [rows, setRows] = useState([
-    { "0": "", "1": "" },
-    { "0": "", "1": "" },
-    { "0": "", "1": "" },
-    { "0": "", "1": "" },
-    { "0": "", "1": "" }
-  ]);
+  // --- ESTADO: SISTEMA DE HOJAS ---
+  const crearHojaInicial = (nombre = 'Hoja 1') => ({
+    nombre,
+    columns: [
+      {
+        key: "obs", name: "Obs", width: 50,
+        renderCell: (props) => (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <strong style={{ color: "#666" }}>{props.rowIdx + 1}</strong>
+          </div>
+        ),
+        editable: false, resizable: false
+      },
+      { key: "0", name: "Var 1", renderEditCell: textEditor, editable: true, resizable: true, width: 150, minWidth: 150 },
+      { key: "1", name: "Var 2", renderEditCell: textEditor, editable: true, resizable: true, width: 150, minWidth: 150 },
+    ],
+    rows: [
+      { "0": "", "1": "" },
+      { "0": "", "1": "" },
+      { "0": "", "1": "" },
+      { "0": "", "1": "" },
+      { "0": "", "1": "" }
+    ]
+  });
+
+  const [hojas, setHojas] = useState([crearHojaInicial()]);
+  const [hojaActiva, setHojaActiva] = useState(0);
+  const [editandoNombreHoja, setEditandoNombreHoja] = useState(null);
+  const [tempNombreHoja, setTempNombreHoja] = useState('');
+
+  // Ref para acceder siempre al estado más reciente en guardarTabla
+  const hojasRef = useRef(hojas);
+  useEffect(() => { hojasRef.current = hojas; }, [hojas]);
+  const hojaActivaRef = useRef(hojaActiva);
+  useEffect(() => { hojaActivaRef.current = hojaActiva; }, [hojaActiva]);
+
+  // Atajos para la hoja activa
+  const columns = hojas[hojaActiva]?.columns || [];
+  const rows    = hojas[hojaActiva]?.rows    || [];
+
+  // Setter que actualiza columns/rows en la hoja activa
+  const setColumns = (updater) => setHojas(prev => {
+    const next = [...prev];
+    next[hojaActiva] = {
+      ...next[hojaActiva],
+      columns: typeof updater === 'function' ? updater(next[hojaActiva].columns) : updater
+    };
+    return next;
+  });
+
+  const setRows = (updater) => setHojas(prev => {
+    const next = [...prev];
+    next[hojaActiva] = {
+      ...next[hojaActiva],
+      rows: typeof updater === 'function' ? updater(next[hojaActiva].rows) : updater
+    };
+    return next;
+  });
+
+  // --- LÓGICA DE HOJAS ---
+  const agregarHoja = () => {
+    const numero = hojas.length + 1;
+    setHojas(prev => [...prev, crearHojaInicial(`Hoja ${numero}`)]);
+    setHojaActiva(hojas.length);
+  };
+
+  const eliminarHoja = (idx) => {
+    if (hojas.length <= 1) {
+      alerta.warning('Solo una hoja', 'El archivo debe tener al menos una hoja.');
+      return;
+    }
+    setHojas(prev => prev.filter((_, i) => i !== idx));
+    setHojaActiva(prev => Math.min(prev, hojas.length - 2));
+  };
+
+  const renombrarHoja = (idx, nuevoNombre) => {
+    setHojas(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], nombre: nuevoNombre };
+      return next;
+    });
+  };
 
   // --- LÓGICA DE VARIABLES (COLUMNAS) ---
   const agregarColumna = () => {
@@ -206,9 +266,28 @@ export default function TablaDinamica({ onTablaCreada }) {
   };
 
   // --- LÓGICA DE FILAS ---
+  // Genera un valor según la configuración de distribución de la columna
+  const generarValorColumna = (col) => {
+    if (col.dataType !== 'numero' || !col.distConfig) return "";
+    const { distribucion, tipo, media, desvStd, min, max } = col.distConfig;
+    let valor;
+    if (distribucion === 'normal') {
+      let u, v;
+      do { u = Math.random(); } while (u === 0);
+      do { v = Math.random(); } while (v === 0);
+      const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      valor = media + z * desvStd;
+    } else {
+      valor = Math.random() * (max - min) + min;
+    }
+    return tipo === 'entero' ? Math.round(valor) : parseFloat(valor.toFixed(2));
+  };
+
   const agregarFila = () => {
     const newRow = {};
-    columns.forEach(col => { newRow[col.key] = ""; });
+    columns.forEach(col => {
+      newRow[col.key] = col.key === 'obs' ? '' : generarValorColumna(col);
+    });
     setRows([...rows, newRow]);
   };
 
@@ -263,7 +342,15 @@ export default function TablaDinamica({ onTablaCreada }) {
       const row = {};
       const existingRow = rows[i]; // Preservamos los datos de la fila si ya existía
       for (let j = 0; j < numCols; j++) {
-        row[j.toString()] = existingRow && existingRow[j.toString()] !== undefined ? existingRow[j.toString()] : "";
+        const colKey = j.toString();
+        const colDef = nuevasColumnas.find(c => c.key === colKey);
+        if (existingRow && existingRow[colKey] !== undefined && existingRow[colKey] !== "") {
+          // Preservar dato existente
+          row[colKey] = existingRow[colKey];
+        } else {
+          // Generar valor si la columna tiene distribución configurada
+          row[colKey] = colDef ? generarValorColumna(colDef) : "";
+        }
       }
       nuevasFilas.push(row);
     }
@@ -338,22 +425,41 @@ export default function TablaDinamica({ onTablaCreada }) {
     }
 
     setLoading(true);
-    const datosLimpios = filasValidas.map(row => {
-      let obj = {};
-      columnasVariables.forEach(col => {
-        const val = row[col.key];
-        obj[col.name] = (val !== undefined && val !== null) ? String(val) : "";
+
+    // Construir payload con TODAS las hojas (usando ref para estado más reciente)
+    const hojasActuales = hojasRef.current;
+    const hojasPayload = hojasActuales.map(hoja => {
+      const colsVar = hoja.columns.filter(c => c.key !== 'obs');
+      const nombresColumnas = colsVar.map(c => c.name);
+
+      const isRowEmpty = (row) => !colsVar.some(c => {
+        const v = row[c.key];
+        return v !== undefined && v !== null && String(v).trim() !== '';
       });
-      return obj;
+      let lastIdx = -1;
+      hoja.rows.forEach((r, i) => { if (!isRowEmpty(r)) lastIdx = i; });
+      const filasHoja = lastIdx >= 0 ? hoja.rows.slice(0, lastIdx + 1) : [];
+
+      const datos = filasHoja.map(row => {
+        const obj = {};
+        colsVar.forEach(col => {
+          const val = row[col.key];
+          obj[col.name] = (val !== undefined && val !== null) ? String(val) : '';
+        });
+        return obj;
+      });
+
+      return { nombre: hoja.nombre, columnas: nombresColumnas, datos };
     });
 
     try {
-      await api.guardarTabla(nombre, datosLimpios, usuario?.nombre);
-      alerta.success(`Guardado: ${nombre}.xlsx`, "Datos almacenados correctamente.");
+      console.log('[DEBUG] hojasPayload:', JSON.stringify(hojasPayload, null, 2));
+      await api.guardarTablaHojas(nombre, hojasPayload, usuario?.nombre);
+      alerta.success(`Guardado: ${nombre}.xlsx`, `${hojasActuales.length} hoja(s) almacenadas.`);
       if (onTablaCreada) onTablaCreada();
     } catch (err) {
       console.error(err);
-      alerta.error("Error", "No se pudo guardar la tabla.");
+      alerta.error('Error', 'No se pudo guardar la tabla.');
     } finally {
       setLoading(false);
     }
@@ -452,6 +558,55 @@ export default function TablaDinamica({ onTablaCreada }) {
     setRows(newRows);
   };
 
+  // --- GENERADOR DE DISTRIBUCIONES ---
+  // Box-Muller para generar valor con distribución normal
+  const generarNormal = (media, std) => {
+    let u, v;
+    do { u = Math.random(); } while (u === 0);
+    do { v = Math.random(); } while (v === 0);
+    const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    return media + z * std;
+  };
+
+  const generarDatosDistribucion = () => {
+    if (!configColId) return;
+
+    // Validar parámetros según distribución
+    if (genDistribucion === 'normal') {
+      const media = parseFloat(genMedia);
+      const std   = parseFloat(genDesvStd);
+      if (isNaN(media) || isNaN(std) || std <= 0) {
+        alerta.error('Parámetros inválidos', 'Ingresa una media válida y una desviación estándar mayor a 0.');
+        return;
+      }
+    } else {
+      const min = parseFloat(genMin);
+      const max = parseFloat(genMax);
+      if (isNaN(min) || isNaN(max) || min >= max) {
+        alerta.error('Parámetros inválidos', 'El mínimo debe ser menor que el máximo.');
+        return;
+      }
+    }
+
+    setRows(prevRows => {
+      const newRows = [...prevRows];
+      for (let i = 0; i < newRows.length; i++) {
+        let valor = generarNormal(parseFloat(genMedia), parseFloat(genDesvStd));
+        if (genDistribucion === 'uniforme') {
+          const min = parseFloat(genMin);
+          const max = parseFloat(genMax);
+          valor = Math.random() * (max - min) + min;
+        }
+        if (genTipo === 'entero') valor = Math.round(valor);
+        else valor = parseFloat(valor.toFixed(2));
+        newRows[i] = { ...newRows[i], [configColId]: valor };
+      }
+      return newRows;
+    });
+
+    alerta.success('Datos generados', `Se generaron ${rows.length} valores con distribución ${genDistribucion === 'normal' ? 'Normal' : 'Uniforme'}.`);
+  };
+
 
   // --- EDICIÓN DE CABECERAS ---
   const columnasEditables = columns.map(col => {
@@ -464,7 +619,7 @@ export default function TablaDinamica({ onTablaCreada }) {
           </div>
         )
       };
-    }
+    } 
 
     let renderEditCell = textEditor;
     let renderCell = undefined;
@@ -600,15 +755,122 @@ export default function TablaDinamica({ onTablaCreada }) {
               </div>
             )}
 
+            {/* ── GENERADOR DE DISTRIBUCIONES (solo para tipo número) ── */}
+            {colConfiguracion.dataType === 'numero' && (
+              <div className="generador_dist_panel">
+                <div className="generador_dist_titulo">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                  Generador de Distribución
+                </div>
+
+                {/* Distribución y Tipo */}
+                <div className="generador_dist_fila">
+                  <div className="form_group_col" style={{ flex: 1 }}>
+                    <label>Distribución</label>
+                    <select value={genDistribucion} onChange={e => setGenDistribucion(e.target.value)}>
+                      <option value="uniforme">Uniforme</option>
+                      <option value="normal">Normal (Gauss)</option>
+                    </select>
+                  </div>
+                  <div className="form_group_col" style={{ flex: 1 }}>
+                    <label>Tipo de Número</label>
+                    <select value={genTipo} onChange={e => setGenTipo(e.target.value)}>
+                      <option value="flotante">Flotante (decimal)</option>
+                      <option value="entero">Entero</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Parámetros según distribución */}
+                {genDistribucion === 'normal' ? (
+                  <div className="generador_dist_fila">
+                    <div className="form_group_col" style={{ flex: 1 }}>
+                      <label>Media (μ)</label>
+                      <input
+                        type="number"
+                        value={genMedia}
+                        onChange={e => setGenMedia(e.target.value)}
+                        placeholder="Ej: 50"
+                      />
+                    </div>
+                    <div className="form_group_col" style={{ flex: 1 }}>
+                      <label>Desv. Estándar (σ)</label>
+                      <input
+                        type="number"
+                        min="0.0001"
+                        value={genDesvStd}
+                        onChange={e => setGenDesvStd(e.target.value)}
+                        placeholder="Ej: 10"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="generador_dist_fila">
+                    <div className="form_group_col" style={{ flex: 1 }}>
+                      <label>Mínimo</label>
+                      <input
+                        type="number"
+                        value={genMin}
+                        onChange={e => setGenMin(e.target.value)}
+                        placeholder="Ej: 0"
+                      />
+                    </div>
+                    <div className="form_group_col" style={{ flex: 1 }}>
+                      <label>Máximo</label>
+                      <input
+                        type="number"
+                        value={genMax}
+                        onChange={e => setGenMax(e.target.value)}
+                        placeholder="Ej: 100"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <p className="generador_dist_info">
+                  Se generarán valores para las <strong>{rows.length}</strong> filas de esta columna.
+                </p>
+
+                <button
+                  className="button_generar_dist"
+                  onClick={generarDatosDistribucion}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                  Generar Datos
+                </button>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button
                 className="button_guardar_col"
                 style={{ flex: 1 }}
                 onClick={() => {
-                  if (colConfiguracion.dataType === 'categoria') {
-                    const arrOpciones = tempOpciones.split(",").map(s => s.trim()).filter(s => s);
-                    setColumns(prev => prev.map(c => c.key === configColId ? { ...c, opciones: arrOpciones } : c));
-                  }
+                  setColumns(prev => prev.map(c => {
+                    if (c.key !== configColId) return c;
+                    let updated = { ...c };
+                    if (c.dataType === 'categoria') {
+                      const arrOpciones = tempOpciones.split(",").map(s => s.trim()).filter(s => s);
+                      updated.opciones = arrOpciones;
+                    }
+                    if (c.dataType === 'numero') {
+                      // Guardar configuración de distribución en la columna
+                      const distConfig = { distribucion: genDistribucion, tipo: genTipo };
+                      if (genDistribucion === 'normal') {
+                        distConfig.media = parseFloat(genMedia) || 0;
+                        distConfig.desvStd = parseFloat(genDesvStd) || 1;
+                      } else {
+                        distConfig.min = parseFloat(genMin) || 0;
+                        distConfig.max = parseFloat(genMax) || 100;
+                      }
+                      updated.distConfig = distConfig;
+                    }
+                    return updated;
+                  }));
                   setConfigColId(null);
                 }}
               >
@@ -706,6 +968,67 @@ export default function TablaDinamica({ onTablaCreada }) {
         </button>
       </div>
 
+      {/* TABS DE HOJAS */}
+      <div className="hojas_tabs_container">
+        {hojas.map((hoja, idx) => (
+          <div
+            key={idx}
+            className={`hoja_tab ${hojaActiva === idx ? 'hoja_tab_activa' : ''}`}
+            onClick={() => setHojaActiva(idx)}
+          >
+            {editandoNombreHoja === idx ? (
+              <input
+                className="hoja_tab_input"
+                autoFocus
+                value={tempNombreHoja}
+                onChange={e => setTempNombreHoja(e.target.value)}
+                onBlur={() => {
+                  const nombre = tempNombreHoja.trim() || hoja.nombre;
+                  renombrarHoja(idx, nombre);
+                  setEditandoNombreHoja(null);
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    const nombre = tempNombreHoja.trim() || hoja.nombre;
+                    renombrarHoja(idx, nombre);
+                    setEditandoNombreHoja(null);
+                  } else if (e.key === 'Escape') {
+                    setEditandoNombreHoja(null); // Cancelar sin guardar
+                  }
+                }}
+                onClick={e => e.stopPropagation()}
+              />
+            ) : (
+              <span
+                onDoubleClick={e => {
+                  e.stopPropagation();
+                  setTempNombreHoja(hoja.nombre); // Inicializar con el nombre actual
+                  setEditandoNombreHoja(idx);
+                }}
+                title="Doble clic para renombrar"
+              >
+                {hoja.nombre}
+              </span>
+            )}
+            {hojas.length > 1 && (
+              <button
+                className="hoja_tab_cerrar"
+                onClick={e => { e.stopPropagation(); eliminarHoja(idx); }}
+                title="Eliminar hoja"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        <button className="hoja_tab_agregar" onClick={agregarHoja} title="Nueva hoja">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
       {/* GRILLA */}
       <div className="container_grilla" onPasteCapture={handlePaste}>
         <DataGrid
@@ -737,6 +1060,7 @@ export default function TablaDinamica({ onTablaCreada }) {
 
       <p className="informacion_grilla">
         * Al presionar <strong>Enter</strong> o las <strong>flechas</strong>, los datos se guardan y la selección se desplaza. Selecciona el tipo de dato en la cabecera.
+        <br />  Doble clic en el nombre de una hoja para renombrarla.
       </p>
     </div>
   );

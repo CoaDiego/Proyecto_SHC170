@@ -48,7 +48,8 @@ function textEditor({ row, column, onRowChange, onClose }) {
       }}
       style={{
         width: '100%', height: '100%', border: 'none',
-        padding: '0 8px', outline: '2px solid #217346', boxSizing: 'border-box'
+        padding: '0 8px', outline: '2px solid #217346', boxSizing: 'border-box',
+        textAlign: 'center'
       }}
     />
   );

@@ -198,6 +198,10 @@
 .ag-theme-alpine .ag-cell {
   color: var(--text-main, #2d3748) !important;
   border-right: 1px solid var(--border-color, #e2e8f0) !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* Desactivar el resaltado de fila completa al pasar el mouse */

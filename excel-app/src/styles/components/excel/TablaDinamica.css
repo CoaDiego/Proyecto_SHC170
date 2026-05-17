@@ -245,7 +245,10 @@
     background: var(--bg-card, #ffffff);
     padding: 24px;
     border-radius: 8px;
-    width: 320px;
+    width: 420px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
@@ -309,6 +312,85 @@
     filter: brightness(1.1);
 }
 
+/* ── Panel del Generador de Distribuciones ── */
+.generador_dist_panel {
+    border: 1px solid color-mix(in srgb, var(--accent-color, #3182ce) 30%, transparent);
+    border-radius: 8px;
+    padding: 14px;
+    background: color-mix(in srgb, var(--accent-color, #3182ce) 5%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.generador_dist_titulo {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-color, #3182ce);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent-color, #3182ce) 20%, transparent);
+    padding-bottom: 8px;
+}
+
+.generador_dist_fila {
+    display: flex;
+    gap: 10px;
+}
+
+.generador_dist_fila .form_group_col {
+    min-width: 0;
+}
+
+.generador_dist_fila .form_group_col input,
+.generador_dist_fila .form_group_col select {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: var(--bg-input, #ffffff);
+    color: var(--text-main, #2d3748);
+}
+
+.generador_dist_fila .form_group_col input:focus,
+.generador_dist_fila .form_group_col select:focus {
+    outline: none;
+    border-color: var(--accent-color, #3182ce);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color, #3182ce) 20%, transparent);
+}
+
+.generador_dist_info {
+    font-size: 0.78rem;
+    color: var(--text-muted, #718096);
+    margin: 0;
+    text-align: center;
+}
+
+.button_generar_dist {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent-color, #3182ce), color-mix(in srgb, var(--accent-color, #3182ce) 70%, #805ad5));
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(49, 130, 206, 0.3);
+    letter-spacing: 0.3px;
+}
+
+.button_generar_dist:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(49, 130, 206, 0.4);
+}
+
 .btn_config_columna {
     transition: color 0.2s ease, transform 0.1s ease;
 }
@@ -353,6 +435,106 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
     -moz-appearance: textfield; /* Firefox */
+}
+
+/* ── Tabs de Hojas (estilo Excel) ── */
+.hojas_tabs_container {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    padding: 8px 0 0 0;
+    border-top: 2px solid var(--border-color, #e2e8f0);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.hoja_tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: color-mix(in srgb, var(--bg-card, #fff) 60%, var(--border-color, #e2e8f0));
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted, #718096);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    min-width: 70px;
+    max-width: 150px;
+}
+
+.hoja_tab:hover {
+    background: color-mix(in srgb, var(--accent-color, #3182ce) 10%, transparent);
+    color: var(--accent-color, #3182ce);
+}
+
+.hoja_tab_activa {
+    background: var(--bg-card, #ffffff) !important;
+    color: var(--accent-color, #3182ce) !important;
+    font-weight: 700;
+    border-color: var(--accent-color, #3182ce);
+    border-bottom: 2px solid var(--bg-card, #ffffff);
+    margin-bottom: -2px;
+    z-index: 1;
+}
+
+.hoja_tab span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+
+.hoja_tab_input {
+    width: 90px;
+    border: none;
+    outline: 1px solid var(--accent-color, #3182ce);
+    border-radius: 3px;
+    font-size: 0.82rem;
+    padding: 1px 4px;
+    background: var(--bg-input, #fff);
+    color: var(--text-main, #2d3748);
+}
+
+.hoja_tab_cerrar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted, #a0aec0);
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 3px;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+}
+
+.hoja_tab_cerrar:hover {
+    color: var(--error-color, #e53e3e);
+    background: color-mix(in srgb, var(--error-color, #e53e3e) 10%, transparent);
+}
+
+.hoja_tab_agregar {
+    background: none;
+    border: 1px dashed var(--border-color, #cbd5e0);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: var(--text-muted, #a0aec0);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hoja_tab_agregar:hover {
+    color: var(--accent-color, #3182ce);
+    border-color: var(--accent-color, #3182ce);
+    background: color-mix(in srgb, var(--accent-color, #3182ce) 8%, transparent);
 }
 
 /* Responsividad para móviles */

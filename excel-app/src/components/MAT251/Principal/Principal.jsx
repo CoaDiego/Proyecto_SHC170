@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import 'react-data-grid/lib/styles.css';
-import { useData } from '../../../components/excel/DataContext';
+import { useMAT251Data } from '../../../components/excel/DataContext';
 import { calcularTecnicasConteo, calcularProbabilidadClasica } from '../Matematicas/logica_Tema1';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
@@ -20,7 +20,7 @@ import ResultadosProbabilidad from '../Temas/Tema_1/Resultados/Resultados_Probab
 import Operacion from '../Temas/Tema_1/Controles/Operacion';
 
 export default function Principal() {
-    const { variables } = useData();
+    const { variables } = useMAT251Data();
 
     // ── UI ───────────────────────────────────────────────────────────────────────
     const [panelAbierto, setPanelAbierto] = useState(true);

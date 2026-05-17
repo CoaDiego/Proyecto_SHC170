@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useData } from "../components/excel/DataContext";
+import { useModuleData } from "../components/excel/DataContext";
 
 import * as UniMath from "../utils/estadisticaUnidimensional";
 import * as MultiMath from "../utils/estadisticaMultivariante";
@@ -10,7 +10,7 @@ import * as IndicesMath from "../utils/estadisticaIndices";
 import { api } from "../services/api";
 
 export function useCalculadoraExcel(filename, sheet) {
-  const { variables, usuario } = useData();
+  const { variables, usuario } = useModuleData();
   const [exceldataoriginal, setExcelDataOriginal] = useState([]);
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);

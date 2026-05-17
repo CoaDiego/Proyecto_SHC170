@@ -16,7 +16,7 @@ import Perfil from "./pages/Perfil";
 import SelectorRol from './components/ui/SelectorRol';
 
 // 👇 1. IMPORTAMOS EL DATAPROVIDER DE LA CARPETA EXCEL
-import { DataProvider } from "./components/excel/DataContext"; 
+import { DataProvider, CalculadoraDataProvider, MAT251DataProvider, ActiveModuleContext } from "./components/excel/DataContext"; 
 
 import LtiTester from "./pages/LtiTester";
 import Historial from "./pages/Historial";
@@ -32,67 +32,79 @@ function App() {
   const isAuth = usuario !== null;
 
   return (
-    // 👇 2. ENVOLVEMOS TODA LA APLICACIÓN CON EL DATAPROVIDER
+    // 👇 2. ENVOLVEMOS TODA LA APLICACIÓN CON EL DATAPROVIDER Y LOS PROVIDERS DE MÓDULOS
     <DataProvider usuario={usuario} setUsuario={setUsuario}>
-      <Router>
-        <SelectorRol />
-        <div className="App">
+      <CalculadoraDataProvider usuario={usuario}>
+        <MAT251DataProvider usuario={usuario}>
+          <Router>
+            <SelectorRol />
+            <div className="App">
 
-          <>
-            <Toaster position="bottom-right" />
-          </>
-          
-          {/* Menú de navegación unificado */}
-         {/* Menú de navegación unificado */}
-          {isAuth && (
-            <header style={{ width: '100%' }}>
-              {/* Le pasamos la variable 'usuario' como prop al componente Menu */}
-              <Menu usuario={usuario} /> 
-            </header>
-          )}
-
-         {/* Contenido que cambia según la ruta */}
-          <div className="content">
-            <Routes>
-              {!isAuth ? (
-                <>
-                  {/* 🆕 3. Pasamos setUsuario a tus puertas de acceso en lugar de setIsAuth */}
-                  <Route path="/login" element={<Login onLogin={setUsuario} />} />
-                  
-                  {/* 🆕 NUEVO: Añadimos la ruta del Registro aquí */}
-                  <Route path="/registro" element={<Registro />} />
-                  
-                  <Route path="/lti-tester" element={<LtiTester onLogin={setUsuario} />} />
-                  
-                  <Route path="*" element={<Navigate to="/login" />} />
-                </>
-              ) : (
-                <>
-                  <Route path="/" element={<Inicio />} />
-                  <Route path="/archivos" element={<Archivos usuario={usuario} />} />
-                  <Route path="/calculadora" element={<Calculadora />} />
-                  <Route path="/historial" element={<Historial />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/grupos" element={<Grupos />} />
-
-                  <Route path="/lti-tester" element={<Navigate to="/" />} />
-                  <Route path="/login" element={<Navigate to="/" />} />
-                  
-                  {/* 🆕 NUEVO: Si ya inició sesión y trata de registrarse, lo mandamos al inicio */}
-                  <Route path="/registro" element={<Navigate to="/" />} />
-                  
-                  <Route path="/MAT251" element={<MAT251 usuario={usuario} />} />
-
-                  <Route path="/perfil" element={<Perfil usuario={usuario} setUsuario={setUsuario} />} />
-                </>
+              <div style={{ position: 'fixed', zIndex: 99999, inset: 0, pointerEvents: 'none' }}>
+                <Toaster position="bottom-right" />
+              </div>
+              
+              {/* Menú de navegación unificado */}
+             {/* Menú de navegación unificado */}
+              {isAuth && (
+                <header style={{ width: '100%' }}>
+                  {/* Le pasamos la variable 'usuario' como prop al componente Menu */}
+                  <Menu usuario={usuario} /> 
+                </header>
               )}
-            </Routes>
-          </div>
-          
-          {isAuth && <Pie_pagina />}
 
-        </div>
-      </Router>
+             {/* Contenido que cambia según la ruta */}
+              <div className="content">
+                <Routes>
+                  {!isAuth ? (
+                    <>
+                      {/* 🆕 3. Pasamos setUsuario a tus puertas de acceso en lugar de setIsAuth */}
+                      <Route path="/login" element={<Login onLogin={setUsuario} />} />
+                      
+                      {/* 🆕 NUEVO: Añadimos la ruta del Registro aquí */}
+                      <Route path="/registro" element={<Registro />} />
+                      
+                      <Route path="/lti-tester" element={<LtiTester onLogin={setUsuario} />} />
+                      
+                      <Route path="*" element={<Navigate to="/login" />} />
+                    </>
+                  ) : (
+                    <>
+                      <Route path="/" element={<Inicio />} />
+                      <Route path="/archivos" element={<Archivos usuario={usuario} />} />
+                       <Route path="/calculadora" element={
+                        <ActiveModuleContext.Provider value="calculadora">
+                          <Calculadora />
+                        </ActiveModuleContext.Provider>
+                      } />
+                      <Route path="/historial" element={<Historial />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/grupos" element={<Grupos />} />
+
+                      <Route path="/lti-tester" element={<Navigate to="/" />} />
+                      <Route path="/login" element={<Navigate to="/" />} />
+                      
+                      {/* 🆕 NUEVO: Si ya inició sesión y trata de registrarse, lo mandamos al inicio */}
+                      <Route path="/registro" element={<Navigate to="/" />} />
+                      
+                      <Route path="/MAT251" element={
+                        <ActiveModuleContext.Provider value="mat251">
+                          <MAT251 usuario={usuario} />
+                        </ActiveModuleContext.Provider>
+                      } />
+
+                      <Route path="/perfil" element={<Perfil usuario={usuario} setUsuario={setUsuario} />} />
+                    </>
+                  )}
+                </Routes>
+              </div>
+              
+              {isAuth && <Pie_pagina />}
+
+            </div>
+          </Router>
+        </MAT251DataProvider>
+      </CalculadoraDataProvider>
     </DataProvider>
   );
 }

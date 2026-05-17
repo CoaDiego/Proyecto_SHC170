@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { AgGridReact, AgGridProvider } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 
-import { useData } from '../components/excel/DataContext';
+import { useModuleData } from '../components/excel/DataContext';
 import { keyToNum, getExcelChar, excelToCoords } from '../utils/excelHelpers';
 import VariableCard from '../components/excel/VariableCard';
 
@@ -11,7 +11,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import "../styles/pages/Datos.css";
 import * as XLSX from 'xlsx'; 
 
-import api from '../services/api';
+import { api } from '../services/api';
 
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -23,7 +23,7 @@ const SimuladorMAT251 = () => {
         workbook, sheetNames, currentSheet, rowData, variables, limiteFilas,
         handleFileUpload, cargarHoja, agregarVariable, eliminarVariable, actualizarVariable, setLimiteFilas,
         usuario
-    } = useData();
+    } = useModuleData();
 
     const [selection, setSelection] = useState({ start: null, end: null, isDragging: false });
     const selectionRef = useRef(selection);
@@ -362,7 +362,9 @@ const SimuladorMAT251 = () => {
                 const vars = variablesRef.current || [];
                 const r = params.node.rowIndex, c = keyToNum(params.column.colId);
                 const v = vars.find(vItem => vItem.sheet === currentSheet && vItem.coords && r >= vItem.coords.rMin && r <= vItem.coords.rMax && c >= vItem.coords.cMin && c <= vItem.coords.cMax);
-                return v ? { backgroundColor: v.color, fontWeight: 'bold', fontSize: '10px' } : { fontSize: '11px' };
+                return v 
+                    ? { backgroundColor: v.color, fontWeight: 'bold', fontSize: '10px', textAlign: 'center' } 
+                    : { fontSize: '11px', textAlign: 'center' };
             }
         }));
         return [rowNumberCol, ...dataCols];
@@ -443,7 +445,7 @@ const SimuladorMAT251 = () => {
                             </span>
                             {archivoActivo && (
                                 <span style={{ color: 'var(--text-muted)' }}>
-                                    {archivoActivo.origen === 'API' ? '(Servidor)' : '(Local)'}
+                                    {archivoActivo.origen === 'API' ? `(${usuario?.nombre || 'Nube'})` : '(Local)'}
                                 </span>
                             )}
                         </div>
