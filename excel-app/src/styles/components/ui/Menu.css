@@ -113,9 +113,9 @@
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #ffffff;
+  background-color: var(--bg-nav); /* 👈 Fondo naranja igual que la barra */
   min-width: 220px;
-  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0px 8px 20px rgba(0,0,0,0.2);
   border-radius: 8px;
   padding: 10px 0;
   list-style: none;
@@ -124,6 +124,7 @@
   visibility: hidden;
   transition: all 0.3s ease;
   z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.15); /* 👈 Borde sutil para darle elegancia */
 }
 
 .dropdown-container:hover .dropdown-menu,
@@ -133,22 +134,23 @@
   top: calc(100% + 5px);
 }
 
+/* Los enlaces dentro del submenú */
 .dropdown-item {
-  color: #333333 !important;
+  color: #ffffff !important; /* 👈 Letras blancas */
   padding: 12px 20px;
   display: block;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
+/* Efecto al pasar el ratón sobre los enlaces del submenú */
 .dropdown-item:hover,
 .dropdown-item.active {
-  background-color: #fff0e0;
-  color: var(--bg-nav) !important;
-  border-left: 4px solid var(--bg-nav);
-  padding-left: 16px;
+  background-color: rgba(255, 255, 255, 0.15); /* 👈 Brillo blanco suave al hacer hover */
+  color: #ffffff !important;
+  border-left: 4px solid #ffffff; /* 👈 La línea indicadora ahora es blanca */
+  padding-left: 16px; 
 }
-
 /* =========================================
    3. CONTENEDOR DERECHO: TEMA + USUARIO
    ========================================= */
