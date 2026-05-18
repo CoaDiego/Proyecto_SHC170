@@ -16,6 +16,7 @@ import ControlesConteo from '../Temas/Tema_1/Controles/Controles_Conteo';
 import ControlesProbabilidad from '../Temas/Tema_1/Controles/Controles_Probabilidad';
 import ResultadosConteo from '../Temas/Tema_1/Resultados/Resultados_conteo';
 import ResultadosProbabilidad from '../Temas/Tema_1/Resultados/Resultados_Probabilidad';
+import ResultadosSimuladorTotal from '../Temas/Tema_1/Resultados/Resultados_SimuladorTotal';
 
 import Operacion from '../Temas/Tema_1/Controles/Operacion';
 
@@ -26,6 +27,7 @@ export default function Principal() {
     const [panelAbierto, setPanelAbierto] = useState(true);
     const [operacion, setOperacion] = useState('permutacion');
     const [subTipoProbabilidad, setSubTipoProbabilidad] = useState('clasica');
+    const [columnaParticion, setColumnaParticion] = useState(''); // Para probabilidad total
 
     // ── Conteo ───────────────────────────────────────────────────────────────────
     const [n, setN] = useState('0');
@@ -45,6 +47,15 @@ export default function Principal() {
     const [modalCondicion, setModalCondicion] = useState(false);
     const [filasTemp, setFilasTemp] = useState([]);   // copia editable en el modal
     const formulaProbRef = useRef(null);
+
+    // ── Simulador Probabilidad Total ─────────────────────────────────────────────
+    const [numRamas, setNumRamas] = useState(2);
+    const [ramas, setRamas] = useState([]);
+    const [errorSimulador, setErrorSimulador] = useState('');
+    const [resultadoSimulador, setResultadoSimulador] = useState(null);
+    const [colCausa, setColCausa] = useState('');
+    const [colEvento, setColEvento] = useState('');
+    const [valExito, setValExito] = useState('');
 
     // FUNCIONES //
 
@@ -256,6 +267,7 @@ export default function Principal() {
             setFilas(nuevas);
             setEventoFavorable([]);
             setEventoCondicion([]);
+            setColumnaParticion('');
             setResProbabilidad(null);
         }
     }, [variables, varSeleccionada]);
@@ -279,6 +291,8 @@ export default function Principal() {
                 latex = `P(A)=\\dfrac{f_A}{N}=\\dfrac{${resProbabilidad.casosFavorables}}{${resProbabilidad.casosTotales}}=${resProbabilidad.probabilidadDecimal}`;
             } else if (subTipoProbabilidad === 'condicional') {
                 latex = `P(A|B)=\\dfrac{n(A \\cap B)}{n(B)}=\\dfrac{${resProbabilidad.casosFavorables}}{${resProbabilidad.casosTotales}}=${resProbabilidad.probabilidadDecimal}`;
+            } else if (subTipoProbabilidad === 'total') {
+                latex = `P(A) = \\sum_{i} P(A|B_i)P(B_i) = ${resProbabilidad.probabilidadDecimal}`;
             } else {
                 latex = `P(A)=\\dfrac{n(A)}{N}=\\dfrac{${resProbabilidad.casosFavorables}}{${resProbabilidad.casosTotales}}=${resProbabilidad.probabilidadDecimal}`;
             }
@@ -337,6 +351,53 @@ export default function Principal() {
 
                 setResProbabilidad(res);
                 setResConteo(null);
+            } else if (subTipoProbabilidad === 'total') {
+                if (!columnaParticion) { alert('Selecciona una variable (columna) de partición B_i'); return; }
+                if (eventoFavorable.length === 0) { alert('Selecciona al menos un Evento de Interés (A)'); return; }
+
+                const colIndex = varSeleccionada.nombresColumnas.indexOf(columnaParticion);
+                if (colIndex === -1) return;
+
+                const valoresParticion = [...new Set(arr.map(d => d.split(' | ')[colIndex]?.trim()).filter(Boolean))];
+
+                let totalA = 0;
+                const desglose = valoresParticion.map(bi => {
+                    const arrBi = arr.filter(d => {
+                        const partes = d.split(' | ').map(p => p.trim());
+                        return partes[colIndex] === bi;
+                    });
+                    const n_Bi = arrBi.length;
+                    const p_Bi = n_Bi / arr.length;
+
+                    const casosA_en_Bi = arrBi.filter(d => {
+                        const partes = d.split(' | ').map(p => p.trim());
+                        return eventoFavorable.some(fav => partes.includes(fav));
+                    }).length;
+                    const p_A_dado_Bi = n_Bi > 0 ? casosA_en_Bi / n_Bi : 0;
+                    
+                    const contribucion = p_A_dado_Bi * p_Bi;
+                    totalA += casosA_en_Bi;
+
+                    return {
+                        bi,
+                        n_Bi,
+                        p_Bi: p_Bi.toFixed(4),
+                        n_A_inter_Bi: casosA_en_Bi,
+                        p_A_dado_Bi: p_A_dado_Bi.toFixed(4),
+                        contribucion: contribucion.toFixed(4)
+                    };
+                });
+
+                const res = {
+                    casosFavorables: totalA,
+                    casosTotales: arr.length,
+                    probabilidadDecimal: (totalA / arr.length).toFixed(4),
+                    probabilidadPorcentaje: ((totalA / arr.length) * 100).toFixed(2),
+                    desgloseTotal: desglose
+                };
+
+                setResProbabilidad(res);
+                setResConteo(null);
             } else {
                 if (eventoFavorable.length === 0) { alert('Selecciona al menos un evento favorable'); return; }
 
@@ -383,7 +444,7 @@ export default function Principal() {
         if (!statsEventosPorColumna) return null;
         if (eventoCondicion.length === 0) return statsEventosPorColumna;
 
-        const columnasUsadasEnB = statsEventosPorColumna.filter(col => 
+        const columnasUsadasEnB = statsEventosPorColumna.filter(col =>
             col.eventos.some(e => eventoCondicion.includes(e.valor))
         ).map(col => col.nombre);
 
@@ -432,6 +493,7 @@ export default function Principal() {
                 {panelAbierto && (
                     <div className="panel-controles-excel" style={{ marginTop: '10px', fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
                         {/* Selector de operación iterativo (Personalizado) */}
+                        {/* Selector de operación iterativo (Personalizado) */}
                         <label style={{ ...labelStyle, fontSize: '1.2em' }}>Operación:</label>
                         <Operacion operacion={operacion} handleOperacion={handleOperacion} />
 
@@ -439,7 +501,7 @@ export default function Principal() {
                         {operacion === 'probabilidad' && (
                             <div style={{ marginBottom: '15px' }}>
                                 <label style={{ ...labelStyle, fontSize: '1.1em', marginBottom: '8px' }}>Tipo de Probabilidad:</label>
-                                <div style={{ display: 'flex', gap: '5px', background: 'var(--bg-card)', padding: '4px', borderRadius: RADIUS, border: '1px solid var(--border-color)' }}>
+                                <div style={{ display: 'flex', gap: '5px', background: 'var(--bg-card)', padding: '4px', borderRadius: RADIUS, border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
                                     {[
                                         { id: 'clasica', label: 'Clásica' },
                                         { id: 'frecuentista', label: 'Frecuentista' },
@@ -472,10 +534,8 @@ export default function Principal() {
                         {(operacion === 'permutacion' || operacion === 'combinacion') && (
                             <ControlesConteo n={n} setN={setN} r={r} setR={setR} ajustar={ajustar} ejecutar={ejecutar} />
                         )}
-                        {operacion === 'probabilidad' && (
-                            <>
-                                <ControlesProbabilidad setModalVars={setModalVars} varSeleccionada={varSeleccionada} tipo={subTipoProbabilidad} />
-                            </>
+                        {(operacion === 'probabilidad' || operacion === 'simulador_total') && (
+                            <ControlesProbabilidad setModalVars={setModalVars} varSeleccionada={varSeleccionada} />
                         )}
                     </div>
                 )}
@@ -486,11 +546,22 @@ export default function Principal() {
             <div className="calculadora-resultados" style={{ fontFamily: FONT }}>
                 <div className="frecuencias" style={{ borderRadius: RADIUS }}>
                     <h3 style={{ fontSize: FS.lg, fontFamily: FONT, fontWeight: 600 }}>
-                        Resultados: {operacion === 'permutacion' ? 'PERMUTACIÓN' : operacion === 'combinacion' ? 'COMBINACIÓN' : (subTipoProbabilidad === 'clasica' ? 'PROBABILIDAD CLÁSICA' : subTipoProbabilidad === 'frecuentista' ? 'PROBABILIDAD FRECUENTISTA' : 'PROBABILIDAD CONDICIONAL')}
+                        Resultados: {operacion === 'permutacion' ? 'PERMUTACIÓN' : operacion === 'combinacion' ? 'COMBINACIÓN' : operacion === 'simulador_total' ? 'PROBABILIDAD TOTAL' : (subTipoProbabilidad === 'clasica' ? 'PROBABILIDAD CLÁSICA' : subTipoProbabilidad === 'frecuentista' ? 'PROBABILIDAD FRECUENTISTA' : 'PROBABILIDAD CONDICIONAL')}
                     </h3>
 
                     {/* RESULTADOS */}
-                    {(operacion === 'permutacion' || operacion === 'combinacion') ? (
+                    {operacion === 'simulador_total' ? (
+                        <ResultadosSimuladorTotal 
+                            filas={filas} varSeleccionada={varSeleccionada}
+                            colCausa={colCausa} setColCausa={setColCausa}
+                            colEvento={colEvento} setColEvento={setColEvento}
+                            valExito={valExito} setValExito={setValExito}
+                            ramas={ramas} setRamas={setRamas}
+                            resultado={resultadoSimulador} setResultadoSimulador={setResultadoSimulador}
+                            errorSimulador={errorSimulador} setErrorSimulador={setErrorSimulador}
+                            statsDatos={statsDatos} abrirEditor={abrirEditor}
+                        />
+                    ) : (operacion === 'permutacion' || operacion === 'combinacion') ? (
                         <ResultadosConteo resConteo={resConteo} formulaConteoRef={formulaConteoRef} hayResultado={hayResultado} />
                     ) : (
                         <ResultadosProbabilidad
@@ -500,6 +571,8 @@ export default function Principal() {
                             inputDatos={inputDatos}
                             tipo={subTipoProbabilidad}
                             eventoCondicion={eventoCondicion} setModalCondicion={setModalCondicion}
+                            columnaParticion={columnaParticion} setColumnaParticion={setColumnaParticion}
+                            varSeleccionada={varSeleccionada}
                         />
                     )}
                 </div>

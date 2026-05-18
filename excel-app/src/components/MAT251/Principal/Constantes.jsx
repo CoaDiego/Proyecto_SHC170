@@ -9,6 +9,7 @@ export const OPERACIONES = [
       { value: 'permutacion', label: 'Permutación (nPr)' },
       { value: 'combinacion', label: 'Combinación (nCr)' },
       { value: 'probabilidad', label: 'Cálculo de Probabilidad' },
+      { value: 'simulador_total', label: 'Teorema Probabilidad Total' },
     ],
   },
 ];
