@@ -101,6 +101,9 @@
   padding: 5px 0;
   cursor: pointer;
   transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .nav-link-dropdown:hover,
@@ -108,13 +111,22 @@
   color: #ffffff;
 }
 
+.chevron-icon {
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.chevron-icon.open {
+  transform: rotate(180deg);
+}
+
 .dropdown-menu {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(10px) scaleY(0.95);
+  transform-origin: top center;
   background-color: var(--bg-nav); /* 👈 Fondo naranja igual que la barra */
-  min-width: 220px;
+  min-width: 230px;
   box-shadow: 0px 8px 20px rgba(0,0,0,0.2);
   border-radius: 8px;
   padding: 10px 0;
@@ -122,34 +134,50 @@
   margin: 0;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.3s;
   z-index: 1000;
-  border: 1px solid rgba(255, 255, 255, 0.15); /* 👈 Borde sutil para darle elegancia */
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.dropdown-container:hover .dropdown-menu,
 .dropdown-menu.show {
   opacity: 1;
   visibility: visible;
-  top: calc(100% + 5px);
+  transform: translateX(-50%) translateY(0) scaleY(1);
+}
+
+.dropdown-li {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dropdown-menu.show .dropdown-li {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* Los enlaces dentro del submenú */
-.dropdown-item {
-  color: #ffffff !important; /* 👈 Letras blancas */
+.nav-links a.dropdown-item {
+  color: #ffffff !important;
   padding: 12px 20px;
   display: block;
+  width: 100%;
+  box-sizing: border-box;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-align: left; /* Ensure text starts at the left */
 }
 
 /* Efecto al pasar el ratón sobre los enlaces del submenú */
-.dropdown-item:hover,
-.dropdown-item.active {
-  background-color: rgba(255, 255, 255, 0.15); /* 👈 Brillo blanco suave al hacer hover */
+.nav-links a.dropdown-item:hover,
+.nav-links a.dropdown-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
   color: #ffffff !important;
-  border-left: 4px solid #ffffff; /* 👈 La línea indicadora ahora es blanca */
-  padding-left: 16px; 
+  border-left: 4px solid #ffffff;
+  padding-left: 24px; /* Animación de texto */
+  transform: none; /* Prevenir el transform de .nav-links a:hover */
 }
 /* =========================================
    3. CONTENEDOR DERECHO: TEMA + USUARIO
@@ -353,6 +381,11 @@
   }
   .dropdown-menu.show {
     display: block;
+    animation: fadeInDown 0.3s ease;
+  }
+  .dropdown-li {
+    opacity: 1;
+    transform: none;
   }
   .dropdown-item {
     color: white !important;
@@ -363,6 +396,18 @@
     background-color: rgba(255, 255, 255, 0.2);
     color: white !important;
     border-left: none;
+    padding-left: 45px;
+  }
+  
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .nav-menu-mobile-extra {

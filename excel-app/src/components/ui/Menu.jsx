@@ -25,11 +25,25 @@ export default function Menu({ usuario }) {
   useEffect(() => {
     const updateUnderline = () => {
       // 🚀 3. Modificamos la búsqueda para que también detecte nuestro "span" activo del submenú
-      const activeLink = navLinksRef.current?.querySelector('a.active, span.active');
+      let activeLink = navLinksRef.current?.querySelector('a.active, span.active');
       if (activeLink) {
+        let leftPos = activeLink.offsetLeft;
+        let width = activeLink.offsetWidth;
+
+        // Corregimos la posición si es parte del menú desplegable
+        // ya que su contenedor (li) tiene position: relative y offsetLeft devuelve 0
+        const dropdownParent = activeLink.closest('.dropdown-container');
+        if (dropdownParent) {
+          leftPos = dropdownParent.offsetLeft;
+          // Queremos que el ancho de la línea sea del span "Calculadora", no de todo el li
+          // aunque el li no tiene padding, el span es más preciso.
+          const span = dropdownParent.querySelector('span');
+          width = span ? span.offsetWidth : dropdownParent.offsetWidth;
+        }
+
         setUnderlineStyle({
-          left: activeLink.offsetLeft,
-          width: activeLink.offsetWidth,
+          left: leftPos,
+          width: width,
           opacity: 1
         });
       } else {
@@ -62,22 +76,28 @@ export default function Menu({ usuario }) {
           {/* 🚀 4. EL NUEVO CONTENEDOR DESPLEGABLE */}
           <li 
             className="nav-item dropdown-container"
-            onMouseEnter={() => setDropdownOpen(true)}
-            onMouseLeave={() => setDropdownOpen(false)}
-            onClick={() => setDropdownOpen(!dropdownOpen)} // Para clics en móvil
+            onClick={() => setDropdownOpen(!dropdownOpen)} // Abrir solo con clic
           >
             {/* El título "Calculadora" se marca como activo si estamos en esas rutas */}
             <span className={`nav-link-dropdown ${isCalculadoraActive ? 'active' : ''}`}>
-              Calculadora ▾
+              Calculadora
+              <svg 
+                className={`chevron-icon ${dropdownOpen ? 'open' : ''}`} 
+                width="16" height="16" viewBox="0 0 24 24" 
+                fill="none" stroke="currentColor" strokeWidth="3.5" 
+                strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
             </span>
 
             <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
-              <li>
+              <li className="dropdown-li" style={{ transitionDelay: '0.05s' }}>
                 <NavLink to="/calculadora" onClick={closeMenu} className="dropdown-item">
                   Estadística General
                 </NavLink>
               </li>
-              <li>
+              <li className="dropdown-li" style={{ transitionDelay: '0.1s' }}>
                 <NavLink to="/MAT251" onClick={closeMenu} className="dropdown-item">
                   Estadística Matemática
                 </NavLink>
