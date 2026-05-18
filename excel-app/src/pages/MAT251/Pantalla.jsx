@@ -5,75 +5,81 @@ import Principal from '../../components/MAT251/Principal/Principal';
 import "../../styles/pages/MAT251/Pantalla.css";
 
 export default function Pantalla() {
-  const [pestanaActiva, setPestanaActiva] = useState(0);
+  const [mostrarDatos, setMostrarDatos] = useState(false);
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedSheet, setSelectedSheet] = useState(0);
 
   const _stats = useCalculadoraExcel(selectedFile, selectedSheet);
 
-  /*const nombresVentanas = [
-    "Gestión de Datos",
-    "Tema 1",
-    "Tema 2",
-    "Tema 3",
-    "Tema 4",
-    "Tema 5",
-    "Tema 6"
-  ];*/
-
-  const nombresVentanas = [
-    "Gestión de Datos",
-    "Calculos"
-  ];
   return (
-      <div className="mat251-contenedor">
-        <div className="mat251-navegacion">
-          {nombresVentanas.map((nombre, index) => (
+    <div className="contenedor-principal-sistema">
+      {/* VENTANA PRINCIPAL: CÁLCULOS (Principal.jsx) */}
+      <div className="ventana-contenido-principal">
+        <Principal />
+      </div>
+
+      {/* BOTÓN FLOTANTE PARA GESTIÓN DE DATOS */}
+      <div className="flotante-lateral-datos">
+        <button
+          className="btn-flotante-datos"
+          onClick={() => setMostrarDatos(true)}
+          title="Abrir Gestión de Datos"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span className="texto-flotante">GESTIÓN DE DATOS</span>
+        </button>
+      </div>
+
+      {/* MODAL DE GESTIÓN DE DATOS */}
+      {mostrarDatos && (
+        <div className="modal-overlay-datos">
+          <div className="modal-content-datos">
             <button
-              key={index}
-              onClick={() => setPestanaActiva(index)}
-              className={`mat251-tab-btn ${pestanaActiva === index ? 'active' : ''}`}
+              className="btn-cerrar-modal"
+              onClick={() => setMostrarDatos(false)}
             >
-              {nombre}
+              Cerrar
             </button>
-          ))}
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-main)' }}>
-          <div style={{ display: pestanaActiva === 0 ? 'block' : 'none' }}>
             <Datos
               setSelectedFile={setSelectedFile}
               selectedFile={selectedFile}
               setSelectedSheet={setSelectedSheet}
             />
           </div>
-
-          <div style={{ display: pestanaActiva === 1 ? 'block' : 'none' }}>
-            <Principal />
-          </div>
-
-          {/* Resto de Temas */}
-          <div style={{ display: pestanaActiva === 2 ? 'block' : 'none' }}><h2>{nombresVentanas[2]}</h2></div>
-          <div style={{ display: pestanaActiva === 3 ? 'block' : 'none' }}><h2>{nombresVentanas[3]}</h2></div>
-          <div style={{ display: pestanaActiva === 4 ? 'block' : 'none' }}><h2>{nombresVentanas[4]}</h2></div>
-          <div style={{ display: pestanaActiva === 5 ? 'block' : 'none' }}><h2>{nombresVentanas[5]}</h2></div>
-          <div style={{ display: pestanaActiva === 6 ? 'block' : 'none' }}><h2>{nombresVentanas[6]}</h2></div>
-
         </div>
+      )}
 
-        {/* ESTADO DEL ARCHIVO */}
-        {selectedFile && (
-          <div style={{
-            marginTop: '20px',
-            padding: '12px 20px',
-            backgroundColor: '#dcfce7',
-            borderRadius: '8px',
-            border: '1px solid #86efac',
-            color: '#166534',
-            display: 'flex',
-            justifyContent: 'space-between'
-          }}>
-          </div>
-        )}
-      </div>
+      {/* ESTADO DEL ARCHIVO */}
+      {selectedFile && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          padding: '12px 20px',
+          backgroundColor: '#dcfce7',
+          borderRadius: '8px',
+          border: '1px solid #86efac',
+          color: '#166534',
+          display: 'flex',
+          justifyContent: 'space-between',
+          zIndex: 10
+        }}>
+          Archivo cargado: {selectedFile}
+        </div>
+      )}
+    </div>
   );
 }

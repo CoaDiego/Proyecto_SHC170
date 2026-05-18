@@ -378,6 +378,18 @@ export default function Principal() {
 
     const hayResultado = resConteo || resProbabilidad;
 
+    // Filtrar la columna usada en la condición (B) para que no aparezca en el evento de interés (A)
+    const statsEventosPorColumnaParaA = useMemo(() => {
+        if (!statsEventosPorColumna) return null;
+        if (eventoCondicion.length === 0) return statsEventosPorColumna;
+
+        const columnasUsadasEnB = statsEventosPorColumna.filter(col => 
+            col.eventos.some(e => eventoCondicion.includes(e.valor))
+        ).map(col => col.nombre);
+
+        return statsEventosPorColumna.filter(col => !columnasUsadasEnB.includes(col.nombre));
+    }, [statsEventosPorColumna, eventoCondicion]);
+
     return (
         <div className={`calculadora-layout ${panelAbierto ? '' : 'colapsado'}`} style={{ position: 'relative', fontFamily: FONT }}>
             {/* Estilos locales para el grid y modal */}
@@ -495,7 +507,7 @@ export default function Principal() {
 
             {/* MODALES*/}
             <ModalEditor modalEditor={modalEditor} setModalEditor={setModalEditor} filasTemp={filasTemp} setFilasTemp={setFilasTemp} columns={columns} guardarEditor={guardarEditor} hayCambiosEditor={hayCambiosEditor} titulo={subTipoProbabilidad === 'frecuentista' ? 'Editor de Datos Históricos' : 'Editor de Espacio Muestral'} />
-            <ModalEventos modalEvento={modalEvento} setModalEvento={setModalEvento} statsEventos={statsEventos} statsEventosPorColumna={statsEventosPorColumna} eventoFavorable={eventoFavorable} setEventoFavorable={setEventoFavorable} setResProbabilidad={setResProbabilidad} titulo={subTipoProbabilidad === 'frecuentista' ? 'Seleccionar Evento de Interés' : 'Seleccionar Eventos Favorables'} />
+            <ModalEventos modalEvento={modalEvento} setModalEvento={setModalEvento} statsEventos={statsEventos} statsEventosPorColumna={statsEventosPorColumnaParaA} eventoFavorable={eventoFavorable} setEventoFavorable={setEventoFavorable} setResProbabilidad={setResProbabilidad} titulo={subTipoProbabilidad === 'frecuentista' ? 'Seleccionar Evento de Interés' : 'Seleccionar Eventos Favorables'} />
             <ModalEventos modalEvento={modalCondicion} setModalEvento={setModalCondicion} statsEventos={statsEventos} statsEventosPorColumna={statsEventosPorColumna} eventoFavorable={eventoCondicion} setEventoFavorable={setEventoCondicion} setResProbabilidad={setResProbabilidad} titulo="Seleccionar Eventos para Condición (B)" />
             <ModalVariables modalVars={modalVars} setModalVars={setModalVars} variables={variables} cargarVariable={cargarVariable} />
         </div>

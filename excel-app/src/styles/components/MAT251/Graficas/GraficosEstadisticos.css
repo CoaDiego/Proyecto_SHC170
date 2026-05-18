@@ -6,17 +6,17 @@
 }
 
 .grafico-card {
-    background: white;
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 12px;
-    border: 1px solid var(--text-muted);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .grafico-card h3 {
     font-size: 1rem;
     margin-bottom: 15px;
-    color: var(--text-variable);
+    color: var(--text-main);
     text-align: center;
 }
 
@@ -30,10 +30,10 @@
 .termometro-container {
     width: 100%;
     height: 30px;
-    background: #f1f5f9;
+    background: var(--bg-input);
     border-radius: 15px;
     overflow: hidden;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--border-color);
 }
 
 .termometro-fill {
@@ -52,6 +52,6 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-muted);
     margin-top: 5px;
 }
