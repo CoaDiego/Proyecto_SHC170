@@ -284,6 +284,41 @@
   font-weight: bold;
 }
 
+/* ======================================================= */
+/* MAGIA RESPONSIVA PARA EL LAYOUT PRINCIPAL (CELULARES)   */
+/* ======================================================= */
+@media (max-width: 900px) {
+  .calculadora-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .boton-toggle-medio {
+    /* Posicionar el botón naranja centrado en la parte superior */
+    position: absolute;
+    left: 50%;
+    right: auto;
+    top: -15px;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+
+  .boton-toggle-medio:hover {
+    transform: translateX(-50%) scale(1.1);
+  }
+
+  .calculadora-layout.colapsado .boton-toggle-medio {
+    left: 50%;
+    right: auto;
+    top: -20px; /* Al colapsar, lo dejamos centrado un poco más arriba */
+  }
+
+  .calculadora-layout.colapsado .calculadora-datos {
+    display: none; /* Oculta completamente el panel de parámetros al colapsar en móvil */
+  }
+}
+
 @media (max-width: 768px) {
   .tabla-academica {
     font-size: 0.85em;

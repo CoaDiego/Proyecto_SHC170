@@ -312,7 +312,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    z-index: 100;
+    z-index: 10001; /* Z-index super alto para que esté encima del menú y flotantes */
     padding: 5px;
   }
   .hamburger-menu .bar {
@@ -335,20 +335,23 @@
   }
 
   .nav-menu {
-    position: absolute;
-    top: 70px;
+    position: absolute; 
+    top: 100%;
     left: 0;
     width: 100%;
+    height: auto;
+    max-height: calc(100vh - 70px);
     background-color: var(--bg-nav);
     flex-direction: column;
-    padding: 30px 0;
+    padding: 20px 0;
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-    z-index: 99;
+    z-index: 10000;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.3s ease;
+    overflow-y: auto;
   }
   .nav-menu.active {
     opacity: 1;
@@ -359,7 +362,7 @@
     flex-direction: column;
     width: 100%;
     text-align: center;
-    gap: 10px;
+    gap: 15px;
   }
   .nav-links a {
     font-size: 1.2rem;
@@ -368,19 +371,38 @@
     width: 100%;
     color: rgba(255, 255, 255, 0.9);
   }
+  
+  .nav-underline {
+    display: none !important; /* Ocultar la línea blanca extraña en móvil */
+  }
+
+  .dropdown-container {
+    flex-direction: column;
+    height: auto;
+    width: 100%;
+  }
+
+  .nav-link-dropdown {
+    justify-content: center; /* Centrar Calculadora con su flecha */
+    font-size: 1.2rem;
+    padding: 12px;
+    width: 100%;
+  }
 
   /* Dropdown en móvil */
   .dropdown-menu {
-    position: static;
-    transform: none;
+    position: static !important;
+    transform: none !important;
     box-shadow: none;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.15); /* Fondo un poco más oscuro para diferenciar */
     border-radius: 0;
-    min-width: 100%;
+    width: 100%;
     display: none;
+    margin-top: 5px;
   }
   .dropdown-menu.show {
     display: block;
+    transform: none !important;
     animation: fadeInDown 0.3s ease;
   }
   .dropdown-li {
@@ -388,15 +410,17 @@
     transform: none;
   }
   .dropdown-item {
-    color: white !important;
-    padding-left: 40px;
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 15px !important;
+    text-align: center !important; /* Centrar el texto en el submenú */
+    font-size: 1.05rem !important;
   }
   .dropdown-item:hover,
   .dropdown-item.active {
     background-color: rgba(255, 255, 255, 0.2);
     color: white !important;
     border-left: none;
-    padding-left: 45px;
+    padding: 15px !important; /* Quitar el salto a la derecha feo */
   }
   
   @keyframes fadeInDown {
