@@ -7,6 +7,17 @@
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const api = {
+  // --- INICIO DE SESION LOCAL ---
+  loginLocal: async (email, password) => {
+    const res = await fetch(`${BASE_URL}/login_local`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) throw new Error("Credenciales incorrectas");
+    return await res.json();
+  },
+
   // --- OBTENER CONTADOR DE VISITAS ---
   obtenerVisitas: async () => {
     try {
