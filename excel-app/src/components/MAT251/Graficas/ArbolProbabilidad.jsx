@@ -4,15 +4,29 @@ import { FONT, FS, RADIUS } from '../Principal/Constantes';
 export default function ArbolProbabilidad({ resultado, ramas }) {
     if (!resultado || !ramas || ramas.length === 0) return null;
 
-    const width = 800;
     const height = Math.max(400, ramas.length * 140);
-    const rootX = 60, rootY = height / 2, nodeAX = 380, nodeBX = 680;
+    const rootX = 60, rootY = height / 2, nodeAX = 420, nodeBX = 720;
     const highlightColor = '#0ea5e9', dimColor = '#94a3b8';
 
+    // Pre-calcular anchos uniformes para alineación perfecta
+    let maxWPill = 80;
+    let maxWLabel1 = 120;
+    let maxWLabel2 = 130;
+
+    resultado.desglose.forEach(rama => {
+        const l1 = `P(${rama.nombre})=${rama.pA.toFixed(4)}`;
+        const l2 = `P(B|${rama.nombre})=${rama.pB_A.toFixed(4)}`;
+        maxWPill = Math.max(maxWPill, rama.nombre.length * 8 + 30);
+        maxWLabel1 = Math.max(maxWLabel1, l1.length * 7 + 20);
+        maxWLabel2 = Math.max(maxWLabel2, l2.length * 7 + 20);
+    });
+
+    const width = Math.max(850, nodeBX + 150);
+
     return (
-        <div style={{ width: '100%', overflowX: 'auto', background: 'var(--bg-card)', borderRadius: RADIUS, border: `1px solid var(--border-color)`, padding: '20px', marginTop: '15px' }}>
-            <h4 style={{ textAlign: 'center', color: 'var(--text-main)', marginBottom: '20px', fontSize: FS.sm }}>Diagrama de Árbol de Decisiones</h4>
-            <svg width={width} height={height} style={{ minWidth: '750px', display: 'block', margin: '0 auto', fontFamily: FONT }}>
+        <div style={{ width: '100%', height: '100%', padding: '0px' }}>
+
+            <svg viewBox={`0 0 ${width} ${height + 40}`} width="100%" height="100%" style={{ display: 'block', margin: '0 auto', fontFamily: FONT }}>
 
                 {/* NODO RAÍZ */}
                 <rect x={rootX - 45} y={rootY - 15} width="45" height="30" rx="15" fill="var(--primary-color)" />
@@ -28,13 +42,11 @@ export default function ArbolProbabilidad({ resultado, ramas }) {
                     const label2Text = `P(B|${rama.nombre})=${rama.pB_A.toFixed(4)}`;
                     const pillText = rama.nombre;
 
-                    // --- Anchos aproximados basados en longitud de texto ---
-                    // Se usa un multiplicador (aprox 7px por caracter) + un padding
-                    const wPill = Math.max(70, pillText.length * 8 + 20);
-                    const wLabel1 = Math.max(110, label1Text.length * 6.8 + 16);
-                    const wLabel2 = Math.max(120, label2Text.length * 6.8 + 16);
+                    const wPill = maxWPill;
+                    const wLabel1 = maxWLabel1;
+                    const wLabel2 = maxWLabel2;
 
-                    const pillX = nodeAX - wPill; // El nodo crece hacia la izquierda
+                    const pillX = nodeAX - wPill; // Ahora será igual para todos
 
                     // Puntos medios geométricos precisos para las etiquetas
                     const midX1 = (rootX + pillX) / 2;
@@ -106,10 +118,12 @@ export default function ArbolProbabilidad({ resultado, ramas }) {
                         </g>
                     );
                 })}
+                {/* LEYENDA */}
+                <text x={width / 2} y={height + 25} textAnchor="middle" fontSize="12" fill="var(--text-muted)">
+                    <tspan fill={highlightColor} fontWeight="bold">■ </tspan>
+                    Rutas ponderadas que conforman la Probabilidad Total del evento analizado
+                </text>
             </svg>
-            <div style={{ textAlign: 'center', marginTop: '15px', fontSize: FS.xs, color: 'var(--text-muted)' }}>
-                <span style={{ color: highlightColor, fontWeight: 'bold' }}>■</span> Rutas ponderadas que conforman la Probabilidad Total del evento analizado
-            </div>
         </div>
     );
 }

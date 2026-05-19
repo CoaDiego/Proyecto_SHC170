@@ -1,10 +1,56 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+} from "@dnd-kit/sortable";
 import { FONT, FS, RADIUS, cardStyle, labelStyle } from '../../../Principal/Constantes';
 import { IconoCalculadora, EditarDatos } from '../../../../ui/iconos';
 import katex from 'katex';
 import ArbolProbabilidad from '../../../Graficas/ArbolProbabilidad';
+import MarcoWidgetMAT251 from '../../../ui/MarcoWidgetMAT251';
 
-export default function ResultadosSimuladorTotal({ 
+const FormulaMatematica = ({ resultado }) => {
+    const formulaRef = useRef(null);
+
+    useEffect(() => {
+        if (formulaRef.current && resultado) {
+            let formulaLatex = `\\begin{aligned}\n`;
+            formulaLatex += `P(B) &= \\sum_{i=1}^{n} P(A_i) \\cdot P(B|A_i) \\\\\n`;
+
+            let sumatoriaStr = resultado.desglose.map(r => `P(\\text{${r.nombre}}) \\cdot P(B|\\text{${r.nombre}})`).join(' + ');
+            formulaLatex += `P(B) &= ${sumatoriaStr} \\\\\n`;
+
+            let valoresStr = resultado.desglose.map(r => `(${r.pA.toFixed(4)} \\cdot ${r.pB_A.toFixed(4)})`).join(' + ');
+            formulaLatex += `P(B) &= ${valoresStr} \\\\\n`;
+
+            let multsStr = resultado.desglose.map(r => `${r.mult.toFixed(4)}`).join(' + ');
+            formulaLatex += `P(B) &= ${multsStr} \\\\\n`;
+
+            formulaLatex += `P(B) &= \\mathbf{${resultado.probB.toFixed(4)}}\n`;
+            formulaLatex += `\\end{aligned}`;
+
+            katex.render(formulaLatex, formulaRef.current, { throwOnError: false, displayMode: true });
+        }
+    }, [resultado]);
+
+    return (
+        <div style={{ overflowX: 'auto', background: 'var(--bg-input)', padding: '10px', borderRadius: RADIUS }}>
+            <div ref={formulaRef}></div>
+        </div>
+    );
+};
+
+export default function ResultadosSimuladorTotal({
     filas, varSeleccionada,
     colCausa, setColCausa,
     colEvento, setColEvento,
@@ -14,14 +60,33 @@ export default function ResultadosSimuladorTotal({
     errorSimulador, setErrorSimulador,
     statsDatos, abrirEditor
 }) {
-    const formulaRef = useRef(null);
+    const [ordenWidgets, setOrdenWidgets] = useState(['w-arbol']);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+    );
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        if (!over) return;
+        if (active.id !== over.id) {
+            setOrdenWidgets((items) => {
+                const oldIndex = items.indexOf(active.id);
+                const newIndex = items.indexOf(over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
 
     // Extraer valores únicos para el selector de "Éxito" del evento
     const valoresUnicosEvento = useMemo(() => {
         if (!varSeleccionada || !colEvento) return [];
         const colIndex = varSeleccionada.nombresColumnas?.indexOf(colEvento);
         if (colIndex === -1 || colIndex === undefined) return [];
-        
+
         const vals = filas.map(f => {
             const partes = f.valor.split(' | ').map(p => p.trim());
             return partes[colIndex];
@@ -31,19 +96,19 @@ export default function ResultadosSimuladorTotal({
 
     const calcular = () => {
         if (!varSeleccionada) {
-            setErrorSimulador("Importa una Matriz de Excel primero."); 
+            setErrorSimulador("Importa una Matriz de Excel primero.");
             setResultadoSimulador(null);
             return;
         }
         if (!colCausa || !colEvento || !valExito) {
-            setErrorSimulador("Selecciona las columnas de Causa y Evento, así como el valor de éxito."); 
+            setErrorSimulador("Selecciona las columnas de Causa y Evento, así como el valor de éxito.");
             setResultadoSimulador(null);
             return;
         }
-        
+
         const idxCausa = varSeleccionada.nombresColumnas.indexOf(colCausa);
         const idxEvento = varSeleccionada.nombresColumnas.indexOf(colEvento);
-        
+
         if (idxCausa === -1 || idxEvento === -1) {
             setErrorSimulador("Columnas no encontradas en la matriz.");
             setResultadoSimulador(null);
@@ -68,7 +133,7 @@ export default function ResultadosSimuladorTotal({
 
         let probB = 0;
         const desglose = [];
-        
+
         causasUnicas.forEach((causa, index) => {
             const datosCausa = datosParseados.filter(d => d.causa === causa);
             const n_Ai = datosCausa.length;
@@ -107,28 +172,6 @@ export default function ResultadosSimuladorTotal({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filas, colCausa, colEvento, valExito, varSeleccionada]);
-
-
-    useEffect(() => {
-        if (formulaRef.current && resultado) {
-            let formulaLatex = `\\begin{aligned}\n`;
-            formulaLatex += `P(B) &= \\sum_{i=1}^{n} P(A_i) \\cdot P(B|A_i) \\\\\n`;
-            
-            let sumatoriaStr = resultado.desglose.map(r => `P(\\text{${r.nombre}}) \\cdot P(B|\\text{${r.nombre}})`).join(' + ');
-            formulaLatex += `P(B) &= ${sumatoriaStr} \\\\\n`;
-            
-            let valoresStr = resultado.desglose.map(r => `(${r.pA.toFixed(4)} \\cdot ${r.pB_A.toFixed(4)})`).join(' + ');
-            formulaLatex += `P(B) &= ${valoresStr} \\\\\n`;
-            
-            let multsStr = resultado.desglose.map(r => `${r.mult.toFixed(4)}`).join(' + ');
-            formulaLatex += `P(B) &= ${multsStr} \\\\\n`;
-            
-            formulaLatex += `P(B) &= \\mathbf{${resultado.probB.toFixed(4)}}\n`;
-            formulaLatex += `\\end{aligned}`;
-
-            katex.render(formulaLatex, formulaRef.current, { throwOnError: false, displayMode: true });
-        }
-    }, [resultado]);
 
 
 
@@ -177,8 +220,8 @@ export default function ResultadosSimuladorTotal({
                             <label style={{ fontSize: FS.sm, fontFamily: FONT, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontWeight: 600 }}>
                                 Variable Causa <span dangerouslySetInnerHTML={{ __html: katex.renderToString('A_i') }} />:
                             </label>
-                            <select 
-                                value={colCausa} 
+                            <select
+                                value={colCausa}
                                 onChange={(e) => {
                                     setColCausa(e.target.value);
                                 }}
@@ -196,8 +239,8 @@ export default function ResultadosSimuladorTotal({
                             <label style={{ fontSize: FS.sm, fontFamily: FONT, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontWeight: 600 }}>
                                 Variable Evento <span dangerouslySetInnerHTML={{ __html: katex.renderToString('B') }} />:
                             </label>
-                            <select 
-                                value={colEvento} 
+                            <select
+                                value={colEvento}
                                 onChange={(e) => {
                                     setColEvento(e.target.value);
                                     setValExito('');
@@ -215,8 +258,8 @@ export default function ResultadosSimuladorTotal({
                         {colEvento && valoresUnicosEvento.length > 0 && (
                             <div style={{ flex: 1, minWidth: '200px' }}>
                                 <label style={{ fontSize: FS.sm, fontFamily: FONT, display: 'block', marginBottom: '4px', color: 'var(--primary-color)', fontWeight: 'bold' }}>Valor de "Éxito":</label>
-                                <select 
-                                    value={valExito} 
+                                <select
+                                    value={valExito}
                                     onChange={(e) => {
                                         setValExito(e.target.value);
                                     }}
@@ -231,9 +274,9 @@ export default function ResultadosSimuladorTotal({
                             </div>
                         )}
 
-                        <button 
-                            onClick={calcular} 
-                            className="button_calcular btn-icon" 
+                        <button
+                            onClick={calcular}
+                            className="button_calcular btn-icon"
                             style={{ padding: '8px 25px', borderRadius: RADIUS, fontSize: FS.sm, fontWeight: 700, height: '36px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}
                             disabled={!varSeleccionada || !colCausa || !colEvento || !valExito}
                         >
@@ -294,23 +337,39 @@ export default function ResultadosSimuladorTotal({
                         </div>
                     </div>
 
-                    <div style={{ ...cardStyle }}>
+                    <div style={{ ...cardStyle, marginBottom: '20px' }}>
                         <h3 style={{ color: 'var(--primary-color)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', fontSize: FS.md, margin: '0 0 15px 0' }}>
                             Desarrollo Matemático
                         </h3>
-                        <div style={{ overflowX: 'auto', background: 'var(--bg-input)', padding: '10px', borderRadius: RADIUS }}>
-                            <div ref={formulaRef}></div>
-                        </div>
+                        <FormulaMatematica resultado={resultado} />
                         <div style={{ marginTop: '15px', padding: '15px', background: 'rgba(2, 132, 199, 0.05)', border: '1.5px solid var(--primary-color)', borderRadius: RADIUS, textAlign: 'center' }}>
                             <div style={{ fontSize: FS.lg, fontWeight: 'bold', color: 'var(--primary-color)' }}>
                                 P(B) = {resultado.probB.toFixed(4)}
                             </div>
                             <div style={{ fontSize: FS.sm, color: 'var(--text-main)', marginTop: '4px' }}>
-                                ({ (resultado.probB * 100).toFixed(2) }% probabilidad)
+                                ({(resultado.probB * 100).toFixed(2)}% probabilidad)
                             </div>
                         </div>
-                        <ArbolProbabilidad resultado={resultado} ramas={ramas} />
                     </div>
+
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={ordenWidgets} strategy={rectSortingStrategy}>
+                            <div style={{ width: '100%', minWidth: 0 }}>
+                                {ordenWidgets.map((id) => {
+                                    if (id === 'w-arbol') {
+                                        return (
+                                            <MarcoWidgetMAT251 key={id} id={id} titulo="Árbol de Probabilidad" anchoCompleto={true} alto={`${Math.max(400, ramas.length * 140) + 120}px`}>
+                                                <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
+                                                    <ArbolProbabilidad resultado={resultado} ramas={ramas} />
+                                                </div>
+                                            </MarcoWidgetMAT251>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
                 </>
             )}
         </div>
