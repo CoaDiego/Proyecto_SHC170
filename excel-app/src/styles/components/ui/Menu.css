@@ -362,11 +362,11 @@
     flex-direction: column;
     width: 100%;
     text-align: center;
-    gap: 15px;
+    gap: 5px; /* Menor espacio entre opciones */
   }
   .nav-links a {
-    font-size: 1.2rem;
-    padding: 12px;
+    font-size: 1rem; /* Texto más pequeño */
+    padding: 8px; /* Menos relleno interno */
     display: block;
     width: 100%;
     color: rgba(255, 255, 255, 0.9);
@@ -384,8 +384,8 @@
 
   .nav-link-dropdown {
     justify-content: center; /* Centrar Calculadora con su flecha */
-    font-size: 1.2rem;
-    padding: 12px;
+    font-size: 1rem; /* Texto más pequeño */
+    padding: 8px; /* Menos relleno interno */
     width: 100%;
   }
 
@@ -398,7 +398,7 @@
     border-radius: 0;
     width: 100%;
     display: none;
-    margin-top: 5px;
+    margin-top: 0; /* Sin margen adicional */
   }
   .dropdown-menu.show {
     display: block;
@@ -411,16 +411,16 @@
   }
   .dropdown-item {
     color: rgba(255, 255, 255, 0.8) !important;
-    padding: 15px !important;
+    padding: 10px !important; /* Menos padding */
     text-align: center !important; /* Centrar el texto en el submenú */
-    font-size: 1.05rem !important;
+    font-size: 0.95rem !important; /* Texto un poco más pequeño */
   }
   .dropdown-item:hover,
   .dropdown-item.active {
     background-color: rgba(255, 255, 255, 0.2);
     color: white !important;
     border-left: none;
-    padding: 15px !important; /* Quitar el salto a la derecha feo */
+    padding: 10px !important; /* Quitar el salto a la derecha feo */
   }
   
   @keyframes fadeInDown {
@@ -438,9 +438,9 @@
     display: flex !important;
     flex-direction: column;
     align-items: center;
-    gap: 25px;
-    margin-top: 20px;
-    padding: 25px 20px;
+    gap: 15px; /* Menos gap */
+    margin-top: 10px; /* Menos margin */
+    padding: 15px 20px; /* Menos padding */
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     width: 100%;
   }
