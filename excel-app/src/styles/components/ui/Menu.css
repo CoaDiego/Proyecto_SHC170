@@ -312,7 +312,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    z-index: 10001; /* Z-index super alto para que esté encima del menú y flotantes */
+    /* Eliminado el z-index de 10001 porque ya no hace falta que se sobreponga al menú gigante */
     padding: 5px;
   }
   .hamburger-menu .bar {
