@@ -129,41 +129,22 @@ export default function Archivos({ usuario }) {
   };
 
   return (
-    <div
-      className="page-container"
-      style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}
-    >
-      <div
-        style={{
-          borderBottom: "2px solid var(--border-color)",
-          paddingBottom: "10px",
-          marginBottom: "20px",
-        }}
-      >
-        <h2 style={{ margin: 0, color: "var(--text-main)" }}>
+    <div className="page-container">
+      <div className="archivos-header">
+        <h2 className="archivos-titulo">
           Gestión de Datos y Archivos
         </h2>
-        <p style={{ margin: "5px 0 0 0", color: "var(--text-muted)" }}>
+        <p className="archivos-subtitulo">
           Espacio de trabajo de: <strong>{usuario?.nombre}</strong> (
           {usuario?.rol})
         </p>
       </div>
 
-      <div
-        className="files-layout"
-        style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}
-      >
+      <div className="files-layout">
         {/* ========================================================= */}
         {/* COLUMNA IZQUIERDA: Pestañas y Gestión (35%)               */}
         {/* ========================================================= */}
-        <div
-          style={{
-            flex: "0 0 35%",
-            display: "flex",
-            flexDirection: "column",
-            gap: "15px",
-          }}
-        >
+        <div className="archivos-col-izq">
           {/* 🆕 SELECTOR DE PESTAÑAS */}
           <div
             style={{
@@ -183,6 +164,10 @@ export default function Archivos({ usuario }) {
                 borderRadius: "6px",
                 cursor: "pointer",
                 fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
                 background:
                   tabActiva === "personales"
                     ? "var(--accent-color)"
@@ -191,7 +176,11 @@ export default function Archivos({ usuario }) {
                   tabActiva === "personales" ? "white" : "var(--text-muted)",
               }}
             >
-              👤 Mi Espacio
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Mi Espacio
             </button>
             <button
               onClick={() => setTabActiva("cursos")}
@@ -202,6 +191,10 @@ export default function Archivos({ usuario }) {
                 borderRadius: "6px",
                 cursor: "pointer",
                 fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
                 background:
                   tabActiva === "cursos"
                     ? "var(--primary-color)"
@@ -209,7 +202,11 @@ export default function Archivos({ usuario }) {
                 color: tabActiva === "cursos" ? "white" : "var(--text-muted)",
               }}
             >
-              📚 Mis Cursos
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              Mis Cursos
             </button>
           </div>
 
@@ -324,20 +321,7 @@ export default function Archivos({ usuario }) {
         {/* ========================================================= */}
         {/* COLUMNA DERECHA: Vista Previa                            */}
         {/* ========================================================= */}
-        <div
-          style={{
-            flex: "1",
-            minWidth: 0, /* 👈 El truco mágico que evita el desborde */
-            display: "flex",
-            flexDirection: "column",
-            background: "var(--bg-card)",
-            padding: "20px",
-            borderRadius: "8px",
-            border: "1px solid var(--border-color)",
-            minHeight: "600px",
-            maxHeight: "800px"
-          }}
-        >
+        <div className="archivos-col-der">
           <h3
             style={{
               margin: "0 0 15px 0",

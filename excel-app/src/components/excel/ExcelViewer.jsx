@@ -74,7 +74,6 @@ export default function ExcelViewer({ files, onSelect, onDelete, rol }) {
                   <button
                     onClick={() => openDeleteModal(f.filename)}
                     className="container_button_2"
-                    title="Eliminar archivo"
                     onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#ef4444"; e.currentTarget.style.color = "white"; }}
                     onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#ef4444"; }}
                   >

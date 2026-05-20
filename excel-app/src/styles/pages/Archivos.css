@@ -36,53 +36,69 @@
     z-index: 10;
 }
 
-/* 🆕 Limpiado: Quitamos el display: grid que chocaba con el display: flex */
+/* Encabezado de la página */
+.archivos-header {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.archivos-titulo {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.6rem;
+}
+
+.archivos-subtitulo {
+    margin: 5px 0 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ========================================================
+   ESCRITORIO: Las columnas van lado a lado
+   ======================================================== */
+.page-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 95%;
+    box-sizing: border-box;
+}
+
 .files-layout {
     display: flex;
+    flex-direction: row;  /* Escritorio: lado a lado */
     flex-wrap: wrap;
     gap: 20px;
     width: 100%;
     align-items: flex-start;
 }
 
-.panel-section_1 {
-    background-color: var(--bg-card);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    min-height: 300px;
-    flex: 1 1 300px;
-    min-width: 250px;
-    max-width: 350px; /* 🆕 Un poco más ajustado para darle más espacio a la vista previa */
+.archivos-col-izq {
+    flex: 0 0 35%;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
 }
 
-.panel-section_1 h3 {
-    color: var(--text-main);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-top: 0;
-}
-
-.panel-section_2 {
-    background-color: var(--bg-card);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    min-height: 300px;
-    flex: 2 1 600px; /* 🆕 Tomará el resto del espacio disponible */
+.archivos-col-der {
+    flex: 1;
     min-width: 0;
-    width: 100%;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    min-height: 600px;
+    max-height: 800px;
+    box-sizing: border-box;
 }
 
-.panel-section_2 h3 {
-    color: var(--text-main);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-top: 0;
-}
-
-/* 🆕 Quitamos el borde punteado y centramos el texto para que se fusione con la tarjeta */
+/* 🆕 Quitamos el borde punteado y centramos el texto */
 .container_reader_archivo {
     padding: 40px;
     color: var(--text-muted);
@@ -94,21 +110,54 @@
     min-height: 200px;
 }
 
-/* Ajustes para dispositivos pequeños */
-@media (max-width: 768px) {
+/* ========================================================
+   MÓVIL: Las columnas se apilan una debajo de la otra
+   ======================================================== */
+@media (max-width: 900px) {
     .page-container {
-        padding: 0px; 
+        padding: 0px;        /* Menos padding en celular */
         width: 100%;
+        max-width: 100%;
+    }
+
+    /* Encabezado más compacto en móvil */
+    .archivos-header {
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+    }
+
+    .archivos-titulo {
+        font-size: 1rem;     /* Título reducido en móvil */
+    }
+
+    .archivos-subtitulo {
+        font-size: 0.75rem;  /* Subtítulo reducido en móvil */
+    }
+
+    .files-layout {
+        flex-direction: column !important;
+        gap: 10px;
+    }
+
+    .archivos-col-izq {
+        width: 100% !important;
+        flex: none !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .archivos-col-der {
+        width: 100% !important;
+        flex: none !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        min-height: 300px;
+        max-height: none;
+        padding: 12px;       /* Menos padding interno en celular */
     }
 
     .upload-section_container {
         flex-direction: column;
         gap: 10px;
-    }
-
-    .panel-section_1,
-    .panel-section_2 {
-        max-width: 100%;
-        flex: 1 1 100%;
     }
 }
