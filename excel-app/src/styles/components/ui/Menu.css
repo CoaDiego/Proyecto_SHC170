@@ -308,68 +308,128 @@
   .hamburger-menu {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    align-items: flex-end; /* Alinea todas las líneas a la derecha */
+    gap: 5px; /* Espaciado perfecto */
     background: transparent;
     border: none;
     cursor: pointer;
-    /* Eliminado el z-index de 10001 porque ya no hace falta que se sobreponga al menú gigante */
-    padding: 5px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
   }
+  
+  .hamburger-menu:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
   .hamburger-menu .bar {
-    width: 26px;
+    width: 24px; /* Tamaño total fijo */
     height: 3px;
     background-color: white;
     border-radius: 3px;
-    transition:
-      transform 0.3s ease,
-      opacity 0.3s ease;
-  }
-  .hamburger-menu.open .bar:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
-  }
-  .hamburger-menu.open .bar:nth-child(2) {
-    opacity: 0;
-  }
-  .hamburger-menu.open .bar:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform-origin: center;
   }
 
+  /* Estado NORMAL: Línea del medio pequeña */
+  .hamburger-menu .bar:nth-child(2) {
+    width: 14px; 
+  }
+
+  /* --- Estado ABIERTO --- */
+  /* No gira ni cambia de tamaño general. Solo invierte qué líneas son pequeñas. */
+  .hamburger-menu.open {
+    transform: none; 
+  }
+
+  /* La línea superior se hace pequeña */
+  .hamburger-menu.open .bar:nth-child(1) {
+    width: 14px;
+    transform: none;
+  }
+  
+  /* La línea del medio recupera su tamaño total y se ilumina ligeramente */
+  .hamburger-menu.open .bar:nth-child(2) {
+    width: 24px; 
+    transform: none; 
+    opacity: 1;
+    background-color: white; 
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5); /* Sutil indicador de activo */
+  }
+  
+  /* La línea inferior se hace pequeña */
+  .hamburger-menu.open .bar:nth-child(3) {
+    width: 14px;
+    transform: none;
+  }
+
+  /* ====================================
+     MENÚ FLOTANTE TIPO TARJETA (POPOVER)
+     ==================================== */
   .nav-menu {
     position: absolute; 
-    top: 100%;
-    left: 0;
-    width: 100%;
+    top: calc(100% + 15px); /* Espacio para la flechita superior */
+    right: 15px; /* Alineado a la derecha, cerca del botón */
+    left: auto; /* Quitamos el 100% width */
+    width: 250px; /* Ancho fijo elegante */
     height: auto;
-    max-height: calc(100vh - 70px);
     background-color: var(--bg-nav);
+    border-radius: 12px; /* Bordes muy redondeados */
     flex-direction: column;
-    padding: 20px 0;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    padding: 10px 0;
+    /* Sombras pro, usamos drop-shadow para que afecte a la flechita superior (caret) */
+    filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4));
     z-index: 10000;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: all 0.3s ease;
-    overflow-y: auto;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    /* overflow-y visible para no cortar la flechita superior */
+    overflow: visible;
   }
+
+  /* Flechita / Caret apuntando al botón de hamburguesa */
+  .nav-menu::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 20px; /* Alineado verticalmente con el botón hamburguesa */
+    width: 14px;
+    height: 14px;
+    background-color: var(--bg-nav);
+    transform: rotate(45deg);
+    border-radius: 2px;
+    z-index: -1;
+  }
+
   .nav-menu.active {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
   }
+
   .nav-links {
     flex-direction: column;
     width: 100%;
-    text-align: center;
-    gap: 5px; /* Menor espacio entre opciones */
+    text-align: left; /* Alineación a la izquierda profesional */
+    gap: 0; /* Sin gap para que los hover se toquen */
   }
+  
   .nav-links a {
-    font-size: 1rem; /* Texto más pequeño */
-    padding: 8px; /* Menos relleno interno */
+    font-size: 0.95rem;
+    padding: 12px 20px;
     display: block;
     width: 100%;
     color: rgba(255, 255, 255, 0.9);
+    border-left: 4px solid transparent; /* Preparado para el hover */
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  
+  .nav-links a:hover,
+  .nav-links a.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 4px solid white; /* Borde blanco para que contraste en modo claro y oscuro */
+    color: white;
   }
   
   .nav-underline {
@@ -383,22 +443,29 @@
   }
 
   .nav-link-dropdown {
-    justify-content: center; /* Centrar Calculadora con su flecha */
-    font-size: 1rem; /* Texto más pequeño */
-    padding: 8px; /* Menos relleno interno */
+    justify-content: space-between; /* El texto a la izq y la flecha a la der */
+    font-size: 0.95rem;
+    padding: 12px 20px;
     width: 100%;
+    border-left: 4px solid transparent;
+    transition: background-color 0.2s ease;
   }
 
-  /* Dropdown en móvil */
+  .nav-link-dropdown:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 4px solid white;
+  }
+
+  /* Submenú en móvil */
   .dropdown-menu {
     position: static !important;
     transform: none !important;
     box-shadow: none;
-    background-color: rgba(0, 0, 0, 0.15); /* Fondo un poco más oscuro para diferenciar */
+    background-color: rgba(0, 0, 0, 0.15); /* Ligeramente más oscuro para anidamiento */
     border-radius: 0;
     width: 100%;
     display: none;
-    margin-top: 0; /* Sin margen adicional */
+    margin-top: 0;
   }
   .dropdown-menu.show {
     display: block;
@@ -410,17 +477,18 @@
     transform: none;
   }
   .dropdown-item {
-    color: rgba(255, 255, 255, 0.8) !important;
-    padding: 10px !important; /* Menos padding */
-    text-align: center !important; /* Centrar el texto en el submenú */
-    font-size: 0.95rem !important; /* Texto un poco más pequeño */
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 10px 20px 10px 35px !important; /* Sangría para sub-elementos */
+    text-align: left !important; 
+    font-size: 0.9rem !important; 
+    border-left: 4px solid transparent !important;
   }
   .dropdown-item:hover,
   .dropdown-item.active {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.15);
     color: white !important;
-    border-left: none;
-    padding: 10px !important; /* Quitar el salto a la derecha feo */
+    border-left: 4px solid white !important;
+    padding: 10px 20px 10px 35px !important; 
   }
   
   @keyframes fadeInDown {
@@ -436,11 +504,12 @@
 
   .nav-menu-mobile-extra {
     display: flex !important;
-    flex-direction: column;
+    flex-direction: row; /* Horizontal para alinear botoncitos extra */
+    justify-content: flex-start;
     align-items: center;
-    gap: 15px; /* Menos gap */
-    margin-top: 10px; /* Menos margin */
-    padding: 15px 20px; /* Menos padding */
+    gap: 15px; 
+    margin-top: 5px; 
+    padding: 15px 20px; 
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     width: 100%;
   }
