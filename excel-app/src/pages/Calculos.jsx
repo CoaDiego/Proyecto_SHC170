@@ -49,6 +49,8 @@ export default function Calculos() {
     if (location.state) {
       const { archivoReabrir, calculoReabrir, colXReabrir, colYReabrir, hojaReabrir } = location.state;
 
+      console.log("Historial recibido:", { archivoReabrir, calculoReabrir, colXReabrir });
+
       if (archivoReabrir) setSelectedFile(archivoReabrir);
       if (calculoReabrir) setCalculo(calculoReabrir);
       if (colXReabrir) setSelectedColumn(colXReabrir);

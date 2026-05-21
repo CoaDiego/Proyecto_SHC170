@@ -7,11 +7,20 @@ export default function SelectorRol() {
   // Si no hay usuario, no mostramos el simulador
   if (!usuario) return null;
 
+  // 🛡️ VALIDACIÓN DE SEGURIDAD 
+  // Verificamos si es Administrador o si ya se puso un disfraz pero su rol real (rolOriginal) es Administrador
+  const esAdministrador = usuario.rol === 'Administrador' || usuario.rolOriginal === 'Administrador';
+
+  // Si entra un Estudiante o Docente real, el componente muere aquí y no ven el botón
+  if (!esAdministrador) return null;
+
   const cambiarRol = (nuevoRol) => {
     // 1. Creamos el nuevo objeto de usuario
     const usuarioActualizado = { 
       ...usuario, 
-      rol: nuevoRol 
+      rol: nuevoRol,
+      // 🆕 Guardamos tu rol verdadero en secreto para que el botón no desaparezca
+      rolOriginal: usuario.rolOriginal || usuario.rol 
     };
     
     // 2. Actualizamos el estado global (esto debería refrescar Grupos.jsx sin recargar)
@@ -20,10 +29,8 @@ export default function SelectorRol() {
     }
 
     // 3. Actualizamos el localStorage para que el cambio persista
-    // Asegúrate de que la llave 'usuario' sea la misma que usas en tu Login/App
     localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
 
-    // 4. Eliminamos window.location.reload() para evitar que te mande al Login
     console.log(`Simulando rol: ${nuevoRol}`);
   };
 
@@ -32,9 +39,9 @@ export default function SelectorRol() {
       style={{ 
         position: 'fixed', 
         bottom: '20px', 
-        left: '20px', // 👈 Movido al lado izquierdo
+        left: '20px',
         zIndex: 999999, 
-        background: 'white', 
+        background: 'var(--bg-card)', // Ajustado para modo oscuro
         padding: '12px', 
         borderRadius: '10px', 
         boxShadow: '0 8px 30px rgba(0,0,0,0.2)', 
@@ -45,7 +52,7 @@ export default function SelectorRol() {
         gap: '10px'
       }}
     >
-      <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#888', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
         Vista de: {usuario.rol}
       </span>
       
@@ -53,8 +60,8 @@ export default function SelectorRol() {
         <button 
           onClick={() => cambiarRol('Administrador')} 
           style={{ 
-            background: usuario.rol === 'Administrador' ? 'var(--accent-color)' : '#f3f4f6', 
-            color: usuario.rol === 'Administrador' ? 'white' : '#374151', 
+            background: usuario.rol === 'Administrador' ? 'var(--accent-color)' : 'var(--bg-input)', 
+            color: usuario.rol === 'Administrador' ? 'white' : 'var(--text-main)', 
             border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold'
           }}
         >
@@ -64,8 +71,8 @@ export default function SelectorRol() {
         <button 
           onClick={() => cambiarRol('Docente')} 
           style={{ 
-            background: usuario.rol === 'Docente' ? 'var(--primary-color)' : '#f3f4f6', 
-            color: usuario.rol === 'Docente' ? 'white' : '#374151', 
+            background: usuario.rol === 'Docente' ? 'var(--primary-color)' : 'var(--bg-input)', 
+            color: usuario.rol === 'Docente' ? 'white' : 'var(--text-main)', 
             border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold'
           }}
         >
@@ -75,8 +82,8 @@ export default function SelectorRol() {
         <button 
           onClick={() => cambiarRol('Estudiante')} 
           style={{ 
-            background: usuario.rol === 'Estudiante' ? '#10b981' : '#f3f4f6', 
-            color: usuario.rol === 'Estudiante' ? 'white' : '#374151', 
+            background: usuario.rol === 'Estudiante' ? '#10b981' : 'var(--bg-input)', 
+            color: usuario.rol === 'Estudiante' ? 'white' : 'var(--text-main)', 
             border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold'
           }}
         >

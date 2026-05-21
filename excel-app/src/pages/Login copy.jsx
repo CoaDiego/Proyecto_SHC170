@@ -5,11 +5,8 @@ import { api } from "../services/api";
 import { alerta } from '../utils/Notificaciones';
 import '../styles/components/ui/Login.css';
 
-// 🆕 Importamos tu componente original (Ajusta la ruta si tu carpeta se llama distinto)
-import OscuroClaro from "../components/ui/oscuro_claro.jsx";
-
 export default function Login({ onLogin }) {
-  const [email, setEmail] = useState(""); 
+  const [email, setEmail] = useState(""); // 🆕 Ahora usamos email
   const [pass, setPass] = useState("");
   const [error, setError] = useState(""); 
 
@@ -30,13 +27,7 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="login-container" style={{ position: 'relative' }}>
-      
-      {/* 🆕 Aquí insertamos tu botón oficial en la esquina superior izquierda */}
-      <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1000 }}>
-        <OscuroClaro />
-      </div>
-
+    <div className="login-container">
       <div className="login-card">
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <img
@@ -48,6 +39,7 @@ export default function Login({ onLogin }) {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
+          {/* 🆕 Actualizado a Correo Electrónico */}
           <div style={{ textAlign: 'left' }}>
             <label className="etiqueta">Correo Electrónico</label>
             <input

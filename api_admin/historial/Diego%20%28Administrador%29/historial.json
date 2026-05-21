@@ -1,22 +1,12 @@
 [
     {
-        "id": "HIST_1778875222",
-        "fecha": "15/05/2026",
-        "hora": "16:00:22",
-        "calculo": "distribucion_intervalos",
-        "archivo_origen": "Datos_Ejemplos.xlsx",
-        "columna_x": "Dia/muestra n=100",
-        "columna_y": "Cant. Piezas defectuosas",
-        "hoja": 2
-    },
-    {
-        "id": "HIST_1778869803",
-        "fecha": "15/05/2026",
-        "hora": "14:30:03",
+        "id": "HIST_1779404206",
+        "fecha": "21/05/2026",
+        "hora": "18:56:46",
         "calculo": "frecuencias_completas",
         "archivo_origen": "Datos_Ejemplos.xlsx",
-        "columna_x": "Datos 1",
-        "columna_y": "Datos 2",
-        "hoja": 0
+        "columna_x": "Cant. Piezas defectuosas",
+        "columna_y": "Cant. Piezas defectuosas",
+        "hoja": 2
     }
 ]

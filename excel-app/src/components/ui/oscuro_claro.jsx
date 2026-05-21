@@ -1,18 +1,14 @@
 import { useState, useEffect } from "react";
 
 export default function OscuroClaro() {
-  const [theme, setTheme] = useState("light");
+  // 1. Inicializamos el estado leyendo el navegador PRIMERO.
+  // Si no hay nada guardado, usamos "light" por defecto.
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "light";
+  });
 
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("theme");
-    if (storedTheme) {
-      setTheme(storedTheme);
-      if (storedTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      }
-    }
-  }, []);
-
+  // 2. Solo necesitamos UN useEffect. 
+  // Cada vez que 'theme' cambie, actualiza el HTML y el navegador.
   useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");

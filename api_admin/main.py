@@ -1,7 +1,10 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, archivos, calculos, historial
+from routers import auth, archivos, calculos, historial, grupos
+from database import engine
+import models
+
 
 app = FastAPI()
 
@@ -19,6 +22,12 @@ app.include_router(auth.router)
 app.include_router(archivos.router)
 app.include_router(calculos.router)
 app.include_router(historial.router)
+# Incluir los Routers modulares del proyecto
+app.include_router(auth.router)
+app.include_router(archivos.router)
+app.include_router(calculos.router)
+app.include_router(historial.router)
+app.include_router(grupos.router)
 
 # Utilidades globales del núcleo
 VISITAS_FILE = "visitas.txt"
