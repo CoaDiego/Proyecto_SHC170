@@ -89,13 +89,22 @@ export default function Historial() {
                       <button
                         className="btn-reabrir"
                         onClick={() => {
+                          // 1. Buscamos los datos donde sea que estén guardados (versión nueva o vieja)
+                          const datosBrutos =
+                            reg.snapshot || reg.resultados_json;
+
+                          // 2. Nos aseguramos de que sea un objeto real y no un string
+                          const snapshotListo =
+                            typeof datosBrutos === "string"
+                              ? JSON.parse(datosBrutos)
+                              : datosBrutos;
+
+                          // 3. Ahora sí enviamos la variable correcta "snapshotListo"
                           navigate("/calculadora", {
                             state: {
                               archivoReabrir: reg.archivo_origen,
                               calculoReabrir: reg.calculo,
-                              colXReabrir: reg.columna_x,
-                              colYReabrir: reg.columna_y,
-                              hojaReabrir: reg.hoja,
+                              snapshot: snapshotListo,
                             },
                           });
                         }}

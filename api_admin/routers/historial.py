@@ -2,6 +2,7 @@ import os
 import json
 import urllib.parse
 from datetime import datetime
+from typing import Any, Dict, Optional  # 👈 Importación corregida
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -10,13 +11,12 @@ router = APIRouter()
 HISTORIAL_FOLDER = "historial"
 os.makedirs(HISTORIAL_FOLDER, exist_ok=True)
 
+# 1. MODELO ACTUALIZADO
 class RegistroHistorial(BaseModel):
     autor: str
     calculo: str
     archivo_origen: str
-    columna_x: str          
-    columna_y: str = None   
-    hoja: int = 0
+    snapshot: Optional[Dict[str, Any]] = None  # 👈 Permite recibir el JSON gigante
 
 @router.post("/guardar_historial")
 async def guardar_historial(registro: RegistroHistorial):
@@ -31,15 +31,14 @@ async def guardar_historial(registro: RegistroHistorial):
             with open(historial_file, "r", encoding="utf-8") as f:
                 historial_data = json.load(f)
         
+        # 2. GUARDADO CON SNAPSHOT
         nuevo_registro = {
             "id": f"HIST_{int(datetime.now().timestamp())}",
             "fecha": datetime.now().strftime("%d/%m/%Y"),
             "hora": datetime.now().strftime("%H:%M:%S"),
             "calculo": registro.calculo,
             "archivo_origen": registro.archivo_origen,
-            "columna_x": registro.columna_x,     
-            "columna_y": registro.columna_y,      
-            "hoja": registro.hoja
+            "snapshot": registro.snapshot  # 👈 Se guarda tal cual
         }
         
         historial_data.insert(0, nuevo_registro)

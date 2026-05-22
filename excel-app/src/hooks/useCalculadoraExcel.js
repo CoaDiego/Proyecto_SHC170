@@ -9,7 +9,7 @@ import * as IndicesMath from "../utils/estadisticaIndices";
 
 import { api } from "../services/api";
 
-export function useCalculadoraExcel(filename, sheet) {
+export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
   const { variables, usuario } = useModuleData();
   const [exceldataoriginal, setExcelDataOriginal] = useState([]);
   const [excelData, setExcelData] = useState([]);
@@ -39,30 +39,37 @@ export function useCalculadoraExcel(filename, sheet) {
   const [errorNumerico, setErrorNumerico] = useState(false);
   const [resultado, setResultado] = useState(null);
 
-  // 1. CARGA DESDE EL BACKEND
+  // 1. EFECTO ÚNICO PARA CARGA DE DATOS (YA SEA SNAPSHOT O API)
   useEffect(() => {
-    if (!filename || sheet === "" || sheet === undefined) return;
-    if (!usuario) return; // Necesitamos el usuario para ubicar el archivo correcto
-    const hojaIndex = Number(sheet);
-    const autorNombre = usuario.nombre;
+    // A. Si tenemos datos precargados (Snapshot del Historial), los usamos y terminamos
+    if (datosPrecargados) {
+      setExcelData(datosPrecargados);
+      setExcelDataOriginal(datosPrecargados);
+      if (datosPrecargados.length > 0) {
+        setColumns(Object.keys(datosPrecargados[0]));
+      }
+      return; // Salimos, no hacemos nada más
+    }
+
+    // B. Si NO hay datos precargados, intentamos cargar desde la API
+    if (!filename || sheet === "" || sheet === undefined || !usuario) return;
 
     const caragarDatos = async () => {
       try {
-        const data = await api.obtenerDatosHoja(filename, hojaIndex, autorNombre);
+        const data = await api.obtenerDatosHoja(filename, Number(sheet), usuario.nombre);
         if (Array.isArray(data) && data.length > 0) {
           const headerRow = Object.keys(data[0]);
           setColumns(headerRow);
           setExcelData(data);
           setExcelDataOriginal(data);
 
-          if (headerRow.length > 0) {
-            setSelectedColumn(headerRow[0]);
-            setSelectedColumnY(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
-            setColPrecioBase(headerRow[0]);
-            setColCantidadBase(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
-            setColPrecioActual(headerRow.length > 2 ? headerRow[2] : headerRow[0]);
-            setColCantidadActual(headerRow.length > 3 ? headerRow[3] : headerRow[0]);
-          }
+          // Seteo inicial de columnas
+          setSelectedColumn(headerRow[0]);
+          setSelectedColumnY(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
+          setColPrecioBase(headerRow[0]);
+          setColCantidadBase(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
+          setColPrecioActual(headerRow.length > 2 ? headerRow[2] : headerRow[0]);
+          setColCantidadActual(headerRow.length > 3 ? headerRow[3] : headerRow[0]);
         } else {
           setExcelData([]);
           setColumns([]);
@@ -72,55 +79,9 @@ export function useCalculadoraExcel(filename, sheet) {
       }
     };
     caragarDatos();
-  }, [filename, sheet, usuario]);
+  }, [filename, sheet, usuario, datosPrecargados]);
 
-  useEffect(() => {
-    if (columns.length > 0 && selectedColumnY === "") {
-      setSelectedColumnY(columns.length > 1 ? columns[1] : columns[0]);
-    }
-    if (columns.length === 0 && variables.length > 0 && selectedColumn === "") {
-      setSelectedColumn(variables[0].nombre);
-    }
-  }, [columns, selectedColumnY, variables]);
 
-  // =========================================================================
-  // 2. EL SÚPER CEREBRO DE VARIABLES (Arregla la tabla visual)
-  // =========================================================================
-  useEffect(() => {
-    const selecciones = [
-      selectedColumn, selectedColumnY,
-      colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual
-    ].filter(Boolean);
-
-    const varsActivas = variables.filter(v => selecciones.includes(v.nombre));
-    const colsOriginalesActivas = columns.filter(c => selecciones.includes(c));
-
-    if (selecciones.length > 0) {
-      // Calculamos hasta dónde llega la columna más larga para no cortar datos
-      const maxLength = Math.max(
-        ...varsActivas.map(v => v.datos ? v.datos.length : 0),
-        colsOriginalesActivas.length > 0 ? exceldataoriginal.length : 0
-      );
-
-      const rowsParaGrid = [];
-      for (let i = 0; i < maxLength; i++) {
-        const row = {};
-        varsActivas.forEach(v => {
-          row[v.nombre] = (v.datos && v.datos[i] !== undefined) ? v.datos[i] : "";
-        });
-        colsOriginalesActivas.forEach(c => {
-          row[c] = (exceldataoriginal[i] && exceldataoriginal[i][c] !== undefined) ? exceldataoriginal[i][c] : "";
-        });
-        rowsParaGrid.push(row);
-      }
-      setExcelData(rowsParaGrid);
-    } else {
-      setExcelData(exceldataoriginal);
-    }
-  }, [
-    selectedColumn, selectedColumnY, colPrecioBase, colCantidadBase,
-    colPrecioActual, colCantidadActual, exceldataoriginal, variables, columns
-  ]);
 
   const handleChangeDato = (index, colName, value) => {
     const esNumero = !isNaN(Number(value)) && value.trim() !== "";

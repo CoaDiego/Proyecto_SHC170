@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom"; // 👈 1. IMPORTAMOS USELOCATION
 import Datos from "./Datos";
 import Calculos from "./Calculos";
 import TablaDinamica from "../components/excel/TablaDinamica";
@@ -7,25 +8,32 @@ import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 import "../styles/pages/Calculadora.css";
 
 export default function Calculadora() {
+  const location = useLocation(); // 👈 2. CAPTURAMOS LOS DATOS DEL HISTORIAL
+  const paramsReabrir = location.state || {};
+  
+  // 👈 3. EXTRAEMOS EL SNAPSHOT EXACTAMENTE COMO LO ENVIASTE DESDE HISTORIAL.JSX
+  const { archivoReabrir, calculoReabrir, snapshot } = paramsReabrir;
+
   const [mostrarDatos, setMostrarDatos] = useState(false);
   const [mostrarCreacion, setMostrarCreacion] = useState(false);
 
-  const [selectedFile, setSelectedFile] = useState("");
+  // Inicializamos con el archivo del historial si existe
+  const [selectedFile, setSelectedFile] = useState(archivoReabrir || "");
   const [selectedSheet, setSelectedSheet] = useState(0);
-  // 🆕 Nuevo estado para saber si el archivo viene de un curso
   const [selectedCourse, setSelectedCourse] = useState("");
 
-  // 🚀 Pasamos el curso al hook para que sepa de dónde leer los datos
+  // 🚀 4. PASAMOS EL SNAPSHOT AL HOOK (¡LA MAGIA SUCEDE AQUÍ!)
   const stats = useCalculadoraExcel(
     selectedFile,
     selectedSheet,
-    selectedCourse,
+    snapshot // Si viene del historial, esto llenará los datos al instante
   );
 
   return (
     <div className="contenedor-principal-sistema">
       <div className="ventana-contenido-principal">
-        <Calculos stats={stats} />
+        {/* Le pasamos paramsReabrir a Calculos para que sepa qué cálculo seleccionar */}
+        <Calculos stats={stats} paramsReabrir={paramsReabrir} />
       </div>
 
       <div className="flotante-lateral-datos">
@@ -90,7 +98,6 @@ export default function Calculadora() {
               setSelectedFile={setSelectedFile}
               selectedFile={selectedFile}
               setSelectedSheet={setSelectedSheet}
-              // 🆕 Pasamos los nuevos props a Datos
               setSelectedCourse={setSelectedCourse}
               selectedCourse={selectedCourse}
             />

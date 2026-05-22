@@ -9,14 +9,13 @@ import { useModuleData } from "../components/excel/DataContext";
 import { api } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 
-// --- IMPORTS DE LOS PANELES MODULARES ---
+// --- IMPORTS DE LOS 3 NUEVOS PANELES MODULARES ---
 import ReportePDF from "../components/Resultados/ReportePDF";
 import PanelResultados from "../components/Resultados/PanelResultados";
-import PanelConfiguracion from "../components/Resultados/PanelConfiguracion";
+import PanelConfiguracion from "../components/Resultados/PanelConfiguracion"; // (O la ruta donde lo hayas guardado)
 
 export default function Calculos() {
   const { variables, usuario } = useModuleData();
-  const location = useLocation();
 
   const [files, setFiles] = useState([]);
   const [ordenGraficos, setOrdenGraficos] = useState([]);
@@ -27,14 +26,6 @@ export default function Calculos() {
   const [filtroFractil, setFiltroFractil] = useState("Cuartil");
   const [panelAbierto, setPanelAbierto] = useState(true);
   const [modoCreacion, setModoCreacion] = useState(false);
-
-  // 🚀 1. EXTRAEMOS EL SNAPSHOT
-  const snapshotRecibido = location.state?.snapshot || null;
-
-  // 🚀 2. LA MAGIA: Le damos al hook SOLO el array de datos, no el objeto entero
-  const datosParaHook = snapshotRecibido
-    ? snapshotRecibido.datosSnapshot
-    : null;
 
   const {
     excelData,
@@ -77,62 +68,50 @@ export default function Calculos() {
     setColCantidadActual,
     nuevoIndiceBase,
     setNuevoIndiceBase,
-  } = useCalculadoraExcel(selectedFile, selectedSheet, datosParaHook); // 👈 Ahora el hook es feliz
+  } = useCalculadoraExcel(selectedFile, selectedSheet);
 
+  const location = useLocation();
   const calculoPendiente = useRef(false);
 
-  // 🚀 3. RESTAURAMOS TODO EL RESTO DE LA CONFIGURACIÓN
   useEffect(() => {
-    if (location.state && location.state.snapshot) {
-      const { archivoReabrir, calculoReabrir, snapshot } = location.state;
+    if (location.state) {
+      const {
+        archivoReabrir,
+        calculoReabrir,
+        colXReabrir,
+        colYReabrir,
+        hojaReabrir,
+      } = location.state;
+
+      console.log("Historial recibido:", {
+        archivoReabrir,
+        calculoReabrir,
+        colXReabrir,
+      });
 
       if (archivoReabrir) setSelectedFile(archivoReabrir);
       if (calculoReabrir) setCalculo(calculoReabrir);
+      if (colXReabrir) setSelectedColumn(colXReabrir);
+      if (colYReabrir) setSelectedColumnY(colYReabrir);
+      if (hojaReabrir !== undefined) setSelectedSheet(hojaReabrir);
 
-      // Restauración segura de las columnas y controles
-      if (snapshot.configuracion) {
-        const conf = snapshot.configuracion;
-
-        // Si guardamos las columnas, las ponemos. Si no, forzamos la primera por defecto.
-        if (conf.columnasSeleccionadas && conf.columnasSeleccionadas.x) {
-          setSelectedColumn(conf.columnasSeleccionadas.x);
-          setSelectedColumnY(conf.columnasSeleccionadas.y || "");
-        } else if (
-          snapshot.datosSnapshot &&
-          snapshot.datosSnapshot.length > 0
-        ) {
-          const columnasRespaldo = Object.keys(snapshot.datosSnapshot[0]);
-          setSelectedColumn(columnasRespaldo[0]);
-          setSelectedColumnY(
-            columnasRespaldo.length > 1
-              ? columnasRespaldo[1]
-              : columnasRespaldo[0],
-          );
-        }
-
-        // Restaurar otras configuraciones para que los gráficos queden idénticos
-        if (conf.tipoIntervalo) setTipoIntervalo(conf.tipoIntervalo);
-        if (conf.metodoK) setMetodoK(conf.metodoK);
+      if (archivoReabrir && calculoReabrir && colXReabrir) {
+        calculoPendiente.current = true;
       }
-
-      calculoPendiente.current = true;
       window.history.replaceState({}, document.title);
     }
-  }, [
-    location.state,
-    setCalculo,
-    setSelectedColumn,
-    setSelectedColumnY,
-    setTipoIntervalo,
-    setMetodoK,
-  ]);
+  }, [location.state, setCalculo, setSelectedColumn, setSelectedColumnY]);
 
   useEffect(() => {
     if (calculoPendiente.current && excelData && excelData.length > 0) {
       const timer = setTimeout(() => {
         ejecutarCalculo();
-        alerta.exito("Historial Cargado", "Se restauró el cálculo guardado.");
-      }, 400); // Le damos un poquitito más de tiempo a React para acomodar las columnas
+        alerta.exito(
+          "Historial Cargado",
+          "Se restauró el cálculo automáticamente.",
+        );
+      }, 300);
+
       calculoPendiente.current = false;
       return () => clearTimeout(timer);
     }
@@ -165,6 +144,7 @@ export default function Calculos() {
   const handleGuardarResultado = async () => {
     if (!usuario) return;
     try {
+      // 1. Empaquetamos todo el estado actual
       const snapshotCompleto = {
         datosSnapshot: excelData,
         configuracion: {
@@ -183,28 +163,28 @@ export default function Calculos() {
           colPrecioActual,
           colCantidadActual,
           nuevoIndiceBase,
-          columnasSeleccionadas: { x: selectedColumn, y: selectedColumnY },
+          // Guardamos también las columnas seleccionadas
+          columnasSeleccionadas: { x: selectedColumn, y: selectedColumnY } 
         },
         resultadoFinal: resultado,
       };
 
+      // 2. Enviamos los 4 parámetros exactos que espera api.js
       await api.guardarEnHistorial(
         usuario.nombre,
         calculo,
         selectedFile,
-        snapshotCompleto,
+        snapshotCompleto
       );
-
-      alerta.exito(
-        "¡Guardado Permanentemente!",
-        "El cálculo completo está en el historial.",
-      );
+      
+      alerta.exito("¡Guardado Permanentemente!", "El cálculo completo está en el historial y no dependerá del Excel.");
     } catch (error) {
       console.error(error);
       alerta.error("Error", "No se pudo guardar el snapshot.");
     }
   };
 
+ 
   const esIntervalo = calculo === "distribucion_intervalos";
   const esUnidimensional = [
     "frecuencias_completas",
@@ -231,6 +211,7 @@ export default function Calculos() {
       className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`}
       style={{ position: "relative" }}
     >
+      {/* 1. EL PANEL IZQUIERDO (CONTROLES) */}
       <PanelConfiguracion
         panelAbierto={panelAbierto}
         setPanelAbierto={setPanelAbierto}
@@ -287,6 +268,7 @@ export default function Calculos() {
         setMostrarCalculadora={setMostrarCalculadora}
       />
 
+      {/* 2. EL PANEL DERECHO (TABLAS Y GRÁFICOS) */}
       <PanelResultados
         modoCreacion={modoCreacion}
         setModoCreacion={setModoCreacion}
@@ -305,6 +287,7 @@ export default function Calculos() {
         handleGuardarResultado={handleGuardarResultado}
       />
 
+      {/* 3. EL REPORTE INVISIBLE (PDF) */}
       <ReportePDF
         usuario={usuario}
         calculo={calculo}

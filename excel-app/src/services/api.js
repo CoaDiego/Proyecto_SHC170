@@ -233,7 +233,7 @@ export const api = {
     }
   },
 
-  guardarEnHistorial: async (autor, calculo, archivo, colX, colY, hoja) => {
+guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
     try {
       const res = await fetch(`${BASE_URL}/guardar_historial`, {
         method: "POST",
@@ -242,18 +242,20 @@ export const api = {
           autor: autor,
           calculo: calculo,
           archivo_origen: archivo,
-          columna_x: colX,
-          columna_y: colY,
-          hoja: hoja,
+          snapshot: snapshotCompleto, // 👈 La clave coincide exactamente con el backend
         }),
       });
+      if (!res.ok) {
+         const err = await res.json();
+         throw new Error(err.error || "Error al guardar en el servidor");
+      }
       return await res.json();
     } catch (error) {
       console.error("Error en api.guardarEnHistorial:", error);
       throw error;
     }
   },
-
+  
   obtenerHistorial: async (autor) => {
     try {
       const res = await fetch(

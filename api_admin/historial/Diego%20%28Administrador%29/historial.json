@@ -1,12 +1,680 @@
 [
     {
-        "id": "HIST_1779404206",
-        "fecha": "21/05/2026",
-        "hora": "18:56:46",
+        "id": "HIST_1779427890",
+        "fecha": "22/05/2026",
+        "hora": "01:31:30",
+        "calculo": "distribucion_intervalos",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "snapshot": {
+            "datosSnapshot": [
+                {
+                    "Dia/muestra n=100": 1,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 2,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 3,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 4,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 5,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 6,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 7,
+                    "Cant. Piezas defectuosas": 9
+                },
+                {
+                    "Dia/muestra n=100": 8,
+                    "Cant. Piezas defectuosas": 7
+                },
+                {
+                    "Dia/muestra n=100": 9,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 10,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 11,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 12,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 13,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 14,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 15,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 16,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 17,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 18,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 19,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 20,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 21,
+                    "Cant. Piezas defectuosas": 7
+                },
+                {
+                    "Dia/muestra n=100": 22,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 23,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 24,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 25,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 26,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 27,
+                    "Cant. Piezas defectuosas": 15
+                },
+                {
+                    "Dia/muestra n=100": 28,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 29,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 30,
+                    "Cant. Piezas defectuosas": 1
+                }
+            ],
+            "configuracion": {
+                "calculo": "distribucion_intervalos",
+                "tipoIntervalo": "semiabierto",
+                "metodoK": "sturges",
+                "kPersonalizado": "",
+                "percentilK": 50,
+                "metodoSeries": "movil_simple",
+                "periodosK": 3,
+                "pesos": "0.5, 0.3, 0.2",
+                "alfa": 0.2,
+                "subTemaIndices": "compuestos",
+                "colPrecioBase": "",
+                "colCantidadBase": "",
+                "colPrecioActual": "",
+                "colCantidadActual": "",
+                "nuevoIndiceBase": 100,
+                "columnasSeleccionadas": {
+                    "x": "Cant. Piezas defectuosas",
+                    "y": "Cant. Piezas defectuosas"
+                }
+            },
+            "resultadoFinal": [
+                {
+                    "Haber b\u00e1sico": "1 - 4",
+                    "f_i": 7,
+                    "p_i": 23.33,
+                    "F_i": 7,
+                    "P_i": 23.33,
+                    "F'i": 30,
+                    "P'i": 100
+                },
+                {
+                    "Haber b\u00e1sico": "4 - 7",
+                    "f_i": 14,
+                    "p_i": 46.67,
+                    "F_i": 21,
+                    "P_i": 70,
+                    "F'i": 23,
+                    "P'i": 76.67
+                },
+                {
+                    "Haber b\u00e1sico": "7 - 10",
+                    "f_i": 8,
+                    "p_i": 26.67,
+                    "F_i": 29,
+                    "P_i": 96.67,
+                    "F'i": 9,
+                    "P'i": 30
+                },
+                {
+                    "Haber b\u00e1sico": "10 - 13",
+                    "f_i": 0,
+                    "p_i": 0,
+                    "F_i": 29,
+                    "P_i": 96.67,
+                    "F'i": 1,
+                    "P'i": 3.33
+                },
+                {
+                    "Haber b\u00e1sico": "13 - 16",
+                    "f_i": 1,
+                    "p_i": 3.33,
+                    "F_i": 30,
+                    "P_i": 100,
+                    "F'i": 1,
+                    "P'i": 3.33
+                },
+                {
+                    "Haber b\u00e1sico": "16 - 19",
+                    "f_i": 0,
+                    "p_i": 0,
+                    "F_i": 30,
+                    "P_i": 100,
+                    "F'i": 0,
+                    "P'i": 0
+                }
+            ]
+        }
+    },
+    {
+        "id": "HIST_1779427825",
+        "fecha": "22/05/2026",
+        "hora": "01:30:25",
         "calculo": "frecuencias_completas",
         "archivo_origen": "Datos_Ejemplos.xlsx",
-        "columna_x": "Cant. Piezas defectuosas",
-        "columna_y": "Cant. Piezas defectuosas",
-        "hoja": 2
+        "snapshot": {
+            "datosSnapshot": [
+                {
+                    "Dia/muestra n=100": 1,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 2,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 3,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 4,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 5,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 6,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 7,
+                    "Cant. Piezas defectuosas": 9
+                },
+                {
+                    "Dia/muestra n=100": 8,
+                    "Cant. Piezas defectuosas": 7
+                },
+                {
+                    "Dia/muestra n=100": 9,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 10,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 11,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 12,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 13,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 14,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 15,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 16,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 17,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 18,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 19,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 20,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 21,
+                    "Cant. Piezas defectuosas": 7
+                },
+                {
+                    "Dia/muestra n=100": 22,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 23,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 24,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 25,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 26,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 27,
+                    "Cant. Piezas defectuosas": 15
+                },
+                {
+                    "Dia/muestra n=100": 28,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 29,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 30,
+                    "Cant. Piezas defectuosas": 1
+                }
+            ],
+            "configuracion": {
+                "calculo": "frecuencias_completas",
+                "tipoIntervalo": "semiabierto",
+                "metodoK": "sturges",
+                "kPersonalizado": "",
+                "percentilK": 50,
+                "metodoSeries": "movil_simple",
+                "periodosK": 3,
+                "pesos": "0.5, 0.3, 0.2",
+                "alfa": 0.2,
+                "subTemaIndices": "compuestos",
+                "colPrecioBase": "Dia/muestra n=100",
+                "colCantidadBase": "Cant. Piezas defectuosas",
+                "colPrecioActual": "Dia/muestra n=100",
+                "colCantidadActual": "Dia/muestra n=100",
+                "nuevoIndiceBase": 100,
+                "columnasSeleccionadas": {
+                    "x": "Cant. Piezas defectuosas",
+                    "y": "Cant. Piezas defectuosas"
+                }
+            },
+            "resultadoFinal": [
+                {
+                    "x_i": 1,
+                    "f_i": 4,
+                    "F_i": 4,
+                    "F_i_inv": 30,
+                    "p_i": 13.33,
+                    "P_i": 13.33,
+                    "P_i_inv": 100
+                },
+                {
+                    "x_i": 2,
+                    "f_i": 3,
+                    "F_i": 7,
+                    "F_i_inv": 26,
+                    "p_i": 10,
+                    "P_i": 23.33,
+                    "P_i_inv": 86.67
+                },
+                {
+                    "x_i": 4,
+                    "f_i": 6,
+                    "F_i": 13,
+                    "F_i_inv": 23,
+                    "p_i": 20,
+                    "P_i": 43.33,
+                    "P_i_inv": 76.67
+                },
+                {
+                    "x_i": 5,
+                    "f_i": 3,
+                    "F_i": 16,
+                    "F_i_inv": 17,
+                    "p_i": 10,
+                    "P_i": 53.33,
+                    "P_i_inv": 56.67
+                },
+                {
+                    "x_i": 6,
+                    "f_i": 5,
+                    "F_i": 21,
+                    "F_i_inv": 14,
+                    "p_i": 16.67,
+                    "P_i": 70,
+                    "P_i_inv": 46.67
+                },
+                {
+                    "x_i": 7,
+                    "f_i": 2,
+                    "F_i": 23,
+                    "F_i_inv": 9,
+                    "p_i": 6.67,
+                    "P_i": 76.67,
+                    "P_i_inv": 30
+                },
+                {
+                    "x_i": 8,
+                    "f_i": 5,
+                    "F_i": 28,
+                    "F_i_inv": 7,
+                    "p_i": 16.67,
+                    "P_i": 93.33,
+                    "P_i_inv": 23.33
+                },
+                {
+                    "x_i": 9,
+                    "f_i": 1,
+                    "F_i": 29,
+                    "F_i_inv": 2,
+                    "p_i": 3.33,
+                    "P_i": 96.67,
+                    "P_i_inv": 6.67
+                },
+                {
+                    "x_i": 15,
+                    "f_i": 1,
+                    "F_i": 30,
+                    "F_i_inv": 1,
+                    "p_i": 3.33,
+                    "P_i": 100,
+                    "P_i_inv": 3.33
+                }
+            ]
+        }
+    },
+    {
+        "id": "HIST_1779427778",
+        "fecha": "22/05/2026",
+        "hora": "01:29:38",
+        "calculo": "frecuencias_completas",
+        "archivo_origen": "Datos_Ejemplos.xlsx",
+        "snapshot": {
+            "datosSnapshot": [
+                {
+                    "Dia/muestra n=100": 1,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 2,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 3,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 4,
+                    "Cant. Piezas defectuosas": 15
+                },
+                {
+                    "Dia/muestra n=100": 5,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 6,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 7,
+                    "Cant. Piezas defectuosas": 9
+                },
+                {
+                    "Dia/muestra n=100": 8,
+                    "Cant. Piezas defectuosas": 7
+                },
+                {
+                    "Dia/muestra n=100": 9,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 10,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 11,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 12,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 13,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 14,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 15,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 16,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 17,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 18,
+                    "Cant. Piezas defectuosas": 6
+                },
+                {
+                    "Dia/muestra n=100": 19,
+                    "Cant. Piezas defectuosas": 8
+                },
+                {
+                    "Dia/muestra n=100": 20,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 21,
+                    "Cant. Piezas defectuosas": 7
+                },
+                {
+                    "Dia/muestra n=100": 22,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 23,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 24,
+                    "Cant. Piezas defectuosas": 2
+                },
+                {
+                    "Dia/muestra n=100": 25,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 26,
+                    "Cant. Piezas defectuosas": 5
+                },
+                {
+                    "Dia/muestra n=100": 27,
+                    "Cant. Piezas defectuosas": 15
+                },
+                {
+                    "Dia/muestra n=100": 28,
+                    "Cant. Piezas defectuosas": 1
+                },
+                {
+                    "Dia/muestra n=100": 29,
+                    "Cant. Piezas defectuosas": 4
+                },
+                {
+                    "Dia/muestra n=100": 30,
+                    "Cant. Piezas defectuosas": 1
+                }
+            ],
+            "configuracion": {
+                "calculo": "frecuencias_completas",
+                "tipoIntervalo": "semiabierto",
+                "metodoK": "sturges",
+                "kPersonalizado": "",
+                "percentilK": 50,
+                "metodoSeries": "movil_simple",
+                "periodosK": 3,
+                "pesos": "0.5, 0.3, 0.2",
+                "alfa": 0.2,
+                "subTemaIndices": "compuestos",
+                "colPrecioBase": "Dia/muestra n=100",
+                "colCantidadBase": "Cant. Piezas defectuosas",
+                "colPrecioActual": "Dia/muestra n=100",
+                "colCantidadActual": "Dia/muestra n=100",
+                "nuevoIndiceBase": 100,
+                "columnasSeleccionadas": {
+                    "x": "Cant. Piezas defectuosas",
+                    "y": "Cant. Piezas defectuosas"
+                }
+            },
+            "resultadoFinal": [
+                {
+                    "x_i": 1,
+                    "f_i": 4,
+                    "F_i": 4,
+                    "F_i_inv": 30,
+                    "p_i": 13.33,
+                    "P_i": 13.33,
+                    "P_i_inv": 100
+                },
+                {
+                    "x_i": 2,
+                    "f_i": 3,
+                    "F_i": 7,
+                    "F_i_inv": 26,
+                    "p_i": 10,
+                    "P_i": 23.33,
+                    "P_i_inv": 86.67
+                },
+                {
+                    "x_i": 4,
+                    "f_i": 6,
+                    "F_i": 13,
+                    "F_i_inv": 23,
+                    "p_i": 20,
+                    "P_i": 43.33,
+                    "P_i_inv": 76.67
+                },
+                {
+                    "x_i": 5,
+                    "f_i": 3,
+                    "F_i": 16,
+                    "F_i_inv": 17,
+                    "p_i": 10,
+                    "P_i": 53.33,
+                    "P_i_inv": 56.67
+                },
+                {
+                    "x_i": 6,
+                    "f_i": 5,
+                    "F_i": 21,
+                    "F_i_inv": 14,
+                    "p_i": 16.67,
+                    "P_i": 70,
+                    "P_i_inv": 46.67
+                },
+                {
+                    "x_i": 7,
+                    "f_i": 2,
+                    "F_i": 23,
+                    "F_i_inv": 9,
+                    "p_i": 6.67,
+                    "P_i": 76.67,
+                    "P_i_inv": 30
+                },
+                {
+                    "x_i": 8,
+                    "f_i": 4,
+                    "F_i": 27,
+                    "F_i_inv": 7,
+                    "p_i": 13.33,
+                    "P_i": 90,
+                    "P_i_inv": 23.33
+                },
+                {
+                    "x_i": 9,
+                    "f_i": 1,
+                    "F_i": 28,
+                    "F_i_inv": 3,
+                    "p_i": 3.33,
+                    "P_i": 93.33,
+                    "P_i_inv": 10
+                },
+                {
+                    "x_i": 15,
+                    "f_i": 2,
+                    "F_i": 30,
+                    "F_i_inv": 2,
+                    "p_i": 6.67,
+                    "P_i": 100,
+                    "P_i_inv": 6.67
+                }
+            ]
+        }
     }
 ]
