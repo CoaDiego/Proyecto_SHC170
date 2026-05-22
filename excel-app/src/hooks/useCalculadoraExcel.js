@@ -63,13 +63,16 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
           setExcelData(data);
           setExcelDataOriginal(data);
 
-          // Seteo inicial de columnas
-          setSelectedColumn(headerRow[0]);
-          setSelectedColumnY(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
-          setColPrecioBase(headerRow[0]);
-          setColCantidadBase(headerRow.length > 1 ? headerRow[1] : headerRow[0]);
-          setColPrecioActual(headerRow.length > 2 ? headerRow[2] : headerRow[0]);
-          setColCantidadActual(headerRow.length > 3 ? headerRow[3] : headerRow[0]);
+          // 🛠️ SETEO INTELIGENTE: Respeta lo que el usuario ya eligió
+          if (headerRow.length > 0) {
+            setSelectedColumn(prev => (prev && headerRow.includes(prev)) ? prev : headerRow[0]);
+            setSelectedColumnY(prev => (prev && headerRow.includes(prev)) ? prev : (headerRow.length > 1 ? headerRow[1] : headerRow[0]));
+            
+            setColPrecioBase(prev => (prev && headerRow.includes(prev)) ? prev : headerRow[0]);
+            setColCantidadBase(prev => (prev && headerRow.includes(prev)) ? prev : (headerRow.length > 1 ? headerRow[1] : headerRow[0]));
+            setColPrecioActual(prev => (prev && headerRow.includes(prev)) ? prev : (headerRow.length > 2 ? headerRow[2] : headerRow[0]));
+            setColCantidadActual(prev => (prev && headerRow.includes(prev)) ? prev : (headerRow.length > 3 ? headerRow[3] : headerRow[0]));
+          }
         } else {
           setExcelData([]);
           setColumns([]);
@@ -79,7 +82,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
       }
     };
     caragarDatos();
-  }, [filename, sheet, usuario, datosPrecargados]);
+  }, [filename, sheet, usuario?.nombre, datosPrecargados]);
 
 
 
