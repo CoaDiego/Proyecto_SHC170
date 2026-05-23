@@ -11,7 +11,7 @@ export default function ReportePDF({
   usuario, calculo, selectedFile, selectedSheet, selectedColumn, 
   resultado, esBivariada, esUnidimensional, esIntervalo,
   formatearCelda, filtroFractil, setFiltroFractil, ordenGraficos,
-  parametros 
+  parametros // Agrupamos los parámetros técnicos aquí
 }) {
   const {
     tipoIntervalo, metodoK, kPersonalizado, percentilK,
@@ -21,44 +21,6 @@ export default function ReportePDF({
 
   return (
     <div style={{ position: "fixed", left: "200vw", top: "200vh", opacity: 0, pointerEvents: "none" }}>
-      
-      {/* 🚀 EL BLINDAJE CONTRA EL MODO OSCURO: Estilos incrustados solo para este PDF */}
-      <style>{`
-        #reporte-formal-pdf {
-          --bg-card: #ffffff !important;
-          --text-main: #000000 !important;
-          --border-color: #cccccc !important;
-        }
-        #reporte-formal-pdf table, 
-        #reporte-formal-pdf td {
-          background-color: #ffffff !important;
-          color: #000000 !important;
-          border-color: #cccccc !important;
-        }
-        #reporte-formal-pdf th {
-          background-color: #f3f4f6 !important;
-          color: #000000 !important;
-          border-color: #cccccc !important;
-          font-weight: bold !important;
-        }
-        #reporte-formal-pdf .katex, 
-        #reporte-formal-pdf .katex-display {
-          color: #000000 !important;
-        }
-        /* Para limpiar los gráficos SVG de Recharts */
-        #reporte-formal-pdf svg {
-          background-color: #ffffff !important;
-        }
-        #reporte-formal-pdf svg text {
-          fill: #333333 !important;
-        }
-        #reporte-formal-pdf svg line, 
-        #reporte-formal-pdf svg path.recharts-cartesian-grid-horizontal,
-        #reporte-formal-pdf svg path.recharts-cartesian-grid-vertical {
-          stroke: #cccccc !important;
-        }
-      `}</style>
-
       <div
         id="reporte-formal-pdf"
         style={{ width: "8.5in", minHeight: "11in", padding: "0.8in", backgroundColor: "white", color: "black", fontFamily: "Arial, sans-serif" }}
