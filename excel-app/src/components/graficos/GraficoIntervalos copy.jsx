@@ -14,21 +14,17 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
   // 1. PROCESAMIENTO EXCLUSIVO PARA EL EJE X NUMÉRICO
   const limitesSet = new Set();
   const datosProcesados = datos.map(item => {
-    // Busca la columna correcta (nuestra nueva tabla usa "Intervalo")
+    // Busca la columna correcta sin importar cómo se llame
     const intervaloStr = item["Haber básico"] || item["Intervalos"] || item["Intervalo"] || item["Marca de Clase"] || "";
     let partes = [0, 0];
     
-    if (typeof intervaloStr === 'string') {
-      // 🚀 LA MAGIA: Extrae cualquier número ignorando corchetes, comas o guiones
-      const numeros = intervaloStr.match(/-?\d+(\.\d+)?/g);
-      
-      if (numeros && numeros.length >= 2) {
-        partes = [parseFloat(numeros[0]), parseFloat(numeros[1])];
-      } else {
-        // Si solo hay un número, simulamos un ancho
+    // Si es un intervalo real (ej: "10 - 20")
+    if (typeof intervaloStr === 'string' && intervaloStr.includes("-")) {
+        partes = intervaloStr.split("-").map(n => parseFloat(n.trim()));
+    } else {
+        // Si por alguna razón mandan el punto medio, simulamos un intervalo de ancho 10
         const val = parseFloat(intervaloStr);
         partes = [val - 5, val + 5]; 
-      }
     }
     
     // Extraemos límites para los ticks
@@ -37,11 +33,10 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
 
     return {
       Intervalo: typeof intervaloStr === 'string' ? intervaloStr : intervaloStr.toString(),
-      midpoint: (partes[0] + partes[1]) / 2, // Calculamos el centro para centrar las barras/puntos
+      midpoint: (partes[0] + partes[1]) / 2, // Calculamos midpoint para posicionamiento numérico
       f_i: Number(item["f_i"] || item["fi"] || 0),
       F_i: Number(item["F_i"] || item["Fi"] || 0),
-      // Nos aseguramos de capturar la clave F_i_inv que definimos en la tabla
-      "F_i_inv": Number(item["F_i_inv"] || item["F'i"] || 0) 
+      "F'i": Number(item["F'i"] || item["F_i_inv"] || 0)
     };
   });
 
@@ -95,8 +90,7 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
         return (
           <AreaChart data={datosProcesados} {...commonProps}>
             {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
-            {/* Usamos F_i_inv que es la variable corregida */}
-            <Area type="linear" dataKey="F_i_inv" stroke="#d32f2f" fill="rgba(211, 47, 47, 0.3)" strokeWidth={3} dot={{ r: 3 }} name="Frecuencia Acumulada Mayor que" />
+            <Area type="linear" dataKey="F'i" stroke="#d32f2f" fill="rgba(211, 47, 47, 0.3)" strokeWidth={3} dot={{ r: 3 }} name="Frecuencia Acumulada Mayor que" />
           </AreaChart>
         );
       case 'mixto':

@@ -63,9 +63,9 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, 
   // 2. GRÁFICO DE OJIVA (Frecuencias Acumuladas)
   // ------------------------------------------
   if (tipo === "ojiva") {
-    // Agregamos un punto de inicio en 0 para que la ojiva nazca desde abajo (eje X)
+    // Usamos P_i (que ya es 0-1) y agregamos el punto inicial
     const ojivaData = [
-      { hasta: graficos[0].desde, P_i: 0 }, // Punto de anclaje inicial
+      { hasta: graficos[0].desde, P_i: 0 }, 
       ...graficos
     ];
 
@@ -77,23 +77,22 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, 
             dataKey="hasta"
             stroke="var(--text-variable)"
             tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
-            label={{ value: 'Límite Superior del Intervalo', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontWeight: 'bold', fill: 'var(--text-variable)' } }}
+            label={{ value: 'Límite Superior', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
           />
           <YAxis
-            domain={[0, 100]}
+            domain={[0, 1]} // 👈 DOMINIO CORREGIDO: De 0 a 1
             stroke="var(--text-variable)"
             tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
-            label={{ value: 'Frecuencia Acumulada (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontWeight: 'bold', fill: 'var(--text-variable)' } }}
+            label={{ value: 'Frecuencia Acumulada', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
           />
-          <Tooltip formatter={(value) => [`${value.toFixed(2)}%`, 'Acumulado']} />
+          {/* 👈 TOOLTIP: Mostramos formato decimal limpio */}
+          <Tooltip formatter={(value) => [value.toFixed(4), 'Proporción']} />
           
-          {/* La línea de la Ojiva */}
-          <Line type="linear" dataKey="P_i" stroke="#e67e22" strokeWidth={isMaximized ? 5 : 3} dot={{ r: isMaximized ? 8 : 5 }} activeDot={{ r: isMaximized ? 12 : 8 }} name="Ojiva Porcentual" />
+          <Line type="linear" dataKey="P_i" stroke="#e67e22" strokeWidth={isMaximized ? 5 : 3} dot={{ r: isMaximized ? 8 : 5 }} activeDot={{ r: isMaximized ? 12 : 8 }} name="Ojiva" />
         </LineChart>
       </ResponsiveContainer>
     );
   }
-
   return null;
 }
 

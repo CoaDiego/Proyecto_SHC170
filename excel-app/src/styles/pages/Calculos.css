@@ -425,3 +425,95 @@ body.dark-mode .logo-espera {
     color: var(--accent-color);
     font-weight: bold;
 }
+
+/* =========================================
+   TOOLTIPS ESTADÍSTICOS (StatLabel)
+========================================= */
+.stat-label-container {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dashed #666;
+  padding-bottom: 2px;
+  display: inline-block;
+}
+
+/* El globo oculto por defecto */
+.stat-tooltip {
+  position: absolute;
+  top: 150%;
+  background-color: #2c3e50;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  width: max-content;
+  max-width: 220px;
+  text-align: center;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  font-weight: normal;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  
+  /* Animación suave */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* Mostrar al pasar el mouse */
+.stat-label-container:hover .stat-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip-math {
+  color: #f1c40f;
+  font-size: 1.1rem;
+}
+
+/* --- POSICIÓN: CENTRO (Por defecto) --- */
+.tooltip-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tooltip-center::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #2c3e50 transparent;
+}
+
+/* --- POSICIÓN: IZQUIERDA (Para la primera columna) --- */
+.tooltip-left {
+  left: 0;
+}
+.tooltip-left::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 15px; /* Triángulo anclado a la izquierda */
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #2c3e50 transparent;
+}
+
+/* --- POSICIÓN: DERECHA (Para las últimas columnas) --- */
+.tooltip-right {
+  right: 0;
+}
+.tooltip-right::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  right: 15px; /* Triángulo anclado a la derecha */
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent #2c3e50 transparent;
+}

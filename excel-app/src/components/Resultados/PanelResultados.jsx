@@ -9,6 +9,24 @@ import TablasUnidimensionales from "./TablasUnidimensionales";
 import PanelGraficos from "./PanelGraficos";
 import { generarPDFReporte } from "../../utils/exportUtils";
 import { IconoPDF, IconoGuardar } from "../ui/iconos";
+import { glosarioEstadistico } from "../../utils/diccionario";
+
+// Este componente envuelve tus símbolos en un tooltip automático
+const StatLabel = ({ simbolo }) => {
+  const nombre = glosarioEstadistico[simbolo] || simbolo;
+  return (
+    <span 
+      title={nombre} 
+      style={{ 
+        cursor: "help", 
+        borderBottom: "1px dashed #666", 
+        fontWeight: "bold" 
+      }}
+    >
+      {simbolo}
+    </span>
+  );
+};
 
 export default function PanelResultados({
   modoCreacion, setModoCreacion, cargarArchivos,
