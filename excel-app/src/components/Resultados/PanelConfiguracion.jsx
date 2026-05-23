@@ -267,10 +267,51 @@ export default function PanelConfiguracion({
                         {metodoK === "personalizada" && <input type="number" value={kPersonalizado} onChange={(e) => setKPersonalizado(e.target.value)} placeholder="Valor k" className="container_cal_input" />}
                       </>
                     )}
-                    {(calculo === "medidas_posicion" || calculo === "tendencia_y_posicion") && (
-                      <div className="container_cal_percentil">
-                        <label>Percentil (1 - 99):</label>
-                        <input type="number" min="1" max="99" value={percentilK} onChange={(e) => setPercentilK(e.target.value)} />
+                   {(calculo === "medidas_posicion" || calculo === "tendencia_y_posicion") && (
+                      <div className="container_cal_percentil" style={{ marginTop: "2px", display: "flex", alignItems: "center", gap: "10px" }}>
+                        <label style={{ fontWeight: "bold", margin: 0 }}>
+                          Percentil (1 - 99):
+                        </label>
+                        
+                        {/* 🚀 Controles personalizados e indestructibles */}
+                        <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--border-color)", borderRadius: "2px", overflow: "hidden", backgroundColor: "var(--bg-card)" }}>
+                          <button 
+                            type="button"
+                            onClick={() => setPercentilK(p => {
+                              const actual = p === "" ? 50 : p;
+                              return actual > 1 ? actual - 1 : 1;
+                            })}
+                            style={{ padding: "6px 12px", border: "none", background: "rgba(0,0,0,0.05)", color: "var(--text-main)", cursor: "pointer", fontWeight: "bold", borderRight: "1px solid var(--border-color)", fontSize: "1.1rem" }}
+                          >
+                            −
+                          </button>
+                          
+                          <input 
+                            type="text" // Usamos text para burlar las flechas ocultas del navegador
+                            value={percentilK === "" ? "" : percentilK} 
+                            onChange={(e) => {
+                              const valor = e.target.value;
+                              if (valor === "") { setPercentilK(""); return; }
+                              const num = parseInt(valor, 10);
+                              if (!isNaN(num) && num >= 1 && num <= 99) { setPercentilK(num); }
+                            }} 
+                            style={{
+                              width: "45px", padding: "6px 0", border: "none", textAlign: "center",
+                              backgroundColor: "transparent", color: "var(--text-main)", fontWeight: "bold", outline: "none"
+                            }}
+                          />
+                          
+                          <button 
+                            type="button"
+                            onClick={() => setPercentilK(p => {
+                              const actual = p === "" ? 50 : p;
+                              return actual < 99 ? actual + 1 : 99;
+                            })}
+                            style={{ padding: "6px 12px", border: "none", background: "rgba(0,0,0,0.05)", color: "var(--text-main)", cursor: "pointer", fontWeight: "bold", borderLeft: "1px solid var(--border-color)", fontSize: "1.1rem" }}
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

@@ -69,30 +69,31 @@ export default function TablasUnidimensionales({
         <SelectorVista />
 
         <h4>1. Análisis de Tendencia Central</h4>
-        {/* 🚀 Colchón de 70px para evitar que el tooltip active el scroll */}
-       <div className="container_tablas_academica" style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
+        <div className="container_tablas_academica" style={{ overflowX: "auto" }}>
           <table className="tabla-academica">
             <thead>
               <tr>
                 <th>Medida</th>
+                {/* 🚀 Renderizado Condicional de Columnas */}
                 {(vistaDatos === "individuales" || vistaDatos === "ambos") && <th>D. Individuales</th>}
                 {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <th>D. Agrupados</th>}
                 {vistaDatos === "ambos" && <th>Error (Proporción)</th>}
               </tr>
             </thead>
-            <tbody>
+           <tbody>
               {resultado.tendencia.map((row, i) => {
+                // Extraemos el nombre sin el símbolo (Ej: "Media Aritmética")
                 const nombreLimpio = row["Medida"].split(" (")[0];
                 return (
                   <tr key={i}>
                     <td style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "bold" }}>
                       {nombreLimpio}
-                      {/* 🚀 Lógica corregida con paréntesis para que no se dupliquen */}
-                      {row["Medida"].includes("(x̄)") && <StatLabel formulaKey="x̄" formulaLatex="\bar{x}" align="left" />}
-                      {row["Medida"].includes("(Me)") && <StatLabel formulaKey="Me" align="left" />}
-                      {row["Medida"].includes("(Mo)") && <StatLabel formulaKey="Mo" align="left" />}
-                      {row["Medida"].includes("(G)") && <StatLabel formulaKey="G" align="left" />}
-                      {row["Medida"].includes("(H)") && <StatLabel formulaKey="H" align="left" />}
+                      {/* Detectamos de qué medida se trata para ponerle su símbolo y tooltip */}
+                      {row["Medida"].includes("x̄") && <StatLabel formulaKey="x̄" formulaLatex="\bar{x}" align="left" />}
+                      {row["Medida"].includes("Me") && <StatLabel formulaKey="Me" align="left" />}
+                      {row["Medida"].includes("Mo") && <StatLabel formulaKey="Mo" align="left" />}
+                      {row["Medida"].includes("G") && <StatLabel formulaKey="G" align="left" />}
+                      {row["Medida"].includes("H") && <StatLabel formulaKey="H" align="left" />}
                     </td>
                     {(vistaDatos === "individuales" || vistaDatos === "ambos") && <td>{formatearCelda(row["D. Individuales"])}</td>}
                     {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <td>{formatearCelda(row["D. Agrupados"])}</td>}
@@ -172,8 +173,7 @@ export default function TablasUnidimensionales({
                 </button>
               ))}
             </div>
-            {/* 🚀 Colchón de 70px aplicado a Medidas de Posición */}
-            <div style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
+            <div style={{ overflowX: "auto" }}>
               <table className="tabla-academica">
                 <thead>
                   <tr>
@@ -186,6 +186,7 @@ export default function TablasUnidimensionales({
                 </thead>
                 <tbody>
                   {resultado.posicion.filter(r => (r.Medida || r.Tipo) === filtroFractil).map((row, i) => {
+                    // Generamos la llave del diccionario (Q_k, D_k, P_k) y el formato visual (Q_1, D_5, P_50)
                     const claveDiccionario = row.Tipo === "Cuartil" ? "Q_k" : row.Tipo === "Decil" ? "D_k" : "P_k";
                     const letra = row.Símbolo[0];
                     const numero = row.Símbolo.substring(1);
@@ -194,6 +195,7 @@ export default function TablasUnidimensionales({
                       <tr key={i}>
                         <td>{row.Medida || row.Tipo}</td>
                         <td style={{ fontWeight: "bold" }}>
+                          {/* 🚀 Renderizamos el símbolo dinámicamente con KaTeX */}
                           <StatLabel formulaKey={claveDiccionario} formulaLatex={`${letra}_{${numero}}`} align="left" />
                         </td>
                         {(vistaDatos !== "agrupados") && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Individuales"])}</td>}
@@ -225,8 +227,7 @@ export default function TablasUnidimensionales({
         <SelectorVista />
 
         <h4>3. Medidas de Dispersión</h4>
-        {/* 🚀 Colchón de 70px aplicado a Medidas de Dispersión */}
-        <div style={{ overflowX: "auto", overflowY: "hidden", marginBottom: "30px", paddingBottom: "70px" }}>
+        <div style={{ overflowX: "auto", marginBottom: "30px" }}>
           <table className="tabla-academica">
             <thead>
               <tr>
@@ -256,8 +257,7 @@ export default function TablasUnidimensionales({
         <h4 style={{ color: "var(--primary-color)", borderBottom: "2px solid var(--border-color)", paddingBottom: "5px" }}>
           4. Medidas de Forma
         </h4>
-        {/* 🚀 Colchón de 70px aplicado a Medidas de Forma */}
-       <div style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
+        <div style={{ overflowX: "auto" }}>
           <table className="tabla-academica">
             <thead>
               <tr>
@@ -305,7 +305,7 @@ export default function TablasUnidimensionales({
           </button>
         </div>
 
-        <div style={{ overflowX: "auto", paddingBottom: "70px" }}>
+        <div style={{ overflowX: "auto" }}>
           <table className="tabla-academica">
             <thead>
               <tr>

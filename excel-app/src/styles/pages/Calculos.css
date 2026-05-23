@@ -517,3 +517,18 @@ body.dark-mode .logo-espera {
   border-style: solid;
   border-color: transparent transparent #2c3e50 transparent;
 }
+
+/* =========================================
+   FORZAR FLECHAS DEL INPUT DE PERCENTIL
+========================================= */
+.input-percentil::-webkit-outer-spin-button,
+.input-percentil::-webkit-inner-spin-button {
+  -webkit-appearance: always !important;
+  opacity: 1 !important;
+  display: block !important;
+  cursor: pointer;
+}
+
+.input-percentil {
+  -moz-appearance: number-input !important; /* Para Firefox */
+}

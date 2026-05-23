@@ -276,5 +276,9 @@ export default function Calculos() {
         parametros={{ tipoIntervalo, metodoK, kPersonalizado, percentilK, metodoSeries, periodosK, pesos, alfa, subTemaIndices, colPrecioBase, colCantidadBase, nuevoIndiceBase }}
       />
     </div>
+    
   );
+
+  
 }
+
