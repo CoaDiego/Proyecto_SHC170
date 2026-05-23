@@ -113,7 +113,7 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
 
   return (
     <div style={{ width: "100%", height: "100%", minHeight: "250px" }}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
         {renderChart()}
       </ResponsiveContainer>
     </div>

@@ -33,7 +33,7 @@ export default function GraficoIndices({ resultado, isMaximized = false }) {
           COMPARATIVA DE ÍNDICES DE PRECIOS/CANTIDADES
         </h4>
         <div style={{ flexGrow: 1, minHeight: 300 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
             <BarChart data={dataGrafico} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               <XAxis dataKey="nombre" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }} />
@@ -66,7 +66,7 @@ export default function GraficoIndices({ resultado, isMaximized = false }) {
           EVOLUCIÓN HISTÓRICA: ÍNDICE ORIGINAL VS NUEVA BASE
         </h4>
         <div style={{ flexGrow: 1, minHeight: 300 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
             <LineChart data={resultado.datos} margin={{ top: 20, right: 30, left: 45, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               
@@ -105,7 +105,7 @@ export default function GraficoIndices({ resultado, isMaximized = false }) {
           ILUSIÓN MONETARIA: VALOR NOMINAL VS VALOR REAL
         </h4>
         <div style={{ flexGrow: 1, minHeight: 300 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
             <ComposedChart data={resultado.datos} margin={{ top: 20, right: 30, left: 45, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               

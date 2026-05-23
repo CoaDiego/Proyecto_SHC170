@@ -344,13 +344,13 @@ export default function PanelConfiguracion({
               {modoCreacion ? "Volver a Resultados" : "Crear Tabla de Datos"}
             </button>
 
-            <button
+            {/* <button
               onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
               style={{ width: "100%", padding: "8px", background: "#6b7280", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginTop: "10px" }}
             >
               {mostrarCalculadora ? "Ocultar Calculadora Manual" : "Mostrar Calculadora Manual"}
             </button>
-            {mostrarCalculadora && <Calculator />}
+            {mostrarCalculadora && <Calculator />} */}
           </>
         )}
       </div>

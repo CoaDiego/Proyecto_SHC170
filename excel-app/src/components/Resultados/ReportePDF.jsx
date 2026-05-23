@@ -57,6 +57,28 @@ export default function ReportePDF({
         #reporte-formal-pdf svg path.recharts-cartesian-grid-vertical {
           stroke: #cccccc !important;
         }
+        /* Forzar dimensiones físicas en los gráficos off-screen para Recharts */
+        #reporte-formal-pdf .widget-grafico {
+          width: 650px !important;
+          display: block !important;
+          margin-bottom: 25px !important;
+        }
+        #reporte-formal-pdf .widget-body {
+          height: 350px !important;
+          min-height: 350px !important;
+          display: block !important;
+          position: relative !important;
+        }
+        #reporte-formal-pdf .contenedor-grafico-interno {
+          position: absolute !important;
+          top: 15px !important;
+          left: 15px !important;
+          right: 15px !important;
+          bottom: 15px !important;
+          width: 620px !important;
+          height: 320px !important;
+          display: block !important;
+        }
       `}</style>
 
       <div

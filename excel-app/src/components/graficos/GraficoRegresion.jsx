@@ -93,7 +93,7 @@ export default function GraficoRegresion({ resultado, isMaximized = false }) {
       {/* CONTENEDOR CENTRALIZADO Y LIMITADO EN ANCHO */}
       <div style={{ flex: 1, width: '100%', minHeight: '350px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ width: '100%', maxWidth: isMaximized ? '1200px' : '1000px', height: isMaximized ? '90%' : '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
             <ComposedChart margin={{ top: 20, right: 30, bottom: 40, left: 45 }}>
               {/* Cuadrícula semi-transparente para modo oscuro/claro */}
               <CartesianGrid stroke="var(--border-color)" strokeDasharray="3 3" opacity={0.5} vertical={true} horizontal={true} />

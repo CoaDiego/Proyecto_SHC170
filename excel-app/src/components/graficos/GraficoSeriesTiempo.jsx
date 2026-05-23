@@ -23,7 +23,7 @@ export default function GraficoSeriesTiempo({ resultado, tipo, isMaximized = fal
           MODELO: {tituloModelo}
         </h4>
         <div style={{ flexGrow: 1, minHeight: 300 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
             <ComposedChart data={datos} margin={{ top: 10, right: 20, left: 10, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               
@@ -60,7 +60,7 @@ export default function GraficoSeriesTiempo({ resultado, tipo, isMaximized = fal
           ANÁLISIS DE ERRORES (RESIDUOS)
         </h4>
         <div style={{ flexGrow: 1, minHeight: 300 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
             <ComposedChart data={datos} margin={{ top: 20, right: 30, left: 25, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               

@@ -31,7 +31,7 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, 
     }
 
     return (
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
         <ComposedChart data={graficos} margin={{ top: 35, right: 20, left: 10, bottom: 25 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
           <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }} />
@@ -70,7 +70,7 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, 
     ];
 
     return (
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
         <LineChart data={ojivaData} margin={{ top: 10, right: 20, left: 10, bottom: 25 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis

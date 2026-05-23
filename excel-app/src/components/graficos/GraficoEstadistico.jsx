@@ -159,7 +159,7 @@ export default function GraficoEstadistico({ datos = [], tipo = "barras", isMaxi
   };
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
       {renderChart()}
     </ResponsiveContainer>
   );

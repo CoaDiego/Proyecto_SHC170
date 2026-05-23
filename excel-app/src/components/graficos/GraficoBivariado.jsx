@@ -16,7 +16,7 @@ export default function GraficoBivariado({ datos, tipo }) {
         <p style={{ textAlign: 'center', fontFamily: 'Times New Roman', color: 'var(--text-muted)', marginBottom: '5px' }}>
           Correlación de Pearson (r) = {datos.correlacion?.toFixed(4)}
         </p>
-        <ResponsiveContainer width="100%" height="90%">
+        <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
           <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color, #e0e0e0)" />
             <XAxis
@@ -61,7 +61,7 @@ export default function GraficoBivariado({ datos, tipo }) {
   const colores = ["#374151", "#60a5fa", "#9ca3af", "#3b82f6", "#d1d5db"];
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
       <BarChart data={dataGrafico} margin={{ top: 30, right: 30, left: 10, bottom: 20 }} barSize={isStacked ? 50 : 30}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color, #e0e0e0)" />
         <XAxis

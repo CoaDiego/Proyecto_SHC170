@@ -68,7 +68,7 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
     const ticksX = [minAdyacente, q1, mediana, q3, maxAdyacente];
 
     return (
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
         <ComposedChart margin={{ top: 50, right: 30, bottom: 20, left: 30 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} opacity={0.2} />
           {/* Ejes numéricos reales */}
@@ -118,7 +118,7 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
     }
 
     return (
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
         <ComposedChart data={graficos.histograma} margin={{ top: 15, right: 20, left: 10, bottom: 25 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.4} />
           <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: 'Intervalos', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontWeight: 'bold' }} />
@@ -136,7 +136,7 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
   // ------------------------------------------
   if (tipo === "desviaciones") {
     return (
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
         <BarChart data={graficos.desviaciones} margin={{ top: 15, right: 20, left: 15, bottom: 25 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="id" hide stroke="var(--text-variable)" />
