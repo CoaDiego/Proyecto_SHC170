@@ -8,7 +8,7 @@
  * @param {Array} cantidadesActuales - [Q_t] Cantidades en el periodo actual
  * @returns {Object} Los 4 índices y sus sumatorias
  */
-export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosActuales, cantidadesActuales, tipoIndiceSimple = null) => {
+export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosActuales, cantidadesActuales, tipoIndiceSimple = null, itemLabels = null) => {
   const n = preciosBase.length;
   if (n === 0 || n !== cantidadesBase.length || n !== preciosActuales.length || n !== cantidadesActuales.length) {
     return null; // Error: Las columnas no tienen el mismo tamaño
@@ -50,8 +50,10 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
     }
     sumRelativos += relativo;
 
+    const itemLabel = (itemLabels && itemLabels[i] !== undefined && itemLabels[i] !== null) ? String(itemLabels[i]) : `Fila ${i + 1}`;
+
     detallesCalculo.push({
-      item: `Fila ${i + 1}`, P0, Q0, Pt, Qt, Pt_Q0, P0_Q0, Pt_Qt, P0_Qt, relativo
+      item: itemLabel, P0, Q0, Pt, Qt, Pt_Q0, P0_Q0, Pt_Qt, P0_Qt, relativo
     });
   }
 

@@ -40,6 +40,7 @@ export default function Calculos() {
     subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
     conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple,
+    conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem,
   } = useCalculadoraExcel(selectedFile, selectedSheet, datosHistorial);
 
 
@@ -131,6 +132,10 @@ export default function Calculos() {
         if (conf.colPrecioActual) setColPrecioActual(conf.colPrecioActual);
         if (conf.colCantidadActual) setColCantidadActual(conf.colCantidadActual);
         if (conf.nuevoIndiceBase) setNuevoIndiceBase(conf.nuevoIndiceBase);
+        if (conf.conPonderacion !== undefined) setConPonderacion(conf.conPonderacion);
+        if (conf.tipoIndiceSimple) setTipoIndiceSimple(conf.tipoIndiceSimple);
+        if (conf.conColumnaItem !== undefined) setConColumnaItem(conf.conColumnaItem);
+        if (conf.columnaItem) setColumnaItem(conf.columnaItem);
       }
       calculoPendiente.current = true;
       window.history.replaceState({}, document.title);
@@ -139,7 +144,8 @@ export default function Calculos() {
     location.state, setCalculo, setSelectedColumn, setSelectedColumnY, 
     setTipoIntervalo, setMetodoK, setKPersonalizado, setPercentilK, 
     setMetodoSeries, setPeriodosK, setPesos, setAlfa, 
-    setSubTemaIndices, setColPrecioBase, setColCantidadBase, setColPrecioActual, setColCantidadActual, setNuevoIndiceBase
+    setSubTemaIndices, setColPrecioBase, setColCantidadBase, setColPrecioActual, setColCantidadActual, setNuevoIndiceBase,
+    setConPonderacion, setTipoIndiceSimple, setConColumnaItem, setColumnaItem
   ]);
 
   useEffect(() => {
@@ -186,6 +192,7 @@ export default function Calculos() {
           metodoSeries, periodosK, pesos, alfa, subTemaIndices,
           colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual, nuevoIndiceBase,
           columnasSeleccionadas: { x: selectedColumn, y: selectedColumnY },
+          conPonderacion, tipoIndiceSimple, conColumnaItem, columnaItem
         },
         resultadoFinal: resultado,
       };
@@ -252,6 +259,8 @@ export default function Calculos() {
         nuevoIndiceBase={nuevoIndiceBase} setNuevoIndiceBase={setNuevoIndiceBase}
         conPonderacion={conPonderacion} setConPonderacion={setConPonderacion}
         tipoIndiceSimple={tipoIndiceSimple} setTipoIndiceSimple={setTipoIndiceSimple}
+        conColumnaItem={conColumnaItem} setConColumnaItem={setConColumnaItem}
+        columnaItem={columnaItem} setColumnaItem={setColumnaItem}
         esBivariada={esBivariada} esUnidimensional={esUnidimensional}
         metodoSeries={metodoSeries} setMetodoSeries={setMetodoSeries}
         periodosK={periodosK} setPeriodosK={setPeriodosK} pesos={pesos} setPesos={setPesos} alfa={alfa} setAlfa={setAlfa}

@@ -37,6 +37,8 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
   const [nuevoIndiceBase, setNuevoIndiceBase] = useState(100);
   const [conPonderacion, setConPonderacion] = useState(false);
   const [tipoIndiceSimple, setTipoIndiceSimple] = useState("precios");
+  const [conColumnaItem, setConColumnaItem] = useState(false);
+  const [columnaItem, setColumnaItem] = useState("");
 
   const [errorNumerico, setErrorNumerico] = useState(false);
   const [resultado, setResultado] = useState(null);
@@ -70,6 +72,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
             setColCantidadBase(prev => (prev && headerRow.includes(prev)) ? prev : (headerRow.length > 1 ? headerRow[1] : headerRow[0]));
             setColPrecioActual(prev => (prev && headerRow.includes(prev)) ? prev : (headerRow.length > 2 ? headerRow[2] : headerRow[0]));
             setColCantidadActual(prev => (prev && headerRow.includes(prev)) ? prev : (headerRow.length > 3 ? headerRow[3] : headerRow[0]));
+            setColumnaItem(prev => (prev && headerRow.includes(prev)) ? prev : headerRow[0]);
           }
         } else {
           setExcelData([]);
@@ -213,10 +216,16 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
             setErrorNumerico(true); setResultado(null); return;
           }
         }
-        resIndices = IndicesMath.calcularIndicesCompuestos(p0, q0, pt, qt, conPonderacion ? null : tipoIndiceSimple);
+        let itemLabels = null;
+        if (conColumnaItem && columnaItem) {
+          itemLabels = obtenerColumna(columnaItem).map(String);
+        }
+        resIndices = IndicesMath.calcularIndicesCompuestos(p0, q0, pt, qt, conPonderacion ? null : tipoIndiceSimple, itemLabels);
         if (resIndices) {
           resIndices.conPonderacion = conPonderacion;
           resIndices.tipoIndiceSimple = tipoIndiceSimple;
+          resIndices.conColumnaItem = conColumnaItem;
+          resIndices.columnaItem = columnaItem;
         }
       } else if (subTemaIndices === "empalme") {
         if (!selectedColumn || !selectedColumnY) return;
@@ -224,6 +233,16 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
         const arrI = obtenerColumna(selectedColumnY).map(Number);
         if (arrI.some(isNaN) || arrI.length === 0) { setErrorNumerico(true); setResultado(null); return; }
         resIndices = IndicesMath.calcularOperacionesSerieIndices(arrT, arrI, Number(nuevoIndiceBase));
+        if (resIndices) {
+          resIndices.conColumnaItem = conColumnaItem;
+          resIndices.columnaItem = columnaItem;
+          if (conColumnaItem && columnaItem) {
+            const itemLabels = obtenerColumna(columnaItem).map(String);
+            resIndices.datos.forEach((d, idx) => {
+              d.item = itemLabels[idx] || `Fila ${idx + 1}`;
+            });
+          }
+        }
       } else if (subTemaIndices === "deflacion") {
         if (!selectedColumn || !selectedColumnY || !colPrecioBase) return;
         const arrT = obtenerColumna(selectedColumn).map(String);
@@ -231,6 +250,16 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
         const arrIPC = obtenerColumna(colPrecioBase).map(Number);
         if (arrNominal.some(isNaN) || arrIPC.some(isNaN) || arrNominal.length === 0) { setErrorNumerico(true); setResultado(null); return; }
         resIndices = IndicesMath.calcularDeflacionSalarial(arrT, arrNominal, arrIPC);
+        if (resIndices) {
+          resIndices.conColumnaItem = conColumnaItem;
+          resIndices.columnaItem = columnaItem;
+          if (conColumnaItem && columnaItem) {
+            const itemLabels = obtenerColumna(columnaItem).map(String);
+            resIndices.datos.forEach((d, idx) => {
+              d.item = itemLabels[idx] || `Fila ${idx + 1}`;
+            });
+          }
+        }
       }
       
       if (!resIndices) { setErrorNumerico(true); setResultado(null); } 
@@ -291,7 +320,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
     calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado, percentilK,
     metodoSeries, periodosK, pesos, alfa,
     subTemaIndices, colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual, nuevoIndiceBase,
-    excelData, conPonderacion, tipoIndiceSimple
+    excelData, conPonderacion, tipoIndiceSimple, conColumnaItem, columnaItem
   ]);
 
   return {
@@ -301,6 +330,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
     metodoSeries, setMetodoSeries, periodosK, setPeriodosK, pesos, setPesos, alfa, setAlfa,
     subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
-    conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple
+    conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple,
+    conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem
   };
 }

@@ -70,18 +70,47 @@ export default function PanelGraficos({
         "deflacion_financiera",
       ].includes(resultado.tipo)
     ) {
-      nuevosWidgets.push({
-        id: "ind-main",
-        titulo: "Indicadores Económicos e Índices",
-        anchoCompleto: true,
-        contenido: (
-          <GraficoIndices
-            resultado={resultado}
-            selectedColumn={selectedColumn}
-            selectedColumnY={selectedColumnY}
-          />
-        ),
-      });
+      if (resultado.tipo === "deflacion_financiera") {
+        nuevosWidgets.push({
+          id: "ind-main",
+          titulo: "Ilusión Monetaria: Valor Nominal vs Valor Real",
+          anchoCompleto: true,
+          contenido: (
+            <GraficoIndices
+              resultado={resultado}
+              tipoGrafico="ilusion_monetaria"
+              selectedColumn={selectedColumn}
+              selectedColumnY={selectedColumnY}
+            />
+          ),
+        });
+        nuevosWidgets.push({
+          id: "ind-deflacion-lineas",
+          titulo: "Evolución de la Inflación y Poder Adquisitivo",
+          anchoCompleto: true,
+          contenido: (
+            <GraficoIndices
+              resultado={resultado}
+              tipoGrafico="inflacion_poder"
+              selectedColumn={selectedColumn}
+              selectedColumnY={selectedColumnY}
+            />
+          ),
+        });
+      } else {
+        nuevosWidgets.push({
+          id: "ind-main",
+          titulo: "Indicadores Económicos e Índices",
+          anchoCompleto: true,
+          contenido: (
+            <GraficoIndices
+              resultado={resultado}
+              selectedColumn={selectedColumn}
+              selectedColumnY={selectedColumnY}
+            />
+          ),
+        });
+      }
     }
 
     // TEMA: VARIABILIDAD Y FORMA
@@ -306,7 +335,7 @@ export default function PanelGraficos({
       });
       nuevosWidgets.push({
         id: "biv-2",
-        titulo: "Barras Apiladas (100%)",
+        titulo: "Barras Apiladas",
         contenido: (
           <GraficoBivariado
             datos={resultado}
@@ -316,21 +345,19 @@ export default function PanelGraficos({
           />
         ),
       });
-      if (resultado.ambosNumericos) {
-        nuevosWidgets.push({
-          id: "biv-3",
-          titulo: "Diagrama de Dispersión",
-          anchoCompleto: true,
-          contenido: (
-            <GraficoBivariado
-              datos={resultado}
-              tipo="dispersion"
-              selectedColumn={selectedColumn}
-              selectedColumnY={selectedColumnY}
-            />
-          ),
-        });
-      }
+      nuevosWidgets.push({
+        id: "biv-3",
+        titulo: "Barras Marginales",
+        anchoCompleto: true,
+        contenido: (
+          <GraficoBivariado
+            datos={resultado}
+            tipo="marginales"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
+      });
     }
 
     return nuevosWidgets;
