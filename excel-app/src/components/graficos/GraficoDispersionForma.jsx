@@ -35,7 +35,7 @@ const EmptyShape = () => <g></g>;
 // ==========================================
 // COMPONENTE PRINCIPAL EXPORTADO
 // ==========================================
-export default function GraficoDispersionForma({ tipo, resultado, isMaximized = false }) {
+export default function GraficoDispersionForma({ tipo, resultado, isMaximized = false, selectedColumn }) {
   if (!resultado || !resultado.graficos) return null;
   const { estadisticas, graficos } = resultado;
 
@@ -69,10 +69,15 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
 
     return (
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-        <ComposedChart margin={{ top: 50, right: 30, bottom: 20, left: 30 }}>
+        <ComposedChart margin={{ top: 50, right: 30, bottom: 35, left: 30 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} opacity={0.2} />
           {/* Ejes numéricos reales */}
-          <XAxis type="number" dataKey="x" domain={[minDomain, maxDomain]} name="Valores" ticks={ticksX} tick={{ fontSize: fontAxis, fontWeight: 'bold', fill: 'var(--text-variable)' }} tickFormatter={tick => tick.toFixed(2)} stroke="var(--text-variable)" />
+          <XAxis 
+            type="number" dataKey="x" domain={[0, 'auto']} name="Valores" ticks={ticksX} 
+            tick={{ fontSize: fontAxis, fontWeight: 'bold', fill: 'var(--text-variable)' }} 
+            tickFormatter={tick => tick.toFixed(2)} stroke="var(--text-variable)"
+            label={{ value: selectedColumn || "Valores", position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }}
+          />
           <YAxis type="number" dataKey="y" domain={[0, 2]} hide />
           
           <Tooltip content={<BoxplotTooltip estadisticas={estadisticas} />} cursor={{strokeDasharray: '3 3'}} />
@@ -119,9 +124,9 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
 
     return (
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-        <ComposedChart data={graficos.histograma} margin={{ top: 15, right: 20, left: 10, bottom: 25 }}>
+        <ComposedChart data={graficos.histograma} margin={{ top: 15, right: 20, left: 10, bottom: 35 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.4} />
-          <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: 'Intervalos', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontWeight: 'bold' }} />
+          <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: selectedColumn || 'Intervalos', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontWeight: 'bold' }} />
           <YAxis stroke="var(--text-variable)" ticks={ticksEjeY} domain={[0, limiteEjeY]} interval={0} tickFormatter={(valor) => valor.toString().replace('.', ',')} tick={{ fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }} label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft', fill: 'var(--text-variable)', fontWeight: 'bold', style: { textAnchor: 'middle', fontSize: fontMed } }} />
           <Tooltip cursor={{ fill: 'var(--border-color)', opacity: 0.2 }} contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '5px' }} formatter={(value, name) => [value.toFixed(2), name]} />
           <Bar dataKey="frecuencia" fill="#3498db" name="Frecuencia Observada" barSize={isMaximized ? 80 : 50} radius={[4, 4, 0, 0]} />
@@ -137,10 +142,10 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
   if (tipo === "desviaciones") {
     return (
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-        <BarChart data={graficos.desviaciones} margin={{ top: 15, right: 20, left: 15, bottom: 25 }}>
+        <BarChart data={graficos.desviaciones} margin={{ top: 15, right: 20, left: 35, bottom: 25 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="id" hide stroke="var(--text-variable)" />
-          <YAxis stroke="var(--text-variable)" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }} label={{ value: 'Distancia a la Media', angle: -90, position: 'insideLeft', fill: 'var(--text-variable)', fontWeight: 'bold', fontSize: fontMed, style: { textAnchor: 'middle' } }} />
+          <YAxis stroke="var(--text-variable)" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }} label={{ value: `Desviaciones (${selectedColumn || 'Valores'})`, angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-variable)', fontWeight: 'bold', fontSize: fontMed, style: { textAnchor: 'middle' } }} />
           <Tooltip formatter={(value, name, props) => [`${value.toFixed(2)}`, `Valor real: ${props.payload.valor}`]} />
           
           <ReferenceLine y={0} stroke="var(--text-main)" strokeWidth={isMaximized ? 3 : 2} label={{ value: "Media (x̄)", fill: 'var(--text-main)' }} />

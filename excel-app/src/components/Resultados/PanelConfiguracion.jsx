@@ -37,6 +37,8 @@ export default function PanelConfiguracion({
   colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
   colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual,
   nuevoIndiceBase, setNuevoIndiceBase,
+  conPonderacion, setConPonderacion,
+  tipoIndiceSimple, setTipoIndiceSimple,
   selectedColumn, setSelectedColumn,
   selectedColumnY, setSelectedColumnY,
   esBivariada, esUnidimensional,
@@ -46,16 +48,32 @@ export default function PanelConfiguracion({
   ejecutarCalculo, modoCreacion, setModoCreacion,
   mostrarCalculadora, setMostrarCalculadora
 }) {
+  const containerRef = React.useRef(null);
+  const [containerWidth, setContainerWidth] = React.useState(284);
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        // Restamos un pequeño margen para los bordes del grid
+        setContainerWidth(Math.max(100, entry.contentRect.width - 4));
+      }
+    });
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   // 3️⃣ Aquí es el ÚNICO lugar donde se crea rdgColumns
   const rdgColumns = [];
   
-  const addCol = (colKey, name, cssClass) => {
-    if (colKey && !rdgColumns.some((c) => c.key === colKey)) {
+  const addCol = (colKey, suffix, name, cssClass) => {
+    if (colKey) {
+      // Usamos una clave única combinando la columna de Excel con el rol de la variable
+      const uniqueKey = `${colKey}__${suffix}`;
       rdgColumns.push({
-        key: colKey,
+        key: uniqueKey,
         name,
-        renderEditCell: textEditor, // 👈 Ahora sabe cómo editar
+        renderEditCell: textEditor,
         editable: true,
         resizable: true,
         cellClass: cssClass,
@@ -65,22 +83,69 @@ export default function PanelConfiguracion({
 
   // Lógica para armar las columnas según el tema
   if (calculo === "numeros_indices" && subTemaIndices === "compuestos") {
-    addCol(colPrecioBase, `${colPrecioBase} (P₀)`, "celda-editable");
-    addCol(colCantidadBase, `${colCantidadBase} (Q₀)`, "celda-editable-y");
-    addCol(colPrecioActual, `${colPrecioActual} (Pt)`, "celda-editable");
-    addCol(colCantidadActual, `${colCantidadActual} (Qt)`, "celda-editable-y");
+    if (!conPonderacion) {
+      if (tipoIndiceSimple === "precios") {
+        addCol(colPrecioBase, "P0", `${colPrecioBase} (P₀)`, "celda-editable");
+        addCol(colPrecioActual, "Pt", `${colPrecioActual} (Pt)`, "celda-editable");
+      } else {
+        addCol(colCantidadBase, "Q0", `${colCantidadBase} (Q₀)`, "celda-editable-y");
+        addCol(colCantidadActual, "Qt", `${colCantidadActual} (Qt)`, "celda-editable-y");
+      }
+    } else {
+      addCol(colPrecioBase, "P0", `${colPrecioBase} (P₀)`, "celda-editable");
+      addCol(colCantidadBase, "Q0", `${colCantidadBase} (Q₀)`, "celda-editable-y");
+      addCol(colPrecioActual, "Pt", `${colPrecioActual} (Pt)`, "celda-editable");
+      addCol(colCantidadActual, "Qt", `${colCantidadActual} (Qt)`, "celda-editable-y");
+    }
   } else if (calculo === "numeros_indices" && subTemaIndices === "deflacion") {
-    addCol(selectedColumn, `${selectedColumn} (Tiempo)`, "celda-editable");
-    addCol(selectedColumnY, `${selectedColumnY} (Nominal)`, "celda-editable-y");
-    addCol(colPrecioBase, `${colPrecioBase} (IPC)`, "celda-editable");
+    addCol(selectedColumn, "Tiempo", `${selectedColumn} (Tiempo)`, "celda-editable");
+    addCol(selectedColumnY, "Nominal", `${selectedColumnY} (Nominal)`, "celda-editable-y");
+    addCol(colPrecioBase, "IPC", `${colPrecioBase} (IPC)`, "celda-editable");
   } else {
-    addCol(selectedColumn, `${selectedColumn} (Var X)`, "celda-editable");
+    addCol(selectedColumn, "X", `${selectedColumn} (Var X)`, "celda-editable");
     if ((esBivariada || calculo === "regresion_simple" || calculo === "series_tiempo" || calculo === "numeros_indices") && selectedColumnY) {
       if (selectedColumn !== selectedColumnY) {
-        addCol(selectedColumnY, `${selectedColumnY} (Var Y)`, "celda-editable-y");
+        addCol(selectedColumnY, "Y", `${selectedColumnY} (Var Y)`, "celda-editable-y");
       }
     }
   }
+
+  // Ajustar el ancho de las columnas de forma dinámica y responsiva para que quepan en el panel izquierdo (350px de ancho)
+  const colCount = rdgColumns.length;
+  if (colCount > 0) {
+    const widthPerCol = Math.floor(containerWidth / colCount);
+    rdgColumns.forEach(col => {
+      col.width = widthPerCol;
+      col.minWidth = Math.min(30, widthPerCol); // Permitir compresión sin forzar scrollbar
+    });
+  }
+
+  // Mapeamos los datos de las filas para asociar las propiedades únicas
+  const mappedRows = React.useMemo(() => {
+    return excelData.map((row) => {
+      const newRow = { ...row };
+      rdgColumns.forEach((col) => {
+        const realKey = col.key.split("__")[0];
+        newRow[col.key] = row[realKey];
+      });
+      return newRow;
+    });
+  }, [excelData, rdgColumns]);
+
+  // Manejador intermedio para traducir las actualizaciones de celdas al formato original de Excel
+  const handleMappedGridChange = (newRows, changeData) => {
+    const { indexes, column } = changeData;
+    const realKey = column.key.split("__")[0];
+    
+    const originalColumn = { ...column, key: realKey };
+    const originalRows = newRows.map(row => {
+      const origRow = { ...row };
+      origRow[realKey] = row[column.key];
+      return origRow;
+    });
+    
+    handleGridChange(originalRows, { indexes, column: originalColumn });
+  };
 
   // 4️⃣ Función para pintar los selects
   const renderOpcionesColumnas = () => (
@@ -197,12 +262,80 @@ export default function PanelConfiguracion({
                     </select>
 
                     {subTemaIndices === "compuestos" && (
-                      <>
-                        <label>Precio Base (P₀):</label><select value={colPrecioBase} onChange={(e) => setColPrecioBase(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
-                        <label>Cantidad Base (Q₀):</label><select value={colCantidadBase} onChange={(e) => setColCantidadBase(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
-                        <label>Precio Actual (Pt):</label><select value={colPrecioActual} onChange={(e) => setColPrecioActual(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
-                        <label>Cantidad Actual (Qt):</label><select value={colCantidadActual} onChange={(e) => setColCantidadActual(e.target.value)} style={{ width: "100%", marginBottom: "10px" }}>{renderOpcionesColumnas()}</select>
-                      </>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {!conPonderacion ? (
+                          <>
+                            <label style={{ display: "block", marginBottom: "2px", fontWeight: "bold" }}>Tipo de Índice Simple:</label>
+                            <select 
+                              value={tipoIndiceSimple} 
+                              onChange={(e) => setTipoIndiceSimple(e.target.value)} 
+                              style={{ width: "100%", marginBottom: "8px", padding: "6px", borderRadius: "4px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-card)", color: "var(--text-color)" }}
+                            >
+                              <option value="precios">Índice Simple de Precios</option>
+                              <option value="cantidades">Índice Simple de Cantidades</option>
+                            </select>
+
+                            {tipoIndiceSimple === "precios" ? (
+                              <>
+                                <label>Precio Base (P₀):</label>
+                                <select value={colPrecioBase} onChange={(e) => setColPrecioBase(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
+                                <label>Precio Actual (Pt):</label>
+                                <select value={colPrecioActual} onChange={(e) => setColPrecioActual(e.target.value)} style={{ width: "100%", marginBottom: "10px" }}>{renderOpcionesColumnas()}</select>
+                              </>
+                            ) : (
+                              <>
+                                <label>Cantidad Base (Q₀):</label>
+                                <select value={colCantidadBase} onChange={(e) => setColCantidadBase(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
+                                <label>Cantidad Actual (Qt):</label>
+                                <select value={colCantidadActual} onChange={(e) => setColCantidadActual(e.target.value)} style={{ width: "100%", marginBottom: "10px" }}>{renderOpcionesColumnas()}</select>
+                              </>
+                            )}
+
+                            <button 
+                              type="button"
+                              onClick={() => setConPonderacion(true)}
+                              style={{ 
+                                width: "100%", padding: "10px", 
+                                background: "linear-gradient(135deg, #1e3a8a, #3b82f6)", 
+                                color: "white", border: "none", borderRadius: "6px", 
+                                cursor: "pointer", fontWeight: "bold", fontSize: "0.9em",
+                                transition: "all 0.3s ease", boxShadow: "0 4px 6px rgba(59,130,246,0.2)"
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
+                              onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
+                            >
+                              ⚙️ Añadir Ponderación (Cantidades/Precios)
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <label>Precio Base (P₀):</label>
+                            <select value={colPrecioBase} onChange={(e) => setColPrecioBase(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
+                            <label>Cantidad Base (Q₀):</label>
+                            <select value={colCantidadBase} onChange={(e) => setColCantidadBase(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
+                            <label>Precio Actual (Pt):</label>
+                            <select value={colPrecioActual} onChange={(e) => setColPrecioActual(e.target.value)} style={{ width: "100%", marginBottom: "5px" }}>{renderOpcionesColumnas()}</select>
+                            <label>Cantidad Actual (Qt):</label>
+                            <select value={colCantidadActual} onChange={(e) => setColCantidadActual(e.target.value)} style={{ width: "100%", marginBottom: "10px" }}>{renderOpcionesColumnas()}</select>
+
+                            <button 
+                              type="button"
+                              onClick={() => setConPonderacion(false)}
+                              style={{ 
+                                width: "100%", padding: "10px", 
+                                background: "linear-gradient(135deg, #7c2d12, #ea580c)", 
+                                color: "white", border: "none", borderRadius: "6px", 
+                                cursor: "pointer", fontWeight: "bold", fontSize: "0.9em",
+                                transition: "all 0.3s ease", boxShadow: "0 4px 6px rgba(234,88,12,0.2)"
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
+                              onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
+                            >
+                              ✕ Quitar Ponderación (Índice Simple)
+                            </button>
+                          </>
+                        )}
+                      </div>
                     )}
                     {subTemaIndices === "empalme" && (
                       <>
@@ -318,12 +451,12 @@ export default function PanelConfiguracion({
                 )}
 
                 {mostrarTabla && excelData.length > 0 && (
-                  <div className=".container_dataset" style={{ marginTop: "10px", width: "100%", overflowX: "hidden" }}>
+                  <div ref={containerRef} className="container_dataset" style={{ marginTop: "10px", width: "100%" }}>
                     <p className="info_vista">Vista Previa (Doble clic para editar):</p>
                     <DataGrid
                       columns={rdgColumns}
-                      rows={excelData}
-                      onRowsChange={handleGridChange}
+                      rows={mappedRows}
+                      onRowsChange={handleMappedGridChange}
                       className="rdg-light"
                       style={{ blockSize: "100%", border: "1px solid var(--border-color)", height: "400px", textAlign: "center", width: "100%" }}
                     />

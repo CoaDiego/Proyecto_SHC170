@@ -1,6 +1,6 @@
 // src/utils/diccionario.js
 export const glosarioEstadistico = {
-  "x_i": { texto: "Marca de clase (Centro del intervalo)", math: "" },
+  "x_i": { texto: "Marca de clase X (Centro del intervalo X)", math: "x_i = \\frac{L_{inf} + L_{sup}}{2}" },
   "f_i": { texto: "Frecuencia Absoluta (Conteo)", math: "" },
   "p_i": { texto: "Frecuencia Relativa", math: "p_i = \\frac{f_i}{n}" },
   "F_i": { texto: "Frecuencia Absoluta Acumulada", math: "F_i = \\sum_{j=1}^{i} f_j" },
@@ -16,11 +16,58 @@ export const glosarioEstadistico = {
 
   // --- TEMA 3 Y 4: TENDENCIA, POSICIÓN Y FORMA ---
   "DM": { texto: "Desviación Media", math: "DM = \\frac{\\sum |x_i - \\bar{x}| f_i}{n}" },
+  "DMed": { texto: "Desviación Mediana", math: "DMed = \\text{Mediana}(|x_i - Me|)" },
+  "IQR": { texto: "Rango Intercuartílico", math: "IQR = Q_3 - Q_1" },
   "G": { texto: "Media Geométrica", math: "G = \\sqrt[n]{x_1 \\cdot x_2 \\cdots x_n}" },
   "H": { texto: "Media Armónica", math: "H = \\frac{n}{\\sum \\frac{f_i}{x_i}}" },
   "Q_k": { texto: "Cuartil (Agrupados)", math: "Q_k = L_i + \\frac{\\frac{k \\cdot n}{4} - F_{i-1}}{f_i} \\cdot A" },
   "D_k": { texto: "Decil (Agrupados)", math: "D_k = L_i + \\frac{\\frac{k \\cdot n}{10} - F_{i-1}}{f_i} \\cdot A" },
   "P_k": { texto: "Percentil (Agrupados)", math: "P_k = L_i + \\frac{\\frac{k \\cdot n}{100} - F_{i-1}}{f_i} \\cdot A" },
   "As": { texto: "Asimetría de Fisher", math: "As = \\frac{m_3}{S^3}" },
-  "K": { texto: "Curtosis", math: "K = \\frac{m_4}{S^4} - 3" }
+  "K": { texto: "Curtosis", math: "K = \\frac{m_4}{S^4} - 3" },
+
+  // --- TEMA 5 Y 6: ANÁLISIS BIVARIANTE Y REGRESIÓN ---
+  "S_xy": { texto: "Covarianza Muestral", math: "S_{xy} = \\frac{\\sum f_{ij}(x_i - \\bar{x})(y_j - \\bar{y})}{n-1}" },
+  "r": { texto: "Coeficiente de Correlación de Pearson (Tipifica la covarianza)", math: "r = \\frac{S_{xy}}{S_x \\cdot S_y}" },
+  "f_ij": { texto: "Frecuencia Absoluta Conjunta (Observaciones en celda i,j)", math: "f_{ij}" },
+  "f_i_dot": { texto: "Frecuencia Marginal de X", math: "f_{i\\cdot} = \\sum_{j} f_{ij}" },
+  "f_dot_j": { texto: "Frecuencia Marginal de Y", math: "f_{\\cdot j} = \\sum_{i} f_{ij}" },
+  "y_j": { texto: "Marca de clase Y (Centro del intervalo Y)", math: "y_j = \\frac{L_{inf} + L_{sup}}{2}" },
+  "xi_fij": { texto: "Marca X ponderada por la frecuencia conjunta", math: "x_i \\cdot f_{ij}" },
+  "yj_fij": { texto: "Marca Y ponderada por la frecuencia conjunta", math: "y_j \\cdot f_{ij}" },
+  "xi2_fij": { texto: "Marca X al cuadrado ponderada por la frecuencia conjunta", math: "x_i^2 \\cdot f_{ij}" },
+  "yj2_fij": { texto: "Marca Y al cuadrado ponderada por la frecuencia conjunta", math: "y_j^2 \\cdot f_{ij}" },
+  "xi_yj_fij": { texto: "Producto cruzado de marcas X e Y por la frecuencia conjunta", math: "x_i \\cdot y_j \\cdot f_{ij}" },
+  "interpretacion_r": { texto: "Criterios para el Coeficiente de Correlación (r)", math: "\\begin{aligned} |r| \\ge 0.9 &\\to \\text{Muy Fuerte} \\\\ 0.7 \\le |r| < 0.9 &\\to \\text{Fuerte} \\\\ 0.4 \\le |r| < 0.7 &\\to \\text{Moderada} \\\\ 0.2 \\le |r| < 0.4 &\\to \\text{Débil} \\\\ |r| < 0.2 &\\to \\text{Nula o Inexistente} \\end{aligned}" },
+  "R²": { texto: "Coeficiente de Determinación", math: "R^2 = 1 - \\frac{SSE}{SST}" },
+  "S_yx": { texto: "Error Estándar de Estimación", math: "S_{yx} = \\sqrt{\\frac{SSE}{n - p}}" },
+  "x_orig": { texto: "Variable Independiente X (Valores Originales)", math: "X" },
+  "y_orig": { texto: "Variable Dependiente Y (Valores Originales)", math: "Y" },
+  "x2_reg": { texto: "Valores de la variable X (original o transformada) al cuadrado", math: "X^2" },
+  "y2_reg": { texto: "Valores de la variable Y (original o transformada) al cuadrado", math: "Y^2" },
+  "xy_reg": { texto: "Producto de las variables X e Y (originales o transformadas)", math: "X \\cdot Y" },
+  "ln_x": { texto: "Logaritmo natural de la variable X", math: "\\ln(X)" },
+  "ln_y": { texto: "Logaritmo natural de la variable Y", math: "\\ln(Y)" },
+  "recip_x": { texto: "Valor recíproco de la variable X", math: "\\frac{1}{X}" },
+  "x3_reg": { texto: "Valores de X al cubo", math: "X^3" },
+  "x4_reg": { texto: "Valores de X a la cuarta", math: "X^4" },
+  "x5_reg": { texto: "Valores de X a la quinta", math: "X^5" },
+  "x6_reg": { texto: "Valores de X a la sexta", math: "X^6" },
+  "x2y_reg": { texto: "Producto de X al cuadrado por Y", math: "X^2 \\cdot Y" },
+  "x3y_reg": { texto: "Producto de X al cubo por Y", math: "X^3 \\cdot Y" },
+
+  // --- TEMA 7: SERIES DE TIEMPO ---
+  "movil_simple": { texto: "Promedio Móvil Simple", math: "F_{t+1} = \\frac{\\sum_{i=0}^{k-1} Y_{t-i}}{k}" },
+  "pms": { texto: "Promedio Móvil Simple", math: "F_{t+1} = \\frac{\\sum_{i=0}^{k-1} Y_{t-i}}{k}" },
+  "movil_ponderado": { texto: "Promedio Móvil Ponderado", math: "F_{t+1} = \\sum_{i=1}^{k} w_i \\cdot Y_{t-i+1}" },
+  "pmp": { texto: "Promedio Móvil Ponderado", math: "F_{t+1} = \\sum_{i=1}^{k} w_i \\cdot Y_{t-i+1}" },
+  "suavizamiento_exponencial": { texto: "Suavizamiento Exponencial", math: "F_{t+1} = \\alpha \\cdot Y_t + (1 - \\alpha) \\cdot F_t" },
+  "se": { texto: "Suavizamiento Exponencial", math: "F_{t+1} = \\alpha \\cdot Y_t + (1 - \\alpha) \\cdot F_t" },
+
+  // --- TEMA 8: NÚMEROS ÍNDICES ---
+  "laspeyres": { texto: "Índice de Laspeyres", math: "I_L = \\frac{\\sum P_t \\cdot Q_0}{\\sum P_0 \\cdot Q_0} \\times 100" },
+  "paasche": { texto: "Índice de Paasche", math: "I_P = \\frac{\\sum P_t \\cdot Q_t}{\\sum P_0 \\cdot Q_t} \\times 100" },
+  "fisher": { texto: "Índice de Fisher", math: "I_F = \\sqrt{I_L \\cdot I_P}" },
+  "poder_adquisitivo": { texto: "Poder Adquisitivo", math: "PA = \\frac{100}{\\text{IPC}}" },
+  "ingreso_real": { texto: "Ingreso Real", math: "V_{\\text{Real}} = \\frac{V_{\\text{Nominal}}}{\\text{IPC} / 100}" }
 };

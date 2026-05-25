@@ -92,18 +92,28 @@ export const calcularDistribucionBivariada = (dataX, dataY) => {
   let covarianza = null;
   let correlacion = null;
   let interpretacion = "No aplicable (Contiene variables cualitativas)";
+  let detalles = null;
 
   if (ambosNumericos && n > 1) {
-    const meanX = dataX.reduce((a, b) => a + b, 0) / n;
-    const meanY = dataY.reduce((a, b) => a + b, 0) / n;
+    const sumX = dataX.reduce((a, b) => a + b, 0);
+    const sumY = dataY.reduce((a, b) => a + b, 0);
+    const meanX = sumX / n;
+    const meanY = sumY / n;
 
     let sumCross = 0, sumSqX = 0, sumSqY = 0;
+    const filasDetalle = [];
     for (let i = 0; i < n; i++) {
-      const dx = dataX[i] - meanX; 
-      const dy = dataY[i] - meanY;
-      sumCross += dx * dy; 
-      sumSqX += dx * dx; 
-      sumSqY += dy * dy;
+      const x = dataX[i];
+      const y = dataY[i];
+      const dx = x - meanX;
+      const dy = y - meanY;
+      const dx2 = dx * dx;
+      const dy2 = dy * dy;
+      const dxdy = dx * dy;
+      sumCross += dxdy;
+      sumSqX += dx2;
+      sumSqY += dy2;
+      filasDetalle.push({ x, y, dx, dy, dx2, dy2, dxdy });
     }
 
     covarianza = sumCross / (n - 1);
@@ -122,6 +132,19 @@ export const calcularDistribucionBivariada = (dataX, dataY) => {
       correlacion = 0;
       interpretacion = "Sin variación en los datos";
     }
+
+    detalles = {
+      sumX,
+      sumY,
+      meanX,
+      meanY,
+      sumSqX,
+      sumSqY,
+      sumCross,
+      stdX,
+      stdY,
+      filas: filasDetalle
+    };
   }
 
   return {
@@ -136,6 +159,7 @@ export const calcularDistribucionBivariada = (dataX, dataY) => {
     covarianza,
     correlacion,
     interpretacion,
+    detalles,
     // 🆕 Versión plana para Excel
     matrizPura: [
       // Fila de encabezados (X \ Y)

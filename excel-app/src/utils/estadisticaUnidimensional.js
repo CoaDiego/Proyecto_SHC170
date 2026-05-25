@@ -418,8 +418,75 @@ export const calcularVariabilidadYForma = (datos, config) => {
   const desvStdAgr = Math.sqrt(varianzaAgr);
   const cvAgr = mediaAgr !== 0 ? Number((desvStdAgr / mediaAgr).toFixed(4)) : 0; 
 
+  const getQ = (p) => {
+    const pos = (n - 1) * p; const base = Math.floor(pos); const rest = pos - base;
+    return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+  };
+
+  const Q1 = getQ(0.25);
+  const Mediana = getQ(0.50);
+  const Q3 = getQ(0.75);
+  const RI = Q3 - Q1; 
+
+  // Desviación Mediana (Individual)
+  const diferenciasAbsolutasMediana = sorted.map(v => Math.abs(v - Mediana));
+  const desvMedianaInd = calcularMediana(basicMath.sort(diferenciasAbsolutasMediana));
+
+  // Mediana (Agrupada)
+  const posMe = n / 2;
+  let F_acum_med = 0, claseMedianaIdx = -1, F_ant_med = 0;
+  const f_acum_arr = [];
+  let runningSum = 0;
+  for (let i = 0; i < k; i++) {
+    runningSum += f[i];
+    f_acum_arr.push(runningSum);
+  }
+  for (let i = 0; i < k; i++) {
+    F_acum_med += f[i];
+    if (F_acum_med >= posMe && claseMedianaIdx === -1) {
+      claseMedianaIdx = i;
+      break;
+    }
+    F_ant_med = F_acum_med;
+  }
+  let medianaAgr = 0;
+  if (claseMedianaIdx !== -1) {
+    const Li = intervalos[claseMedianaIdx].desde;
+    const fi = f[claseMedianaIdx];
+    medianaAgr = fi !== 0 ? Li + ((posMe - F_ant_med) / fi) * amplitud : Li;
+  }
+
+  // Desviación Mediana (Agrupada)
+  let sumFAbsMed = 0;
+  for (let i = 0; i < k; i++) {
+    sumFAbsMed += f[i] * Math.abs(intervalos[i].xm - medianaAgr);
+  }
+  const desvMedianaAgr = sumFAbsMed / n;
+
+  // Rango Intercuartílico (Agrupado)
+  const getQAgrupado = (p) => {
+    const posicion = n * p;
+    let claseIdx = -1;
+    for (let i = 0; i < k; i++) {
+      if (f_acum_arr[i] >= posicion) {
+        claseIdx = i;
+        break;
+      }
+    }
+    if (claseIdx === -1) return absoluteMax;
+    const Li = intervalos[claseIdx].desde;
+    const fi = f[claseIdx];
+    const Fant = claseIdx > 0 ? f_acum_arr[claseIdx - 1] : 0;
+    return fi !== 0 ? Li + ((posicion - Fant) / fi) * amplitud : Li;
+  };
+  const Q1_agr = getQAgrupado(0.25);
+  const Q3_agr = getQAgrupado(0.75);
+  const IQR_agr = Q3_agr - Q1_agr;
+
   const tablaDispersion = [
     { Estadígrafo: "Desviación Media", Sigla: "DM", "D. Individuales": desvMediaInd, "D. Agrupados": desvMediaAgr, "Error %": calcErrorProp(desvMediaInd, desvMediaAgr) },
+    { Estadígrafo: "Desviación Mediana", Sigla: "DMed", "D. Individuales": desvMedianaInd, "D. Agrupados": desvMedianaAgr, "Error %": calcErrorProp(desvMedianaInd, desvMedianaAgr) },
+    { Estadígrafo: "Rango Intercuartílico", Sigla: "IQR", "D. Individuales": RI, "D. Agrupados": IQR_agr, "Error %": calcErrorProp(RI, IQR_agr) },
     { Estadígrafo: "Varianza", Sigla: "S²", "D. Individuales": varianzaInd, "D. Agrupados": varianzaAgr, "Error %": calcErrorProp(varianzaInd, varianzaAgr) },
     { Estadígrafo: "Desviación Estándar", Sigla: "S", "D. Individuales": desvStdInd, "D. Agrupados": desvStdAgr, "Error %": calcErrorProp(desvStdInd, desvStdAgr) },
     { Estadígrafo: "Coeficiente de Variación", Sigla: "CV", "D. Individuales": cvInd, "D. Agrupados": cvAgr, "Error %": calcErrorProp(cvInd, cvAgr) }
@@ -436,17 +503,7 @@ export const calcularVariabilidadYForma = (datos, config) => {
   const tablaForma = [
     { Estadígrafo: "Coeficiente de Asimetría (Fisher)", "Valor Calculado": asimetria, Interpretación: interpAsimetria },
     { Estadígrafo: "Curtosis", "Valor Calculado": curtosis, Interpretación: interpCurtosis }
-  ];
-
-  const getQ = (p) => {
-    const pos = (n - 1) * p; const base = Math.floor(pos); const rest = pos - base;
-    return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
-  };
-
-  const Q1 = getQ(0.25);
-  const Mediana = getQ(0.50);
-  const Q3 = getQ(0.75);
-  const RI = Q3 - Q1; 
+  ]; 
 
   const LIIS = Q1 - 1.5 * RI; 
   const LSIS = Q3 + 1.5 * RI; 

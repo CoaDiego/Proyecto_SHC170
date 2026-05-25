@@ -8,7 +8,7 @@
  * @param {Array} cantidadesActuales - [Q_t] Cantidades en el periodo actual
  * @returns {Object} Los 4 índices y sus sumatorias
  */
-export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosActuales, cantidadesActuales) => {
+export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosActuales, cantidadesActuales, tipoIndiceSimple = null) => {
   const n = preciosBase.length;
   if (n === 0 || n !== cantidadesBase.length || n !== preciosActuales.length || n !== cantidadesActuales.length) {
     return null; // Error: Las columnas no tienen el mismo tamaño
@@ -19,6 +19,8 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
   
   let sum_Pt_Qt = 0; // Numerador Paasche
   let sum_P0_Qt = 0; // Denominador Paasche
+
+  let sumRelativos = 0;
 
   // Tabla de desarrollo paso a paso para mostrar al usuario
   const detallesCalculo = [];
@@ -39,8 +41,17 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
     sum_Pt_Qt += Pt_Qt;
     sum_P0_Qt += P0_Qt;
 
+    // Cálculo del relativo individual según el tipo de índice simple
+    let relativo = 0;
+    if (tipoIndiceSimple === "cantidades") {
+      relativo = Q0 === 0 ? 0 : (Qt / Q0) * 100;
+    } else {
+      relativo = P0 === 0 ? 0 : (Pt / P0) * 100;
+    }
+    sumRelativos += relativo;
+
     detallesCalculo.push({
-      item: `Fila ${i + 1}`, P0, Q0, Pt, Qt, Pt_Q0, P0_Q0, Pt_Qt, P0_Qt
+      item: `Fila ${i + 1}`, P0, Q0, Pt, Qt, Pt_Q0, P0_Q0, Pt_Qt, P0_Qt, relativo
     });
   }
 
@@ -57,6 +68,8 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
   // Fórmula adaptada a las sumatorias precalculadas
   const E = (sum_P0_Q0 + sum_P0_Qt) === 0 ? 0 : ((sum_Pt_Q0 + sum_Pt_Qt) / (sum_P0_Q0 + sum_P0_Qt)) * 100;
 
+  const promedioRelativos = n === 0 ? 0 : sumRelativos / n;
+
   return {
     tipo: "indices_compuestos",
     detalles: detallesCalculo,
@@ -65,7 +78,8 @@ export const calcularIndicesCompuestos = (preciosBase, cantidadesBase, preciosAc
       laspeyres: L,
       paasche: P,
       fisher: F,
-      edgeworth: E // <-- Aquí se exporta el nuevo cálculo
+      edgeworth: E,
+      promedioRelativos
     }
   };
 };

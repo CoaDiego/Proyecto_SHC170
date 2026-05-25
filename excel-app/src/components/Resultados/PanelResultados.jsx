@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import escudoAdmin from "../../assets/images/escudoAdmin.png";
 import TablaDinamica from "../excel/TablaDinamica";
 import TablaRegresion from "./TablaRegresion";
@@ -34,8 +34,26 @@ export default function PanelResultados({
   esBivariada, esUnidimensional, esIntervalo,
   formatearCelda, filtroFractil, setFiltroFractil,
   ordenGraficos, setOrdenGraficos,
-  handleGuardarResultado
+  handleGuardarResultado,
+  selectedColumn,
+  selectedColumnY
 }) {
+  const [modelosVisibles, setModelosVisibles] = useState({});
+
+  useEffect(() => {
+    if (resultado && resultado.tipo === "regresion" && resultado.comparativa && resultado.comparativa.length > 0) {
+      const mejorModelo = resultado.comparativa[0].tipoModelo;
+      setModelosVisibles({
+        lineal: mejorModelo === 'lineal',
+        exponencial: mejorModelo === 'exponencial',
+        logaritmica: mejorModelo === 'logaritmica',
+        potencial: mejorModelo === 'potencial',
+        reciproco: mejorModelo === 'reciproco',
+        cuadratica: mejorModelo === 'cuadratica',
+        cubica: mejorModelo === 'cubica'
+      });
+    }
+  }, [resultado]);
 
   return (
     <div className="calculadora-resultados">
@@ -84,7 +102,7 @@ export default function PanelResultados({
             {resultado && (
               <>
                 {calculo === "regresion_simple" && resultado.tipo === "regresion" && (
-                  <TablaRegresion resultado={resultado} />
+                  <TablaRegresion resultado={resultado} modelosVisibles={modelosVisibles} />
                 )}
                 {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && (
                   <TablaSeriesTiempo resultado={resultado} />
@@ -117,6 +135,10 @@ export default function PanelResultados({
             calculo={calculo}
             orden={ordenGraficos}
             setOrden={setOrdenGraficos}
+            modelosVisibles={modelosVisibles}
+            setModelosVisibles={setModelosVisibles}
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
           />
 
           {/* BARRA DE ACCIONES FINAL */}

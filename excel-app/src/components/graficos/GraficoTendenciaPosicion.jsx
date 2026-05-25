@@ -4,7 +4,7 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine 
 } from 'recharts';
 
-export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, isMaximized = false }) {
+export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, isMaximized = false, selectedColumn }) {
   if (!graficos || graficos.length === 0) return null;
 
   // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
@@ -32,16 +32,16 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, 
 
     return (
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-        <ComposedChart data={graficos} margin={{ top: 35, right: 20, left: 10, bottom: 25 }}>
+        <ComposedChart data={graficos} margin={{ top: 35, right: 20, left: 10, bottom: 35 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-          <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }} />
+          <XAxis dataKey="rango" stroke="var(--text-variable)" tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }} label={{ value: selectedColumn || 'Intervalos', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontWeight: 'bold' }} />
           <YAxis
             stroke="var(--text-variable)"
             ticks={ticksEjeY}
             domain={[0, limiteEjeY]}
             tickFormatter={(valor) => valor.toString().replace('.', ',')}
             tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
-            label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
+            label={{ value: 'Frecuencia (fi)', angle: -90, position: 'insideLeft', offset: -10, style: { textAnchor: 'middle', fontWeight: 'bold' } }}
           />
           <Tooltip />
           <Bar dataKey="frecuencia" fill="#3498db" name="Frecuencia" barSize={isMaximized ? 80 : 50} />
@@ -71,19 +71,19 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, 
 
     return (
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-        <LineChart data={ojivaData} margin={{ top: 10, right: 20, left: 10, bottom: 25 }}>
+        <LineChart data={ojivaData} margin={{ top: 10, right: 20, left: 10, bottom: 35 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="hasta"
             stroke="var(--text-variable)"
             tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
-            label={{ value: 'Límite Superior', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
+            label={{ value: selectedColumn || 'Límite Superior', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
           />
           <YAxis
             domain={[0, 1]} // 👈 DOMINIO CORREGIDO: De 0 a 1
             stroke="var(--text-variable)"
             tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
-            label={{ value: 'Frecuencia Acumulada', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
+            label={{ value: 'Frecuencia Acumulada', angle: -90, position: 'insideLeft', offset: -10, style: { textAnchor: 'middle', fontWeight: 'bold' } }}
           />
           {/* 👈 TOOLTIP: Mostramos formato decimal limpio */}
           <Tooltip formatter={(value) => [value.toFixed(4), 'Proporción']} />

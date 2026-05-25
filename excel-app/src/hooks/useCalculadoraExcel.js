@@ -35,6 +35,8 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
   const [colPrecioActual, setColPrecioActual] = useState("");
   const [colCantidadActual, setColCantidadActual] = useState("");
   const [nuevoIndiceBase, setNuevoIndiceBase] = useState(100);
+  const [conPonderacion, setConPonderacion] = useState(false);
+  const [tipoIndiceSimple, setTipoIndiceSimple] = useState("precios");
 
   const [errorNumerico, setErrorNumerico] = useState(false);
   const [resultado, setResultado] = useState(null);
@@ -179,16 +181,43 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
     if (calculo === "numeros_indices") {
       let resIndices = null;
       if (subTemaIndices === "compuestos") {
-        if (!colPrecioBase || !colCantidadBase || !colPrecioActual || !colCantidadActual) return;
-        const p0 = obtenerColumna(colPrecioBase).map(Number);
-        const q0 = obtenerColumna(colCantidadBase).map(Number);
-        const pt = obtenerColumna(colPrecioActual).map(Number);
-        const qt = obtenerColumna(colCantidadActual).map(Number);
+        let p0, q0, pt, qt;
+        if (!conPonderacion) {
+          if (tipoIndiceSimple === "precios") {
+            if (!colPrecioBase || !colPrecioActual) return;
+            p0 = obtenerColumna(colPrecioBase).map(Number);
+            pt = obtenerColumna(colPrecioActual).map(Number);
+            if (p0.some(isNaN) || pt.some(isNaN) || p0.length === 0) {
+              setErrorNumerico(true); setResultado(null); return;
+            }
+            q0 = new Array(p0.length).fill(1);
+            qt = new Array(p0.length).fill(1);
+          } else {
+            if (!colCantidadBase || !colCantidadActual) return;
+            q0 = obtenerColumna(colCantidadBase).map(Number);
+            qt = obtenerColumna(colCantidadActual).map(Number);
+            if (q0.some(isNaN) || qt.some(isNaN) || q0.length === 0) {
+              setErrorNumerico(true); setResultado(null); return;
+            }
+            p0 = new Array(q0.length).fill(1);
+            pt = new Array(q0.length).fill(1);
+          }
+        } else {
+          if (!colPrecioBase || !colCantidadBase || !colPrecioActual || !colCantidadActual) return;
+          p0 = obtenerColumna(colPrecioBase).map(Number);
+          q0 = obtenerColumna(colCantidadBase).map(Number);
+          pt = obtenerColumna(colPrecioActual).map(Number);
+          qt = obtenerColumna(colCantidadActual).map(Number);
 
-        if (p0.some(isNaN) || q0.some(isNaN) || pt.some(isNaN) || qt.some(isNaN)) {
-          setErrorNumerico(true); setResultado(null); return;
+          if (p0.some(isNaN) || q0.some(isNaN) || pt.some(isNaN) || qt.some(isNaN) || p0.length === 0) {
+            setErrorNumerico(true); setResultado(null); return;
+          }
         }
-        resIndices = IndicesMath.calcularIndicesCompuestos(p0, q0, pt, qt);
+        resIndices = IndicesMath.calcularIndicesCompuestos(p0, q0, pt, qt, conPonderacion ? null : tipoIndiceSimple);
+        if (resIndices) {
+          resIndices.conPonderacion = conPonderacion;
+          resIndices.tipoIndiceSimple = tipoIndiceSimple;
+        }
       } else if (subTemaIndices === "empalme") {
         if (!selectedColumn || !selectedColumnY) return;
         const arrT = obtenerColumna(selectedColumn).map(String);
@@ -262,7 +291,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
     calculo, selectedColumn, selectedColumnY, tipoIntervalo, metodoK, kPersonalizado, percentilK,
     metodoSeries, periodosK, pesos, alfa,
     subTemaIndices, colPrecioBase, colCantidadBase, colPrecioActual, colCantidadActual, nuevoIndiceBase,
-    excelData
+    excelData, conPonderacion, tipoIndiceSimple
   ]);
 
   return {
@@ -271,6 +300,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
     kPersonalizado, setKPersonalizado, percentilK, setPercentilK, handleChangeDato, ejecutarCalculo, errorNumerico,
     metodoSeries, setMetodoSeries, periodosK, setPeriodosK, pesos, setPesos, alfa, setAlfa,
     subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
-    colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase
+    colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
+    conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple
   };
 }

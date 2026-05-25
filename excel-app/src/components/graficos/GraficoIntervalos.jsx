@@ -7,7 +7,7 @@ import {
 // =========================================================
 // COMPONENTE PRINCIPAL
 // =========================================================
-export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
+export default function GraficoIntervalos({ datos, tipo = 'histograma', selectedColumn, selectedColumnY }) {
   
   if (!datos || datos.length === 0) return <p style={{ color: "var(--text-muted)", padding: "20px" }}>No hay datos para graficar.</p>;
 
@@ -49,9 +49,14 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
 
   // 2. CONFIGURACIÓN COMÚN DE RECHARTS
   const currentAxisStyle = { fontSize: 12, fill: 'var(--text-main)' };
-  const commonProps = { margin: { top: 20, right: 30, bottom: 20, left: 10 } };
+  const commonProps = { margin: { top: 20, right: 30, bottom: 35, left: 35 } };
   const commonGrid = <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color, #e0e0e0)" />;
-  const commonY = <YAxis tick={currentAxisStyle} stroke="var(--text-main)" />;
+  const commonY = (
+    <YAxis 
+      tick={currentAxisStyle} stroke="var(--text-main)" domain={[0, 'auto']}
+      label={{ value: selectedColumnY || "Frecuencia", angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-main)', fontSize: 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
+    />
+  );
   const commonTooltip = <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} />;
   const commonLegend = <Legend wrapperStyle={{ fontSize: '0.9rem', color: 'var(--text-main)', paddingTop: '10px' }} />;
 
@@ -60,9 +65,10 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
       type="number" 
       dataKey="midpoint" 
       ticks={limites} 
-      domain={[limites[0], limites[limites.length - 1]]} 
+      domain={[0, 'auto']} 
       tick={currentAxisStyle} 
       stroke="var(--text-main)" 
+      label={{ value: selectedColumn || "Intervalos", position: 'insideBottom', offset: -10, fill: 'var(--text-main)', fontSize: 12, fontWeight: 'bold' }}
     />
   );
 
@@ -99,12 +105,20 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma' }) {
             <Area type="linear" dataKey="F_i_inv" stroke="#d32f2f" fill="rgba(211, 47, 47, 0.3)" strokeWidth={3} dot={{ r: 3 }} name="Frecuencia Acumulada Mayor que" />
           </AreaChart>
         );
+      case 'interseccion_ojivas':
+        return (
+          <LineChart data={datosProcesados} {...commonProps}>
+            {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
+            <Line type="linear" dataKey="F_i" stroke="#388e3c" strokeWidth={3} dot={{ r: 4 }} name="Ojiva Creciente (Menor que)" />
+            <Line type="linear" dataKey="F_i_inv" stroke="#d32f2f" strokeWidth={3} dot={{ r: 4 }} name="Ojiva Decreciente (Mayor que)" />
+          </LineChart>
+        );
       case 'mixto':
       default:
         return (
-          <ComposedChart data={datosProcesados} {...commonProps}>
+          <ComposedChart data={datosProcesados} {...commonProps} barCategoryGap={0}>
             {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
-            <Bar dataKey="f_i" fill="rgba(25, 118, 210, 0.5)" name="Histograma" barSize={40} />
+            <Bar dataKey="f_i" fill="rgba(25, 118, 210, 0.5)" name="Histograma" />
             <Line type="linear" dataKey="f_i" stroke="#1976d2" strokeWidth={3} dot={{ r: 5 }} name="Polígono" />
           </ComposedChart>
         );

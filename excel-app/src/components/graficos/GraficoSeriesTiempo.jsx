@@ -3,7 +3,7 @@ import {
   ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 
-export default function GraficoSeriesTiempo({ resultado, tipo, isMaximized = false }) {
+export default function GraficoSeriesTiempo({ resultado, tipo, isMaximized = false, selectedColumn, selectedColumnY }) {
   if (!resultado || resultado.tipo !== "series_tiempo") return null;
 
   // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
@@ -27,8 +27,8 @@ export default function GraficoSeriesTiempo({ resultado, tipo, isMaximized = fal
             <ComposedChart data={datos} margin={{ top: 10, right: 20, left: 10, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               
-              <XAxis dataKey="xLabel" tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} label={{ value: 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
-              <YAxis tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} label={{ value: 'Valor (Y)', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
+              <XAxis dataKey="xLabel" tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} label={{ value: selectedColumn || 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
+              <YAxis tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} domain={[0, 'auto']} label={{ value: selectedColumnY || 'Valor (Y)', angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
               
               <Tooltip 
                 contentStyle={{backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}
@@ -64,8 +64,8 @@ export default function GraficoSeriesTiempo({ resultado, tipo, isMaximized = fal
             <ComposedChart data={datos} margin={{ top: 20, right: 30, left: 25, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               
-              <XAxis dataKey="xLabel" tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} label={{ value: 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
-              <YAxis tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} label={{ value: 'Error (e)', angle: -90, position: 'insideLeft', offset: -0, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
+              <XAxis dataKey="xLabel" tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} label={{ value: selectedColumn || 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
+              <YAxis tick={{fill: 'var(--text-variable)', fontSize: fontAxis}} label={{ value: 'Error (e)', angle: -90, position: 'insideLeft', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
               
               <Tooltip 
                 contentStyle={{backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}}

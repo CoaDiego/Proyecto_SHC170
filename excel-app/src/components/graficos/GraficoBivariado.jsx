@@ -4,7 +4,7 @@ import {
   ScatterChart, Scatter, ZAxis
 } from 'recharts';
 
-export default function GraficoBivariado({ datos, tipo }) {
+export default function GraficoBivariado({ datos, tipo, selectedColumn, selectedColumnY }) {
   if (!datos || datos.tipo !== "distribucion_bivariada") return null;
 
   // 1. Lógica para el Diagrama de Dispersión
@@ -17,15 +17,17 @@ export default function GraficoBivariado({ datos, tipo }) {
           Correlación de Pearson (r) = {datos.correlacion?.toFixed(4)}
         </p>
         <ResponsiveContainer width="100%" height="90%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-          <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
+          <ScatterChart margin={{ top: 20, right: 30, bottom: 35, left: 35 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color, #e0e0e0)" />
             <XAxis
               type="number" dataKey="x" name={datos.nombreX || "Variable X"}
-              domain={['auto', 'auto']} tick={{ fill: 'var(--text-main)' }}
+              domain={[0, 'auto']} tick={{ fill: 'var(--text-main)' }}
+              label={{ value: selectedColumn || datos.nombreX || "Variable X", position: 'insideBottom', offset: -10, fill: 'var(--text-main)', fontWeight: 'bold' }}
             />
             <YAxis
               type="number" dataKey="y" name={datos.nombreY || "Variable Y"}
-              domain={['auto', 'auto']} tick={{ fill: 'var(--text-main)' }}
+              domain={[0, 'auto']} tick={{ fill: 'var(--text-main)' }}
+              label={{ value: selectedColumnY || datos.nombreY || "Variable Y", angle: -90, position: 'insideLeft', offset: -10, style: { fill: 'var(--text-main)', textAnchor: 'middle' } }}
             />
             <ZAxis range={[60, 60]} />
             <Tooltip
@@ -62,19 +64,20 @@ export default function GraficoBivariado({ datos, tipo }) {
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-      <BarChart data={dataGrafico} margin={{ top: 30, right: 30, left: 10, bottom: 20 }} barSize={isStacked ? 50 : 30}>
+      <BarChart data={dataGrafico} margin={{ top: 30, right: 30, left: 25, bottom: 35 }} barSize={isStacked ? 50 : 30}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color, #e0e0e0)" />
         <XAxis
           dataKey="name"
           tick={{ fill: 'var(--text-main)' }}
           axisLine={{ stroke: 'var(--text-main)' }}
           tickLine={{ stroke: 'var(--text-main)' }}
+          label={{ value: selectedColumn || "Variable X", position: 'insideBottom', offset: -10, fill: 'var(--text-main)', fontWeight: 'bold' }}
         />
         <YAxis
           tick={{ fill: 'var(--text-main)' }}
           axisLine={{ stroke: 'var(--text-main)' }}
           tickLine={{ stroke: 'var(--text-main)' }}
-          label={{ value: ejeYLabel, angle: -90, position: 'insideLeft', style: { fill: 'var(--text-main)' } }}
+          label={{ value: ejeYLabel, angle: -90, position: 'insideLeft', offset: -10, style: { fill: 'var(--text-main)', textAnchor: 'middle' } }}
           tickFormatter={(val) => isStacked ? `${val}%` : val}
           domain={isStacked ? [0, 100] : [0, 'auto']}
         />

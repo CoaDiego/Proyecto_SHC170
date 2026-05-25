@@ -161,21 +161,40 @@ export const calcularRegresionSimple = (arrX, arrY, tipo = "lineal") => {
   // FORMATEO DE ECUACIONES
   // ==========================================
   let cadenaEcuacion = "";
+  let ecuacionLatex = "";
   const sign = (num) => num >= 0 ? `+ ${num.toFixed(4)}` : `- ${Math.abs(num).toFixed(4)}`;
+  const signLatex = (num) => num >= 0 ? `+ ${num.toFixed(4)}` : `- ${Math.abs(num).toFixed(4)}`;
 
-  if (tipo === "lineal") cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}X`;
-  else if (tipo === "logaritmica") cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}ln(X)`;
+  if (tipo === "lineal") {
+    cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}X`;
+    ecuacionLatex = `Y = ${a.toFixed(4)} ${signLatex(b)} X`;
+  }
+  else if (tipo === "logaritmica") {
+    cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}ln(X)`;
+    ecuacionLatex = `Y = ${a.toFixed(4)} ${signLatex(b)} \\ln(X)`;
+  }
   else if (tipo === "exponencial") { 
     a = Math.exp(a); // Volvemos la 'a' a su estado real
     cadenaEcuacion = `Y = ${a.toFixed(4)} * e^(${b.toFixed(4)}X)`; 
+    ecuacionLatex = `Y = ${a.toFixed(4)} \\cdot e^{${b.toFixed(4)} X}`;
   }
   else if (tipo === "potencial") { 
     a = Math.exp(a); 
     cadenaEcuacion = `Y = ${a.toFixed(4)} * X^(${b.toFixed(4)})`; 
+    ecuacionLatex = `Y = ${a.toFixed(4)} \\cdot X^{${b.toFixed(4)}}`;
   }
-  else if (tipo === "reciproco") { cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}(1/X)`; }
-  else if (tipo === "cuadratica") { cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}X ${sign(c)}X²`; }
-  else if (tipo === "cubica") { cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}X ${sign(c)}X² ${sign(d)}X³`; }
+  else if (tipo === "reciproco") { 
+    cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}(1/X)`; 
+    ecuacionLatex = `Y = ${a.toFixed(4)} ${signLatex(b)} \\left(\\frac{1}{X}\\right)`;
+  }
+  else if (tipo === "cuadratica") { 
+    cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}X ${sign(c)}X²`; 
+    ecuacionLatex = `Y = ${a.toFixed(4)} ${signLatex(b)} X ${signLatex(c)} X^2`;
+  }
+  else if (tipo === "cubica") { 
+    cadenaEcuacion = `Y = ${a.toFixed(4)} ${sign(b)}X ${sign(c)}X² ${sign(d)}X³`; 
+    ecuacionLatex = `Y = ${a.toFixed(4)} ${signLatex(b)} X ${signLatex(c)} X^2 ${signLatex(d)} X^3`;
+  }
 
   // ==========================================
   // MOTOR PREDICTOR Y CÁLCULO DE ERRORES
@@ -211,7 +230,7 @@ export const calcularRegresionSimple = (arrX, arrY, tipo = "lineal") => {
   const datosGrafico = datosOrdenados.map(pto => ({ x: pto.xOriginal, yReal: pto.yOriginal }));
 
   return {
-    tipoModelo: tipo, n_validos: n, ecuacion: cadenaEcuacion,
+    tipoModelo: tipo, n_validos: n, ecuacion: cadenaEcuacion, ecuacionLatex: ecuacionLatex,
     indicadores: { r2: r2, r: r, error_estandar: errorEstandar },
     datosGrafico: datosGrafico, funcionPredictora: predecirY,
     // 🛡️ EXPORTAMOS LAS TABLAS COMPLETAS PARA LA VISTA

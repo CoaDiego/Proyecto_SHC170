@@ -5,7 +5,7 @@ import {
 } from "recharts";
 
 // 👈 RECIBIMOS isMaximized AQUÍ
-export default function GraficoEstadistico({ datos = [], tipo = "barras", isMaximized = false }) {
+export default function GraficoEstadistico({ datos = [], tipo = "barras", isMaximized = false, selectedColumn, selectedColumnY }) {
   const [activeIndex, setActiveIndex] = useState(null);
 
   if (!Array.isArray(datos) || datos.length === 0) return <p style={{ padding: "20px" }}>No hay datos.</p>;
@@ -30,10 +30,16 @@ export default function GraficoEstadistico({ datos = [], tipo = "barras", isMaxi
   const renderChart = () => {
     if (tipo === 'barras') {
       return (
-        <BarChart data={datosLimpios} margin={{ top: 20, right: 20, left: -20, bottom: 20 }} barCategoryGap={7}>
+        <BarChart data={datosLimpios} margin={{ top: 20, right: 20, left: 25, bottom: 35 }} barCategoryGap={7}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-          <XAxis dataKey={xKey} tick={axisTextStyle} dy={10} stroke="#000000" />
-          <YAxis tick={axisTextStyle} stroke="#000000" />
+          <XAxis 
+            dataKey={xKey} tick={axisTextStyle} dy={10} stroke="#000000"
+            label={{ value: selectedColumn || "Categorías", position: 'insideBottom', offset: -10, fill: '#6b7280', fontSize: isMaximized ? 14 : 12, fontWeight: 'bold' }}
+          />
+          <YAxis 
+            tick={axisTextStyle} stroke="#000000" domain={[0, 'auto']}
+            label={{ value: selectedColumnY || "Frecuencia absoluta", angle: -90, position: 'insideLeft', offset: -10, fill: '#6b7280', fontSize: isMaximized ? 14 : 12, fontWeight: 'bold', style: { textAnchor: 'middle' } }}
+          />
           <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
           <Legend wrapperStyle={{ paddingTop: '10px' }} />
 

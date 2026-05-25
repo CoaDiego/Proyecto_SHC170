@@ -3,7 +3,7 @@ import {
   BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts'; // Añadimos 'Cell' aquí
 
-export default function GraficoIndices({ resultado, isMaximized = false }) {
+export default function GraficoIndices({ resultado, isMaximized = false, selectedColumn, selectedColumnY }) {
   if (!resultado) return null;
 
   // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
@@ -34,10 +34,10 @@ export default function GraficoIndices({ resultado, isMaximized = false }) {
         </h4>
         <div style={{ flexGrow: 1, minHeight: 300 }}>
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-            <BarChart data={dataGrafico} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+            <BarChart data={dataGrafico} margin={{ top: 20, right: 30, left: 20, bottom: 35 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               <XAxis dataKey="nombre" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }} />
-              <YAxis domain={[minVal, 'auto']} tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} />
+              <YAxis domain={[0, 'auto']} tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} />
               <Tooltip 
                 cursor={{ fill: 'var(--border-color)', opacity: 0.3 }} 
                 contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} 
@@ -70,8 +70,8 @@ export default function GraficoIndices({ resultado, isMaximized = false }) {
             <LineChart data={resultado.datos} margin={{ top: 20, right: 30, left: 45, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               
-              <XAxis dataKey="t" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
-              <YAxis tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: 'Índice', angle: -90, position: 'insideLeft', offset: -30, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
+              <XAxis dataKey="t" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: selectedColumn || 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
+              <YAxis tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} domain={[0, 'auto']} label={{ value: selectedColumnY || 'Índice', angle: -90, position: 'insideLeft', offset: -30, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
               
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} 
@@ -109,8 +109,8 @@ export default function GraficoIndices({ resultado, isMaximized = false }) {
             <ComposedChart data={resultado.datos} margin={{ top: 20, right: 30, left: 45, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.5} vertical={true} horizontal={true} />
               
-              <XAxis dataKey="t" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
-              <YAxis tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: 'Dinero ($)', angle: -90, position: 'insideLeft', offset: -30, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
+              <XAxis dataKey="t" tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} label={{ value: selectedColumn || 'Periodos', position: 'insideBottom', offset: -25, fill: 'var(--text-variable)', fontSize: fontMed, fontWeight: 'bold' }} />
+              <YAxis tick={{ fill: 'var(--text-variable)', fontSize: fontAxis }} domain={[0, 'auto']} label={{ value: selectedColumnY || 'Dinero ($)', angle: -90, position: 'insideLeft', offset: -30, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontSize: fontMed, fontWeight: 'bold' } }} />
               
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} 

@@ -39,6 +39,7 @@ export default function Calculos() {
     metodoSeries, setMetodoSeries, periodosK, setPeriodosK, pesos, setPesos, alfa, setAlfa,
     subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
+    conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple,
   } = useCalculadoraExcel(selectedFile, selectedSheet, datosHistorial);
 
 
@@ -249,6 +250,8 @@ export default function Calculos() {
         colPrecioActual={colPrecioActual} setColPrecioActual={setColPrecioActual}
         colCantidadActual={colCantidadActual} setColCantidadActual={setColCantidadActual}
         nuevoIndiceBase={nuevoIndiceBase} setNuevoIndiceBase={setNuevoIndiceBase}
+        conPonderacion={conPonderacion} setConPonderacion={setConPonderacion}
+        tipoIndiceSimple={tipoIndiceSimple} setTipoIndiceSimple={setTipoIndiceSimple}
         esBivariada={esBivariada} esUnidimensional={esUnidimensional}
         metodoSeries={metodoSeries} setMetodoSeries={setMetodoSeries}
         periodosK={periodosK} setPeriodosK={setPeriodosK} pesos={pesos} setPesos={setPesos} alfa={alfa} setAlfa={setAlfa}
@@ -266,6 +269,8 @@ export default function Calculos() {
         formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil}
         ordenGraficos={ordenGraficos} setOrdenGraficos={setOrdenGraficos}
         handleGuardarResultado={handleGuardarResultado}
+        selectedColumn={selectedColumn}
+        selectedColumnY={selectedColumnY}
       />
 
       <ReportePDF

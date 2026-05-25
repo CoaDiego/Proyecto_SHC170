@@ -30,6 +30,10 @@ export default function PanelGraficos({
   calculo,
   orden,
   setOrden,
+  modelosVisibles,
+  setModelosVisibles,
+  selectedColumn,
+  selectedColumnY
 }) {
   // 1. MEMORIZACIÓN DE COMPONENTES
   const widgetsDisponibles = useMemo(() => {
@@ -45,7 +49,16 @@ export default function PanelGraficos({
         id: "reg-main",
         titulo: "Análisis de Regresión y Correlación",
         anchoCompleto: true,
-        contenido: <GraficoRegresion resultado={resultado} />,
+        alto: "480px",
+        contenido: (
+          <GraficoRegresion
+            resultado={resultado}
+            modelosVisibles={modelosVisibles}
+            setModelosVisibles={setModelosVisibles}
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
     }
 
@@ -61,7 +74,13 @@ export default function PanelGraficos({
         id: "ind-main",
         titulo: "Indicadores Económicos e Índices",
         anchoCompleto: true,
-        contenido: <GraficoIndices resultado={resultado} />,
+        contenido: (
+          <GraficoIndices
+            resultado={resultado}
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
     }
 
@@ -71,14 +90,22 @@ export default function PanelGraficos({
         id: "v1",
         titulo: "Boxplot (Caja y Bigotes)",
         contenido: (
-          <GraficoDispersionForma tipo="boxplot" resultado={resultado} />
+          <GraficoDispersionForma
+            tipo="boxplot"
+            resultado={resultado}
+            selectedColumn={selectedColumn}
+          />
         ),
       });
       nuevosWidgets.push({
         id: "v2",
         titulo: "Curva de Densidad Normal",
         contenido: (
-          <GraficoDispersionForma tipo="campana" resultado={resultado} />
+          <GraficoDispersionForma
+            tipo="campana"
+            resultado={resultado}
+            selectedColumn={selectedColumn}
+          />
         ),
       });
       nuevosWidgets.push({
@@ -86,7 +113,11 @@ export default function PanelGraficos({
         titulo: "Desviaciones Respecto a la Media",
         anchoCompleto: true,
         contenido: (
-          <GraficoDispersionForma tipo="desviaciones" resultado={resultado} />
+          <GraficoDispersionForma
+            tipo="desviaciones"
+            resultado={resultado}
+            selectedColumn={selectedColumn}
+          />
         ),
       });
     }
@@ -101,6 +132,7 @@ export default function PanelGraficos({
             tipo="histograma_tendencia"
             graficos={resultado.graficosTema3?.graficoData}
             indicadores={resultado.graficosTema3?.indicadores}
+            selectedColumn={selectedColumn}
           />
         ),
       });
@@ -111,6 +143,7 @@ export default function PanelGraficos({
           <GraficoTendenciaPosicion
             tipo="ojiva"
             graficos={resultado.graficosTema3?.graficoData}
+            selectedColumn={selectedColumn}
           />
         ),
       });
@@ -123,7 +156,12 @@ export default function PanelGraficos({
         titulo: "Gráfico de Serie Cronológica Histórica",
         anchoCompleto: true,
         contenido: (
-          <GraficoSeriesTiempo resultado={resultado} tipo="historico" />
+          <GraficoSeriesTiempo
+            resultado={resultado}
+            tipo="historico"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
         ),
       });
       nuevosWidgets.push({
@@ -131,7 +169,12 @@ export default function PanelGraficos({
         titulo: "Línea de Tendencia y Pronóstico",
         anchoCompleto: true,
         contenido: (
-          <GraficoSeriesTiempo resultado={resultado} tipo="pronostico" />
+          <GraficoSeriesTiempo
+            resultado={resultado}
+            tipo="pronostico"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
         ),
       });
     }
@@ -141,32 +184,76 @@ export default function PanelGraficos({
       nuevosWidgets.push({
         id: "int-1",
         titulo: "Histograma de Frecuencias",
-        contenido: <GraficoIntervalos datos={resultado} tipo="histograma" />,
+        contenido: (
+          <GraficoIntervalos
+            datos={resultado}
+            tipo="histograma"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
       nuevosWidgets.push({
         id: "int-2",
         titulo: "Polígono de Frecuencias",
-        contenido: <GraficoIntervalos datos={resultado} tipo="poligono" />,
+        contenido: (
+          <GraficoIntervalos
+            datos={resultado}
+            tipo="poligono"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
       nuevosWidgets.push({
         id: "int-3",
         titulo: "Ojiva Creciente (Fi)",
         contenido: (
-          <GraficoIntervalos datos={resultado} tipo="ojiva_creciente" />
+          <GraficoIntervalos
+            datos={resultado}
+            tipo="ojiva_creciente"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
         ),
       });
       nuevosWidgets.push({
         id: "int-4",
         titulo: "Ojiva Decreciente (F'i)",
         contenido: (
-          <GraficoIntervalos datos={resultado} tipo="ojiva_decreciente" />
+          <GraficoIntervalos
+            datos={resultado}
+            tipo="ojiva_decreciente"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
         ),
       });
       nuevosWidgets.push({
         id: "int-5",
         titulo: "Histograma + Polígono (Mixto)",
         anchoCompleto: true,
-        contenido: <GraficoIntervalos datos={resultado} tipo="mixto" />,
+        contenido: (
+          <GraficoIntervalos
+            datos={resultado}
+            tipo="mixto"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
+      });
+      nuevosWidgets.push({
+        id: "int-6",
+        titulo: "Intersección de Ojivas (Creciente y Decreciente)",
+        anchoCompleto: true,
+        contenido: (
+          <GraficoIntervalos
+            datos={resultado}
+            tipo="interseccion_ojivas"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
     }
 
@@ -180,12 +267,26 @@ export default function PanelGraficos({
       nuevosWidgets.push({
         id: "uni-1",
         titulo: "Gráfico de Barras",
-        contenido: <GraficoEstadistico datos={resultado} tipo="barras" />,
+        contenido: (
+          <GraficoEstadistico
+            datos={resultado}
+            tipo="barras"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
       nuevosWidgets.push({
         id: "uni-2",
         titulo: "Gráfico Circular (Pastel)",
-        contenido: <GraficoEstadistico datos={resultado} tipo="pastel" />,
+        contenido: (
+          <GraficoEstadistico
+            datos={resultado}
+            tipo="pastel"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
     }
 
@@ -194,25 +295,54 @@ export default function PanelGraficos({
       nuevosWidgets.push({
         id: "biv-1",
         titulo: "Barras Agrupadas",
-        contenido: <GraficoBivariado datos={resultado} tipo="agrupadas" />,
+        contenido: (
+          <GraficoBivariado
+            datos={resultado}
+            tipo="agrupadas"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
       nuevosWidgets.push({
         id: "biv-2",
         titulo: "Barras Apiladas (100%)",
-        contenido: <GraficoBivariado datos={resultado} tipo="apiladas_100" />,
+        contenido: (
+          <GraficoBivariado
+            datos={resultado}
+            tipo="apiladas_100"
+            selectedColumn={selectedColumn}
+            selectedColumnY={selectedColumnY}
+          />
+        ),
       });
       if (resultado.ambosNumericos) {
         nuevosWidgets.push({
           id: "biv-3",
           titulo: "Diagrama de Dispersión",
           anchoCompleto: true,
-          contenido: <GraficoBivariado datos={resultado} tipo="dispersion" />,
+          contenido: (
+            <GraficoBivariado
+              datos={resultado}
+              tipo="dispersion"
+              selectedColumn={selectedColumn}
+              selectedColumnY={selectedColumnY}
+            />
+          ),
         });
       }
     }
 
     return nuevosWidgets;
-  }, [resultado, esIntervalo, calculo]);
+  }, [
+    resultado,
+    esIntervalo,
+    calculo,
+    modelosVisibles,
+    setModelosVisibles,
+    selectedColumn,
+    selectedColumnY,
+  ]);
 
   // 2. SINCRONIZACIÓN CON EL ESTADO DE CALCULOS.JSX
   useEffect(() => {
@@ -266,6 +396,7 @@ export default function PanelGraficos({
                 id={widget.id}
                 titulo={widget.titulo}
                 anchoCompleto={widget.anchoCompleto}
+                alto={widget.alto}
               >
                 {widget.contenido}
               </MarcoWidget>
