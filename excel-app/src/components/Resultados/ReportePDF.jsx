@@ -1,5 +1,5 @@
 import React from "react";
-import escudoAdmin from "../../assets/images/escudoAdmin.png";
+import escudoDorado from "../../assets/images/escudo-dorado.png";
 import TablaRegresion from "./TablaRegresion";
 import TablaSeriesTiempo from "./TablaSeriesTiempo";
 import TablaIndices from "./TablaIndices";
@@ -28,6 +28,46 @@ export default function ReportePDF({
           --bg-card: #ffffff !important;
           --text-main: #000000 !important;
           --border-color: #cccccc !important;
+          display: block !important;
+          width: 8.5in !important;
+          min-height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #reporte-formal-pdf .pdf-section {
+          display: block;
+          width: 100% !important;
+          margin-top: 0 !important;
+          margin-bottom: 15px !important;
+          page-break-before: avoid !important;
+          page-break-after: auto !important;
+          page-break-inside: avoid !important;
+        }
+        #pdf-header {
+          border-bottom: 2px solid #000 !important;
+          padding-bottom: 10px !important;
+          margin-bottom: 20px !important;
+          display: block !important;
+          width: 100% !important;
+          clear: both !important;
+        }
+        #pdf-header-text {
+          float: left !important;
+          width: 75% !important;
+          text-align: left !important;
+        }
+        #pdf-header-logo {
+          float: right !important;
+          width: 20% !important;
+          text-align: right !important;
+        }
+        #pdf-header-logo img {
+          width: 1.2in !important;
+          height: auto !important;
+          display: inline-block !important;
+        }
+        #reporte-formal-pdf button {
+          display: none !important;
         }
         #reporte-formal-pdf table, 
         #reporte-formal-pdf td {
@@ -86,18 +126,20 @@ export default function ReportePDF({
         style={{ width: "8.5in", minHeight: "11in", padding: "0.8in", backgroundColor: "white", color: "black", fontFamily: "Arial, sans-serif" }}
       >
         {/* ENCABEZADO INSTITUCIONAL */}
-        <div className="pdf-section" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #000", paddingBottom: "10px", marginBottom: "20px" }}>
-          <img src={escudoAdmin} style={{ width: "1in" }} alt="USFX" />
-          <div style={{ textAlign: "center", flex: 1 }}>
-            <h2 style={{ margin: 0, fontSize: "16pt" }}>UNIVERSIDAD DE SAN FRANCISCO XAVIER</h2>
-            <h3 style={{ margin: 0, fontSize: "14pt" }}>Facultad de Ciencias Económicas y Empresariales</h3>
-            <p style={{ margin: 0, fontSize: "10pt" }}>Carrera: Administración de Empresas</p>
+        <div id="pdf-header" className="pdf-section" style={{ borderBottom: "2px solid #000", paddingBottom: "10px", marginBottom: "20px", display: "block", width: "100%", clear: "both" }}>
+          <div id="pdf-header-text" style={{ float: "left", width: "75%", textAlign: "left" }}>
+            <div style={{ margin: 0, fontSize: "12pt", fontFamily: "Arial, sans-serif", color: "#000000" }}>Universidad Mayor, Real y Pontificia de San Francisco Xavier de Chuquisaca</div>
+            <div style={{ margin: "2px 0 0 0", fontSize: "11pt", fontFamily: "Arial, sans-serif", color: "#000000" }}>Facultad de Ciencias Económicas y Empresariales</div>
+            <div style={{ margin: "4px 0 0 0", fontSize: "12pt", fontWeight: "bold", fontFamily: "Arial, sans-serif", color: "#000000" }}>CARRERA DE ADMINISTRACIÓN DE EMPRESAS</div>
           </div>
-          <div style={{ width: "1in" }}></div>
+          <div id="pdf-header-logo" style={{ float: "right", width: "20%", textAlign: "right" }}>
+            <img src={escudoDorado} style={{ width: "1.2in", height: "auto", display: "inline-block" }} alt="USFX" />
+          </div>
+          <div style={{ clear: "both" }}></div>
         </div>
 
         {/* FICHA TÉCNICA */}
-        <div className="pdf-section" style={{ marginBottom: "30px", backgroundColor: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #ddd" }}>
+        <div id="pdf-ficha-tecnica" className="pdf-section" style={{ marginBottom: "30px", backgroundColor: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #ddd" }}>
           <h1 style={{ textAlign: "center", fontSize: "16pt", margin: "0 0 15px 0", color: "#2c3e50" }}>
             ANÁLISIS ESTADÍSTICO: {calculo.replace(/_/g, " ").toUpperCase()}
           </h1>
@@ -159,26 +201,26 @@ export default function ReportePDF({
 
         {/* CONTENIDO DE TABLAS Y GRÁFICOS */}
         <div id="contenido-pdf-dinamico">
-          <div className="pdf-section">
+          <div id="pdf-intro" className="pdf-section">
             <p style={{ fontStyle: "italic", marginBottom: "15px" }}>Este documento contiene el análisis estadístico detallado generado por el sistema.</p>
           </div>
 
           {resultado && (
             <>
               {calculo === "regresion_simple" && resultado.tipo === "regresion" && (
-                <div className="pdf-section"><TablaRegresion resultado={resultado} /></div>
+                <div id="pdf-tabla-regresion" className="pdf-section"><TablaRegresion resultado={resultado} /></div>
               )}
               {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && (
-                <div className="pdf-section"><TablaSeriesTiempo resultado={resultado} /></div>
+                <div id="pdf-tabla-series-tiempo" className="pdf-section"><TablaSeriesTiempo resultado={resultado} /></div>
               )}
               {calculo === "numeros_indices" && ["indices_compuestos", "operaciones_indices", "deflacion_financiera"].includes(resultado.tipo) && (
-                <div className="pdf-section"><TablaIndices resultado={resultado} /></div>
+                <div id="pdf-tabla-indices" className="pdf-section"><TablaIndices resultado={resultado} /></div>
               )}
               {esBivariada && resultado.tipo === "distribucion_bivariada" && (
-                <div className="pdf-section"><TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} /></div>
+                <div id="pdf-tabla-bivariantes" className="pdf-section"><TablasBivariantes resultado={resultado} formatearCelda={formatearCelda} /></div>
               )}
               {esUnidimensional && (!resultado.tipo || ["tendencia_y_posicion", "variabilidad_y_forma", "estadistica_descriptiva"].includes(resultado.tipo)) && (
-                <div className="pdf-section">
+                <div id="pdf-tabla-unidimensionales" className="pdf-section">
                   <TablasUnidimensionales resultado={resultado} calculo={calculo} formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil} modoImpresion={true} />
                 </div>
               )}
@@ -190,7 +232,7 @@ export default function ReportePDF({
           )}
         </div>
 
-        <div className="pdf-section" style={{ marginTop: "50px", borderTop: "1px solid #ccc", paddingTop: "10px", fontSize: "9pt", textAlign: "center" }}>
+        <div id="pdf-footer" className="pdf-section" style={{ marginTop: "20px", borderTop: "1px solid #ccc", paddingTop: "10px", fontSize: "9pt", textAlign: "center" }}>
           Software Estadístico - Trabajo Dirigido USFX © 2026
         </div>
       </div>

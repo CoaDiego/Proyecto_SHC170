@@ -35,17 +35,23 @@ export default function Archivos({ usuario }) {
   const [misCursos, setMisCursos] = useState([]);
 
   useEffect(() => {
-    if (!usuario) return;
+    const cargarCursos = async () => {
+      if (!usuario) return;
+      try {
+        const correoUsuario = usuario.email || usuario.id;
+        if (["Docente", "Administrador"].includes(usuario.rol)) {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_clases/${correoUsuario}`);
+          if (res.ok) setMisCursos(await res.json());
+        } else {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_inscripciones/${correoUsuario}`);
+          if (res.ok) setMisCursos(await res.json());
+        }
+      } catch (error) {
+        console.error("Error al cargar cursos para dropdown:", error);
+      }
+    };
 
-    if (usuario.rol === "Estudiante") {
-      // Si es estudiante, cargamos su mochila
-      const inscritos = localStorage.getItem("cursos_estudiante");
-      if (inscritos) setMisCursos(JSON.parse(inscritos));
-    } else {
-      // Si es docente/admin, cargamos los cursos creados
-      const creados = localStorage.getItem("cursos_docente");
-      if (creados) setMisCursos(JSON.parse(creados));
-    }
+    cargarCursos();
   }, [usuario]);
 
   const loadFiles = async () => {
@@ -237,15 +243,16 @@ export default function Archivos({ usuario }) {
                     width: "100%",
                     padding: "10px",
                     borderRadius: "4px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#f8f9fa",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-input)",
+                    color: "var(--text-main)",
                   }}
                 >
-                  <option value="">
+                  <option value="" style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)" }}>
                     -- Elige un curso para ver material --
                   </option>
                   {misCursos.map((c) => (
-                    <option key={c.id} value={c.id}>
+                    <option key={c.id} value={c.nombre} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)" }}>
                       {c.nombre}
                     </option>
                   ))}

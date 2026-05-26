@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { IconoGrafico, IconoMostrar, IconoOcultar, IconoMaximizar, IconoRestaurar } from './iconos';
+import { IconoGrafico, IconoMostrar, IconoOcultar, IconoMaximizar, IconoRestaurar, IconoCopiar } from './iconos';
+import { copiarGrafico } from '../../utils/exportUtils';
 
 const IconoMover = () => (
   <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" style={{ cursor: 'grab', opacity: 0.6 }}>
@@ -55,6 +56,7 @@ export default function MarcoWidget({ id, titulo, children, anchoCompleto = fals
               {...listeners}
               style={{ display: 'flex', alignItems: 'center', cursor: 'grab', touchAction: 'none', padding: '4px' }}
               title="Arrastrar gráfico"
+              data-html2canvas-ignore="true"
             >
               <IconoMover />
             </div>
@@ -63,7 +65,15 @@ export default function MarcoWidget({ id, titulo, children, anchoCompleto = fals
             </h4>
           </div>
 
-          <div className="widget-controles">
+          <div className="widget-controles" data-html2canvas-ignore="true">
+            <button 
+              className="widget-btn" 
+              onClick={() => copiarGrafico(id)} 
+              title="Copiar Imagen" 
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <IconoCopiar />
+            </button>
             <button className="widget-btn" onClick={() => setIsMinimized(!isMinimized)} title={isMinimized ? "Mostrar" : "Ocultar"} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {isMinimized ? <IconoMostrar /> : <IconoOcultar />}
             </button>

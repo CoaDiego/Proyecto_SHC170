@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { alerta } from '../utils/Notificaciones'; // Asegúrate de que esta ruta sea correcta
+import { alerta } from '../utils/Notificaciones';
+import { api } from "../services/api";
 
 export default function Perfil({ usuario, setUsuario }) {
   const navigate = useNavigate();
   
-  // --- NUEVOS ESTADOS PARA EL MODO ADMINISTRADOR ---
+  // --- ESTADOS PARA GESTIÓN DE ROLES (ADMIN) ---
   const [listaUsuarios, setListaUsuarios] = useState([]);
 
+  // --- ESTADOS PARA CAMBIAR CONTRASEÑA ---
+  const [passActual, setPassActual] = useState("");
+  const [passNueva, setPassNueva] = useState("");
+  const [passNuevaConf, setPassNuevaConf] = useState("");
+
+  // --- ESTADOS PARA ELIMINAR CUENTA ---
+  const [mostrarConfirmarEliminar, setMostrarConfirmarEliminar] = useState(false);
+  const [passEliminar, setPassEliminar] = useState("");
+  const [palabraConfirmacion, setPalabraConfirmacion] = useState("");
+
   useEffect(() => {
-    // Solo si el usuario logueado es Administrador, descargamos la lista de la base de datos
     if (usuario && usuario.rol === "Administrador") {
       cargarUsuarios();
     }
@@ -37,7 +47,7 @@ export default function Perfil({ usuario, setUsuario }) {
       
       if (res.ok) {
         alerta.success("Rol actualizado", `El usuario ha sido ascendido a ${nuevoRol}`);
-        cargarUsuarios(); // Recargamos la tabla visualmente
+        cargarUsuarios();
       } else {
         alerta.error("Error", "No se pudo actualizar el rol");
       }
@@ -45,16 +55,55 @@ export default function Perfil({ usuario, setUsuario }) {
       alerta.error("Error", "No hay conexión con el servidor");
     }
   };
-  // ------------------------------------------------
 
   const handleCerrarSesion = () => {
     setUsuario(null); 
     navigate('/login'); 
   };
 
+  const handleCambiarPassword = async (e) => {
+    e.preventDefault();
+    if (!passActual || !passNueva || !passNuevaConf) {
+      alerta.error("Campos vacíos", "Por favor, completa todos los campos.");
+      return;
+    }
+    if (passNueva !== passNuevaConf) {
+      alerta.error("Error", "Las nuevas contraseñas no coinciden.");
+      return;
+    }
+    try {
+      await api.cambiarPasswordPerfil(usuario.email, passActual, passNueva);
+      alerta.success("Contraseña actualizada", "Tu contraseña ha sido cambiada correctamente.");
+      setPassActual("");
+      setPassNueva("");
+      setPassNuevaConf("");
+    } catch (err) {
+      alerta.error("Error", err.message || "La contraseña actual es incorrecta.");
+    }
+  };
+
+  const handleEliminarCuenta = async (e) => {
+    e.preventDefault();
+    if (palabraConfirmacion !== "ELIMINAR") {
+      alerta.error("Confirmación incorrecta", "Debes escribir la palabra 'ELIMINAR' en mayúsculas.");
+      return;
+    }
+    if (!passEliminar) {
+      alerta.error("Contraseña requerida", "Por favor, ingresa tu contraseña para confirmar.");
+      return;
+    }
+    try {
+      await api.eliminarCuenta(usuario.email, passEliminar);
+      alerta.success("Cuenta eliminada", "Tu cuenta ha sido eliminada permanentemente.");
+      setUsuario(null);
+      navigate("/login");
+    } catch (err) {
+      alerta.error("Error", err.message || "La contraseña ingresada es incorrecta.");
+    }
+  };
+
   if (!usuario) return null; 
 
-  // Función UX para sacar las iniciales (ej: "Juan Pérez" -> "JP")
   const getIniciales = (nombre) => {
     if (!nombre) return '👤';
     const nombreLimpio = nombre.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '').trim();
@@ -70,10 +119,9 @@ export default function Perfil({ usuario, setUsuario }) {
   };
 
   return (
-    // Ampliamos un poco el maxWidth a 800px para que la tabla de abajo quepa bien
     <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px' }}>
       
-      {/* TARJETA DE PERFIL ORIGINAL (TU DISEÑO INTACTO) */}
+      {/* TARJETA DE PERFIL */}
       <div 
         className="grafico-card" 
         style={{ 
@@ -112,7 +160,7 @@ export default function Perfil({ usuario, setUsuario }) {
               {usuario.institucion && (
                 <span style={{ backgroundColor: 'rgba(41, 128, 185, 0.1)', color: '#2980b9', padding: '6px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 'bold' }}>
                    {usuario.institucion}
-                </span>
+                 </span>
               )}
             </div>
 
@@ -147,7 +195,186 @@ export default function Perfil({ usuario, setUsuario }) {
         </div>
       </div>
 
-      {/* --- NUEVA TARJETA: PANEL DE ADMINISTRADOR (SOLO VISIBLE SI ES ADMIN) --- */}
+      {/* SECCIÓN DE SEGURIDAD Y CONFIGURACIÓN */}
+      <div 
+        className="grafico-card"
+        style={{ 
+          marginTop: '30px',
+          borderRadius: '12px', 
+          boxShadow: '0 8px 24px rgba(0,0,0,0.1)', 
+          backgroundColor: 'var(--bg-card)', 
+          padding: '30px'
+        }}
+      >
+        <h3 style={{ margin: '0 0 20px 0', color: 'var(--text-main)', borderBottom: "2px solid var(--border-color)", paddingBottom: "10px" }}>
+          🔒 Seguridad y Contraseña
+        </h3>
+        
+        <form onSubmit={handleCambiarPassword} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <div style={{ textAlign: 'left' }}>
+            <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Contraseña Actual</label>
+            <input 
+              type="password" 
+              value={passActual} 
+              onChange={(e) => setPassActual(e.target.value)} 
+              placeholder="Contraseña actual" 
+              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', boxSizing: 'border-box' }} 
+              required
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+            <div style={{ textAlign: 'left', flex: 1, minWidth: '200px' }}>
+              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Nueva Contraseña</label>
+              <input 
+                type="password" 
+                value={passNueva} 
+                onChange={(e) => setPassNueva(e.target.value)} 
+                placeholder="Nueva contraseña" 
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', boxSizing: 'border-box' }} 
+                required
+              />
+            </div>
+            <div style={{ textAlign: 'left', flex: 1, minWidth: '200px' }}>
+              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Confirmar Nueva Contraseña</label>
+              <input 
+                type="password" 
+                value={passNuevaConf} 
+                onChange={(e) => setPassNuevaConf(e.target.value)} 
+                placeholder="Repite nueva contraseña" 
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', boxSizing: 'border-box' }} 
+                required
+              />
+            </div>
+          </div>
+          
+          <button 
+            type="submit" 
+            style={{ 
+              alignSelf: 'flex-start',
+              backgroundColor: 'var(--accent-color)', 
+              color: 'white', 
+              border: 'none', 
+              padding: '12px 24px', 
+              borderRadius: '4px', 
+              cursor: 'pointer', 
+              fontWeight: 'bold',
+              marginTop: '10px'
+            }}
+          >
+            Actualizar Contraseña
+          </button>
+        </form>
+      </div>
+
+      {/* SECCIÓN DE DARSE DE BAJA */}
+      <div 
+        className="grafico-card"
+        style={{ 
+          marginTop: '30px',
+          borderRadius: '12px', 
+          boxShadow: '0 8px 24px rgba(0,0,0,0.1)', 
+          backgroundColor: 'var(--bg-card)', 
+          padding: '30px',
+          border: '1px solid rgba(220, 38, 38, 0.3)'
+        }}
+      >
+        <h3 style={{ margin: '0 0 10px 0', color: '#dc2626', borderBottom: "2px solid rgba(220, 38, 38, 0.2)", paddingBottom: "10px" }}>
+          ⚠️ Zona de Peligro: Darse de Baja
+        </h3>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+          Al darse de baja, se eliminará tu cuenta y todos tus datos (archivos guardados, historial de cálculos, clases) de forma permanente del sistema. Esta acción no se puede deshacer.
+        </p>
+
+        {!mostrarConfirmarEliminar ? (
+          <button 
+            onClick={() => setMostrarConfirmarEliminar(true)}
+            style={{ 
+              backgroundColor: '#dc2626', 
+              color: 'white', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '4px', 
+              cursor: 'pointer', 
+              fontWeight: 'bold' 
+            }}
+          >
+            Eliminar Cuenta
+          </button>
+        ) : (
+          <form onSubmit={handleEliminarCuenta} style={{ display: 'flex', flexDirection: 'column', gap: '15px', backgroundColor: 'rgba(220, 38, 38, 0.05)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(220, 38, 38, 0.2)' }}>
+            <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: '#dc2626', fontSize: '0.9rem' }}>
+              Confirmación de Seguridad requerida:
+            </p>
+            
+            <div style={{ textAlign: 'left' }}>
+              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>
+                Escribe la palabra <strong>ELIMINAR</strong> en mayúsculas:
+              </label>
+              <input 
+                type="text" 
+                value={palabraConfirmacion} 
+                onChange={(e) => setPalabraConfirmacion(e.target.value)} 
+                placeholder="Escribe ELIMINAR" 
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #dc2626', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', marginTop: '5px', boxSizing: 'border-box' }} 
+                required
+              />
+            </div>
+
+            <div style={{ textAlign: 'left' }}>
+              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>
+                Confirma ingresando tu contraseña actual:
+              </label>
+              <input 
+                type="password" 
+                value={passEliminar} 
+                onChange={(e) => setPassEliminar(e.target.value)} 
+                placeholder="Tu contraseña" 
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', marginTop: '5px', boxSizing: 'border-box' }} 
+                required
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button 
+                type="submit"
+                style={{ 
+                  backgroundColor: '#dc2626', 
+                  color: 'white', 
+                  border: 'none', 
+                  padding: '10px 20px', 
+                  borderRadius: '4px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold' 
+                }}
+              >
+                Confirmar Borrado de Cuenta
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setMostrarConfirmarEliminar(false);
+                  setPalabraConfirmacion("");
+                  setPassEliminar("");
+                }}
+                style={{ 
+                  backgroundColor: 'var(--bg-main)', 
+                  color: 'var(--text-main)', 
+                  border: '1px solid var(--border-color)', 
+                  padding: '10px 20px', 
+                  borderRadius: '4px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold' 
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* --- PANEL DE ADMINISTRADOR (SOLO VISIBLE SI ES ADMIN) --- */}
       {usuario.rol === "Administrador" && (
         <div 
           className="grafico-card"
@@ -185,7 +412,7 @@ export default function Perfil({ usuario, setUsuario }) {
                       <span style={{ 
                         backgroundColor: u.rol === 'Administrador' ? '#ff4d4f' : (u.rol === 'Docente' ? '#52c41a' : '#1890ff'),
                         color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold'
-                      }}>
+                       }}>
                         {u.rol}
                       </span>
                     </td>

@@ -283,6 +283,70 @@ guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
       throw error;
     }
   },
+
+  obtenerFechaLimite: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/fecha_limite`);
+      if (!res.ok) throw new Error("Error al obtener la fecha límite");
+      return await res.json();
+    } catch (error) {
+      console.error("Error en api.obtenerFechaLimite:", error);
+      throw error;
+    }
+  },
+
+  recuperarPassword: async (email) => {
+    const res = await fetch(`${BASE_URL}/recuperar_password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al solicitar recuperación");
+    return data;
+  },
+
+  resetearPassword: async (email, token, nuevo_password) => {
+    const res = await fetch(`${BASE_URL}/resetear_password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, token, nuevo_password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al restablecer contraseña");
+    return data;
+  },
+
+  cambiarPasswordPerfil: async (email, password_actual, password_nuevo) => {
+    const res = await fetch(`${BASE_URL}/cambiar_password_perfil`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password_actual, password_nuevo }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al cambiar contraseña");
+    return data;
+  },
+
+  eliminarCuenta: async (email, password) => {
+    const res = await fetch(`${BASE_URL}/eliminar_cuenta`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al eliminar la cuenta");
+    return data;
+  },
+
+  eliminarClase: async (claseId, emailUsuario) => {
+    const res = await fetch(`${BASE_URL}/eliminar_clase/${claseId}?user_email=${encodeURIComponent(emailUsuario)}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al eliminar el curso");
+    return data;
+  },
 };
 
 export default api;

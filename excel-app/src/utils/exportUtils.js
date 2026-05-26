@@ -125,3 +125,49 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
         alerta.error("Error PDF", "No se pudo generar el archivo.");
     }
 };
+
+export const copiarGrafico = async (graficoId) => {
+    const input = document.getElementById(graficoId);
+    if (!input) {
+        alerta.error("Error", "No se encontró el contenedor del gráfico.");
+        return;
+    }
+
+    try {
+        // Capturamos el gráfico con html2canvas
+        const canvas = await html2canvas(input, {
+            scale: 2, // Mayor resolución
+            useCORS: true,
+            backgroundColor: "#ffffff", // Fondo blanco
+            logging: false
+        });
+
+        // Convertimos el canvas a blob
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                alerta.error("Error", "No se pudo generar la imagen del gráfico.");
+                return;
+            }
+
+            try {
+                // Escribimos en el portapapeles
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                alerta.exito("¡Gráfico Copiado!", "La imagen del gráfico está lista en tu portapapeles.");
+            } catch (err) {
+                console.error("Error al escribir en el portapapeles:", err);
+                alerta.error(
+                    "Error al copiar",
+                    "Tu navegador bloqueó el copiado de imágenes. Asegúrate de estar en un contexto seguro (HTTPS o localhost)."
+                );
+            }
+        }, "image/png");
+
+    } catch (error) {
+        console.error("Error al copiar el gráfico:", error);
+        alerta.error("Error", "No se pudo procesar la imagen del gráfico.");
+    }
+};

@@ -1,21 +1,27 @@
 import random
-from fastapi import APIRouter, Depends
+from datetime import datetime
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db
-from models import Clase, Inscripcion, Usuario
+from models import Clase, Inscripcion, Usuario, Archivo, HistorialCalculo
 
 router = APIRouter()
 
-# 1. Cambiamos int por str para aceptar correos
 class NuevaClase(BaseModel):
     nombre: str
     docente_email: str 
+    fecha_limite_matriculacion: str = None  # Agregamos esta propiedad
 
 class UnirseClase(BaseModel):
     codigo_acceso: str
     estudiante_email: str
+
+class ActualizarClase(BaseModel):
+    id: int
+    nombre: str
+    fecha_limite_matriculacion: str = None
 
 @router.post("/crear_clase")
 async def crear_clase(datos: NuevaClase, db: Session = Depends(get_db)):
@@ -35,12 +41,29 @@ async def crear_clase(datos: NuevaClase, db: Session = Depends(get_db)):
     nueva_clase = Clase(
         nombre=datos.nombre,
         docente_id=docente.id,
-        codigo_acceso=codigo
+        codigo_acceso=codigo,
+        fecha_limite_matriculacion=datos.fecha_limite_matriculacion
     )
     db.add(nueva_clase)
     db.commit()
     db.refresh(nueva_clase)
     return {"message": "Clase creada exitosamente", "codigo_acceso": codigo}
+
+@router.put("/actualizar_clase")
+async def actualizar_clase(datos: ActualizarClase, db: Session = Depends(get_db)):
+    clase = db.query(Clase).filter(Clase.id == datos.id).first()
+    if not clase:
+        return JSONResponse(status_code=404, content={"error": "Clase no encontrada"})
+    
+    clase.nombre = datos.nombre
+    clase.fecha_limite_matriculacion = datos.fecha_limite_matriculacion
+    db.commit()
+    return {
+        "message": "Clase actualizada exitosamente",
+        "id": clase.id,
+        "nombre": clase.nombre,
+        "fecha_limite_matriculacion": clase.fecha_limite_matriculacion
+    }
 
 @router.post("/unirse_clase")
 async def unirse_clase(datos: UnirseClase, db: Session = Depends(get_db)):
@@ -51,6 +74,18 @@ async def unirse_clase(datos: UnirseClase, db: Session = Depends(get_db)):
     clase = db.query(Clase).filter(Clase.codigo_acceso == datos.codigo_acceso).first()
     if not clase:
         return JSONResponse(status_code=404, content={"error": "Código de clase inválido"})
+
+    # Validar fecha límite de matriculación del curso
+    if clase.fecha_limite_matriculacion:
+        try:
+            limite = datetime.strptime(clase.fecha_limite_matriculacion, "%Y-%m-%d").date()
+            if datetime.now().date() > limite:
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": f"El periodo de matriculación para este curso ha finalizado (Fecha límite: {clase.fecha_limite_matriculacion})."}
+                )
+        except ValueError:
+            pass
         
     inscrito = db.query(Inscripcion).filter(
         Inscripcion.clase_id == clase.id,
@@ -67,10 +102,28 @@ async def unirse_clase(datos: UnirseClase, db: Session = Depends(get_db)):
 
 @router.get("/mis_clases/{email}")
 async def obtener_clases_docente(email: str, db: Session = Depends(get_db)):
-    docente = db.query(Usuario).filter(Usuario.email == email).first()
-    if not docente: return []
-    clases = db.query(Clase).filter(Clase.docente_id == docente.id).all()
-    return [{"id": c.id, "nombre": c.nombre, "codigo": c.codigo_acceso, "alumnos": 0, "archivos": 0} for c in clases]
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    if not usuario: return []
+    
+    if usuario.rol == "Administrador":
+        clases = db.query(Clase).all()
+    else:
+        clases = db.query(Clase).filter(Clase.docente_id == usuario.id).all()
+        
+    res_list = []
+    for c in clases:
+        docente_creador = db.query(Usuario).filter(Usuario.id == c.docente_id).first()
+        docente_nombre = docente_creador.nombre if docente_creador else "Desconocido"
+        res_list.append({
+            "id": c.id,
+            "nombre": c.nombre,
+            "codigo": c.codigo_acceso,
+            "alumnos": 0,
+            "archivos": 0,
+            "fecha_limite_matriculacion": c.fecha_limite_matriculacion,
+            "docente_nombre": docente_nombre
+        })
+    return res_list
 
 @router.get("/mis_inscripciones/{email}")
 async def obtener_clases_estudiante(email: str, db: Session = Depends(get_db)):
@@ -84,6 +137,37 @@ async def obtener_clases_estudiante(email: str, db: Session = Depends(get_db)):
             clases_inscritas.append({
                 "id": clase.id,
                 "nombre": clase.nombre,
-                "codigo": clase.codigo_acceso
+                "codigo": clase.codigo_acceso,
+                "fecha_limite_matriculacion": clase.fecha_limite_matriculacion
             })
     return clases_inscritas
+
+@router.delete("/eliminar_clase/{clase_id}")
+async def eliminar_clase(clase_id: int, user_email: str = Query(...), db: Session = Depends(get_db)):
+    # 1. Buscar al usuario que solicita la eliminación
+    usuario = db.query(Usuario).filter(Usuario.email == user_email).first()
+    if not usuario:
+        return JSONResponse(status_code=404, content={"error": "Usuario no encontrado"})
+        
+    # 2. Buscar la clase
+    clase = db.query(Clase).filter(Clase.id == clase_id).first()
+    if not clase:
+        return JSONResponse(status_code=404, content={"error": "Clase no encontrada"})
+        
+    # 3. Validar permisos: Administrador o docente creador del curso
+    if usuario.rol != "Administrador" and clase.docente_id != usuario.id:
+        return JSONResponse(
+            status_code=403, 
+            content={"error": "No tienes permisos para eliminar este curso. Solo el docente creador o un administrador pueden hacerlo."}
+        )
+        
+    # 4. Eliminar todas las dependencias asociadas a la clase en cascada
+    db.query(Inscripcion).filter(Inscripcion.clase_id == clase.id).delete(synchronize_session=False)
+    db.query(Archivo).filter(Archivo.clase_id == clase.id).delete(synchronize_session=False)
+    db.query(HistorialCalculo).filter(HistorialCalculo.clase_id == clase.id).delete(synchronize_session=False)
+    
+    # 5. Eliminar la clase de la base de datos
+    db.delete(clase)
+    db.commit()
+    
+    return {"message": "Curso eliminado exitosamente"}
