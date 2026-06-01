@@ -532,4 +532,73 @@ body.dark-mode .logo-espera {
 
 .input-percentil {
   -moz-appearance: number-input !important; /* Para Firefox */
+}
+
+/* =========================================
+   SISTEMA DE TOOLTIPS PARA VISTA PREVIA
+========================================= */
+.col-btn-container {
+  position: relative;
+  display: inline-block;
+}
+
+.col-btn-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  color: white;
+  background-color: rgba(15, 23, 42, 0.95);
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  font-family: var(--font-main, sans-serif);
+  font-weight: 500;
+}
+
+.col-btn-container:hover .col-btn-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Estilos de botones minimalistas */
+.col-btn-minimal {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #6b7280; /* gris neutro visible en modo claro y oscuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 0;
+}
+
+.col-btn-minimal:hover {
+  background-color: rgba(100, 116, 139, 0.12);
+  border-color: rgba(100, 116, 139, 0.25);
+}
+
+.col-btn-blue:hover {
+  color: #3b82f6; /* azul visible en ambos modos */
+}
+
+.col-btn-green:hover {
+  color: #10b981; /* verde esmeralda */
+}
+
+.col-btn-minimal:active {
+  transform: scale(0.92);
 }

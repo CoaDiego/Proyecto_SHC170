@@ -4,11 +4,24 @@ import OscuroClaro from "./oscuro_claro";
 import escudoAdmin from "../../assets/images/Logo-Adm.png";
 import '../../styles/components/ui/Menu.css';
 
-export default function Menu({ usuario }) {
+export default function Menu({ usuario, setUsuario }) {
   const [isOpen, setIsOpen] = useState(false);
   // 🚀 1. Nuevo estado para controlar cuándo se abre el submenú (útil para móviles)
   const [dropdownOpen, setDropdownOpen] = useState(false); 
-  
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const perfilRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (perfilRef.current && !perfilRef.current.contains(event.target)) {
+        setMenuAbierto(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);  
   const closeMenu = () => {
     setIsOpen(false);
     setDropdownOpen(false); // 🚀 Cerramos también el submenú
@@ -122,20 +135,52 @@ export default function Menu({ usuario }) {
         </div>
 
         {usuario && (
-          <div 
-            className="perfil-usuario-menu" 
-            title={`${usuario.nombre} - ${usuario.rol}`}
-            onClick={() => {
-              navigate('/perfil');
-              closeMenu();
-            }}
-          >
-            <div className="avatar-naranja">
-              {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
+          <div className="relative" ref={perfilRef}>
+            <div 
+              className="perfil-usuario-menu" 
+              title={`${usuario.nombre} - ${usuario.rol}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuAbierto(!menuAbierto);
+              }}
+            >
+              <div className="avatar-naranja">
+                {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
+              </div>
+              <span className="user-name-text">
+                {usuario.nombre?.split(' ')[0] || 'Usuario'}
+              </span>
             </div>
-            <span className="user-name-text">
-              {usuario.nombre?.split(' ')[0] || 'Usuario'}
-            </span>
+            
+            {/* Submenú desplegable al hacer clic */}
+            {menuAbierto && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50">
+                <div
+                  onClick={() => {
+                    navigate('/perfil');
+                    closeMenu();
+                    setMenuAbierto(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                  style={{ transition: 'background-color 0.2s', color: 'var(--text-main)' }}
+                >
+                  Mi Perfil
+                </div>
+                <div
+                  onClick={() => {
+                    localStorage.removeItem("token");
+                    setUsuario(null);
+                    navigate('/login');
+                    closeMenu();
+                    setMenuAbierto(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold cursor-pointer"
+                  style={{ transition: 'background-color 0.2s' }}
+                >
+                  Cerrar sesión
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

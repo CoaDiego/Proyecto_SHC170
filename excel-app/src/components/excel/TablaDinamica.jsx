@@ -117,6 +117,7 @@ function selectEditor({ row, column, onRowChange, onClose }) {
 export default function TablaDinamica({ onTablaCreada }) {
   const { usuario } = useData();
   const [nombre, setNombre] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [configColId, setConfigColId] = useState(null); // ID de la columna siendo configurada
   const [tempOpciones, setTempOpciones] = useState(""); // Estado temporal para las opciones
@@ -456,7 +457,12 @@ export default function TablaDinamica({ onTablaCreada }) {
       console.log('[DEBUG] hojasPayload:', JSON.stringify(hojasPayload, null, 2));
       await api.guardarTablaHojas(nombre, hojasPayload, usuario?.nombre);
       alerta.success(`Guardado: ${nombre}.xlsx`, `${hojasActuales.length} hoja(s) almacenadas.`);
-      if (onTablaCreada) onTablaCreada();
+      
+      // Lanzar evento global para que el selector de archivos se entere y se actualice al instante
+      const event = new CustomEvent("tabla-creada", { detail: { nombre } });
+      window.dispatchEvent(event);
+
+      if (onTablaCreada) onTablaCreada(nombre);
     } catch (err) {
       console.error(err);
       alerta.error('Error', 'No se pudo guardar la tabla.');
@@ -887,17 +893,19 @@ export default function TablaDinamica({ onTablaCreada }) {
         </div>
       )}
 
-      <h3 className="titulo_tabla" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="3" y1="9" x2="21" y2="9"></line>
-          <line x1="9" y1="21" x2="9" y2="9"></line>
-        </svg>
-        Ingreso de Datos Estadísticos
+      <h3 className="titulo_tabla" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          Ingreso de Datos Estadísticos
+        </div>
       </h3>
 
       {/* INPUT NOMBRE ARCHIVO */}
-      <div className="container_input">
+      <div className="container_input" id="tour-crear-nombre">
         <label style={{ padding: '10px 0px 5px 0px' }}>Nombre del Archivo:</label>
         <div className="container_input_datos">
           <input
@@ -910,7 +918,7 @@ export default function TablaDinamica({ onTablaCreada }) {
       </div>
 
       {/* GENERADOR DE MATRIZ */}
-      <div className="generador_matriz_container">
+      <div className="generador_matriz_container" id="tour-crear-generador">
         <div className="generador_matriz_inputs">
           <div className="input_group_matriz">
             <label>OBSERVACIONES</label>
@@ -942,7 +950,7 @@ export default function TablaDinamica({ onTablaCreada }) {
       </div>
 
       {/* BARRA DE HERRAMIENTAS */}
-      <div className="container_herramientas">
+      <div className="container_herramientas" id="tour-crear-herramientas">
         <button onClick={agregarFila} className="button_fila_columna" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           Agregar Fila
@@ -962,7 +970,7 @@ export default function TablaDinamica({ onTablaCreada }) {
         </div>
 
         <div style={{ flex: 1 }}></div>
-        <button onClick={guardarTabla} disabled={loading} className="button_guardar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={guardarTabla} disabled={loading} className="button_guardar" id="tour-crear-guardar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
           {loading ? "Guardando..." : "Guardar Tabla"}
         </button>
@@ -1030,7 +1038,7 @@ export default function TablaDinamica({ onTablaCreada }) {
       </div>
 
       {/* GRILLA */}
-      <div className="container_grilla" onPasteCapture={handlePaste}>
+      <div className="container_grilla" id="tour-crear-grilla" onPasteCapture={handlePaste}>
         <DataGrid
           columns={columnasEditables}
           rows={rows}

@@ -1,6 +1,8 @@
 import urllib.parse
 import random
 import os
+import hashlib
+import bcrypt
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import jwt
@@ -10,7 +12,6 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 
 # Importamos la base de datos y modelos
 from database import get_db
@@ -29,20 +30,36 @@ SECRET_KEY = os.getenv("SECRET_KEY", "943e8bb8ef8f8a846174a7d77b4d18ea65bf6b1424
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
-# Configuración de passlib con bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    # Truncado de seguridad: limitamos a 72 caracteres
+    password_truncated = password[:72]
+    # Pre-hash con SHA-256 para evitar el límite de 72 bytes de bcrypt
+    pre_hashed = hashlib.sha256(password_truncated.encode("utf-8")).hexdigest()
+    # Hasheamos con bcrypt directamente para evitar incompatibilidad de passlib
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pre_hashed.encode("utf-8"), salt)
+    return hashed.decode("utf-8")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    # Truncado de seguridad: limitamos a 72 caracteres
+    plain_truncated = plain_password[:72]
+
+    # 1. Intentamos verificar con pre-hash de SHA-256 (nuevo método)
     try:
-        # Intentar verificar usando bcrypt
-        if pwd_context.verify(plain_password, hashed_password):
+        pre_hashed = hashlib.sha256(plain_truncated.encode("utf-8")).hexdigest()
+        if bcrypt.checkpw(pre_hashed.encode("utf-8"), hashed_password.encode("utf-8")):
             return True
     except Exception:
-        # Si da error (ej: es texto plano preexistente), verificar directamente
         pass
+
+    # 2. Si falla, intentamos verificar en plano contra bcrypt (método antiguo para retrocompatibilidad)
+    try:
+        if bcrypt.checkpw(plain_truncated.encode("utf-8"), hashed_password.encode("utf-8")):
+            return True
+    except Exception:
+        pass
+
+    # 3. Fallback final para texto plano puro sin hash
     return plain_password == hashed_password
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
@@ -150,29 +167,44 @@ async def obtener_fecha_limite():
     return {"fecha_limite": FECHA_LIMITE_MATRICULACION}
 
 @router.post("/registrar_usuario")
-async def registrar_usuario(user_data: UsuarioRegistro, db: Session = Depends(get_db)):
-    # 1. Buscamos si el correo ya existe en MySQL
-    usuario_existente = db.query(Usuario).filter(Usuario.email == user_data.email).first()
-    
-    if usuario_existente:
-        return JSONResponse(status_code=400, content={"error": "Este correo electrónico ya está registrado."})
-    
-    # 2. Creamos el nuevo usuario con contraseña hasheada
-    nuevo_usuario = Usuario(
-        email=user_data.email,
-        nombre=user_data.nombre,
-        password=get_password_hash(user_data.password),
-        rol="Estudiante",
-        perfil="Estudiante",
-        institucion=""
-    )
-    
-    # 3. Lo guardamos en la base de datos
-    db.add(nuevo_usuario)
-    db.commit()
-    db.refresh(nuevo_usuario)
-    
-    return {"message": "Usuario registrado con éxito"}
+async def registrar_usuario(usuario: UsuarioRegistro, db: Session = Depends(get_db)):
+    try:
+        # Truncado de seguridad opcional (máximo 72 caracteres)
+        password_plana = usuario.password[:72]
+        
+        # Imprimir la contraseña recibida justo antes de la encriptación para depuración
+        print(f"Password recibida: {password_plana}")
+        
+        # 1. Buscamos si el correo ya existe en MySQL
+        usuario_existente = db.query(Usuario).filter(Usuario.email == usuario.email).first()
+        
+        if usuario_existente:
+            return JSONResponse(status_code=400, content={"error": "Este correo electrónico ya está registrado."})
+        
+        # 2. Encriptamos la contraseña una sola vez y creamos el nuevo usuario
+        password_hasheada = get_password_hash(password_plana)
+        
+        nuevo_usuario = Usuario(
+            email=usuario.email,
+            nombre=usuario.nombre,
+            password=password_hasheada,
+            rol="Estudiante",
+            perfil="Estudiante",
+            institucion=""
+        )
+        
+        # 3. Lo guardamos en la base de datos
+        db.add(nuevo_usuario)
+        db.commit()
+        db.refresh(nuevo_usuario)
+        
+        return {"message": "Usuario registrado con éxito"}
+    except Exception as e:
+        print(f"Error interno en registrar_usuario: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno al registrar usuario: {str(e)}"
+        )
 
 @router.post("/login_local")
 async def login_local(credentials: UsuarioLogin, db: Session = Depends(get_db)):
@@ -225,9 +257,12 @@ class ResetPasswordRequest(BaseModel):
 
 @router.post("/api/auth/forgot-password")
 async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.email == data.email).first()
+    email = data.email
+    print(f"Buscando usuario: {email}")
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
     
     if usuario:
+        print("Usuario encontrado, generando token...")
         token = create_reset_token(usuario.email)
         reset_link = f"http://localhost:5173/reset-password?token={token}"
         
@@ -271,8 +306,9 @@ async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get
                     server.starttls()
                     server.login(email_sender, email_password)
                     server.sendmail(email_sender, usuario.email, msg.as_string())
+                print("Correo enviado exitosamente a través de Gmail.")
             except Exception as e:
-                print(f"Error al enviar correo SMTP: {str(e)}")
+                print(f"Error crítico al enviar correo SMTP: {e}")
                 raise HTTPException(status_code=500, detail="Error interno al procesar el envio de correo.")
                 
     return {"message": "Si el correo está registrado, recibirás un enlace en tu bandeja de entrada"}

@@ -6,6 +6,7 @@ import '../styles/components/ui/Login.css'; // Aseguramos que cargue los estilos
 
 // Importamos el componente de modo oscuro
 import OscuroClaro from "../components/ui/oscuro_claro.jsx"; 
+import { BASE_URL } from "../services/api";
 
 export default function Registro() {
   const [nombres, setNombres] = useState("");
@@ -16,8 +17,16 @@ export default function Registro() {
   
   const navigate = useNavigate();
 
+  const isPasswordMatch = pass === confirmPass;
+  const isPasswordTooShort = pass.length > 0 && pass.length < 6;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (pass.length < 6) {
+      alerta.error("Contraseña muy corta", "La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
     
     if (pass !== confirmPass) {
       alerta.error("Error", "Las contraseñas no coinciden.");
@@ -26,25 +35,44 @@ export default function Registro() {
 
     if (nombres && apellidos && email && pass) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/registrar_usuario`, {
+        const payload = {
+          nombre: `${String(nombres).trim()} ${String(apellidos).trim()}`,
+          email: String(email).trim(),
+          password: String(pass)
+        };
+
+        const response = await fetch(`${BASE_URL}/registrar_usuario`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            nombre: `${nombres} ${apellidos}`, 
-            email: email,             
-            password: pass 
-          })
+          body: JSON.stringify(payload)
         });
 
         if (response.ok) {
           alerta.success("Cuenta creada", "Tu cuenta ha sido registrada exitosamente.");
           navigate("/login"); 
         } else {
-          const errorData = await response.json();
-          alerta.error("Error", errorData.error || "No se pudo registrar.");
+          let msgError = "No se pudo registrar.";
+          try {
+            const errorData = await response.json();
+            if (errorData.detail) {
+              if (Array.isArray(errorData.detail)) {
+                msgError = errorData.detail.map(err => {
+                  const campo = err.loc ? err.loc[err.loc.length - 1] : "";
+                  return campo ? `El campo '${campo}': ${err.msg}` : err.msg;
+                }).join(" | ");
+              } else {
+                msgError = errorData.detail;
+              }
+            } else if (errorData.error) {
+              msgError = errorData.error;
+            }
+          } catch (jsonErr) {
+            msgError = `Error del servidor (${response.status}): ${response.statusText || "Error interno"}`;
+          }
+          alerta.error("Error al registrar", msgError);
         }
       } catch (error) {
-        alerta.error("Error de conexión", "Asegúrate de que el servidor Backend esté corriendo.");
+        alerta.error("Error de conexión", "No se pudo conectar con el servidor. Asegúrate de que el backend esté corriendo.");
       }
     } else {
       alerta.error("Datos incompletos", "Por favor, llena todos los campos del formulario.");
@@ -107,15 +135,23 @@ export default function Registro() {
 
           <div style={{ display: 'flex', gap: '15px' }}>
             <div style={{ textAlign: 'left', flex: 1 }}>
-              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Contraseña</label>
+              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Contraseña (mínimo 6 caracteres)</label>
               <input 
                 type="password" 
                 value={pass} 
                 onChange={(e) => setPass(e.target.value)} 
-                placeholder="Crea una contraseña" 
-                style={{ width: '100%' }} 
+                placeholder="Mínimo 6 caracteres" 
+                style={{ 
+                  width: '100%',
+                  borderColor: isPasswordTooShort ? '#dc2626' : 'var(--border-color)' 
+                }} 
                 required
               />
+              {isPasswordTooShort && (
+                <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '5px', display: 'block', fontWeight: 'bold' }}>
+                  Debe tener al menos 6 caracteres.
+                </span>
+              )}
             </div>
             <div style={{ textAlign: 'left', flex: 1 }}>
               <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Confirmar Contraseña</label>
@@ -124,9 +160,17 @@ export default function Registro() {
                 value={confirmPass} 
                 onChange={(e) => setConfirmPass(e.target.value)} 
                 placeholder="Repite la contraseña" 
-                style={{ width: '100%' }} 
+                style={{ 
+                  width: '100%',
+                  borderColor: !isPasswordMatch && confirmPass !== "" ? '#dc2626' : 'var(--border-color)'
+                }} 
                 required
               />
+              {!isPasswordMatch && confirmPass !== "" && (
+                <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '5px', display: 'block', fontWeight: 'bold' }}>
+                  Las contraseñas no coinciden.
+                </span>
+              )}
             </div>
           </div>
 

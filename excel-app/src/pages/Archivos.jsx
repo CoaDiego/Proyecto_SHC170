@@ -3,7 +3,7 @@ import ExcelViewer from "../components/excel/ExcelViewer";
 import ExcelUploader from "../components/excel/ExcelUploader";
 import ExcelContent from "../components/excel/ExcelContent";
 
-import { api } from "../services/api";
+import { api, BASE_URL } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 import "../styles/pages/Archivos.css";
 
@@ -77,6 +77,15 @@ export default function Archivos({ usuario }) {
             side: "left",
             align: 'start'
           }
+        },
+        {
+          element: '.boton-toggle-medio',
+          popover: {
+            title: 'Ocultar/Mostrar Panel',
+            description: 'Haz clic aquí para ocultar o mostrar el panel lateral y tener más espacio para visualizar tu tabla de datos.',
+            side: "right",
+            align: 'center'
+          }
         }
       ]
     });
@@ -106,10 +115,10 @@ export default function Archivos({ usuario }) {
       try {
         const correoUsuario = usuario.email || usuario.id;
         if (["Docente", "Administrador"].includes(usuario.rol)) {
-          const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_clases/${correoUsuario}`);
+          const res = await fetch(`${BASE_URL}/mis_clases/${correoUsuario}`);
           if (res.ok) setMisCursos(await res.json());
         } else {
-          const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_inscripciones/${correoUsuario}`);
+          const res = await fetch(`${BASE_URL}/mis_inscripciones/${correoUsuario}`);
           if (res.ok) setMisCursos(await res.json());
         }
       } catch (error) {
@@ -204,7 +213,7 @@ export default function Archivos({ usuario }) {
     try {
       const autorParam = encodeURIComponent(usuario.nombre);
       const cursoParam = tabActiva === "cursos" && cursoSeleccionado ? `&curso=${encodeURIComponent(cursoSeleccionado)}` : "";
-      const url = `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/files/${encodeURIComponent(filename)}?autor=${autorParam}${cursoParam}`;
+      const url = `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${autorParam}${cursoParam}`;
       
       const response = await fetch(url);
       if (!response.ok) {

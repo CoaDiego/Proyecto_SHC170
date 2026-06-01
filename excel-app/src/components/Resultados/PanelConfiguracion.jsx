@@ -52,7 +52,8 @@ export default function PanelConfiguracion({
   mostrarTabla, excelData, handleGridChange,
   ejecutarCalculo, modoCreacion, setModoCreacion,
   mostrarCalculadora, setMostrarCalculadora,
-  handleActualizarColumna
+  handleActualizarColumna,
+  handleCrearColumna
 }) {
   const containerRef = React.useRef(null);
   const [containerWidth, setContainerWidth] = React.useState(284);
@@ -72,6 +73,8 @@ export default function PanelConfiguracion({
   const [mostrarActualizarCol, setMostrarActualizarCol] = React.useState(false);
   const [columnaAEditar, setColumnaAEditar] = React.useState("");
   const [textoValores, setTextoValores] = React.useState("");
+  const [isOpenNuevaColumna, setIsOpenNuevaColumna] = React.useState(false);
+  const [nombreNuevaColumna, setNombreNuevaColumna] = React.useState("");
 
   React.useEffect(() => {
     if (mostrarActualizarCol) {
@@ -812,30 +815,65 @@ export default function PanelConfiguracion({
                   <div id="tour-tabla-grid" ref={containerRef} className="container_dataset" style={{ marginTop: "10px", width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                       <p className="info_vista" style={{ margin: 0 }}>Vista Previa (Doble clic para editar):</p>
-                      <button
-                        type="button"
-                        onClick={() => setMostrarActualizarCol(true)}
-                        style={{
-                          background: "var(--primary-color, #3b82f6)",
-                          color: "white",
-                          border: "none",
-                          padding: "5px 12px",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.85rem",
-                          fontWeight: "bold",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          transition: "background 0.3s ease"
-                        }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 20h9"/>
-                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                        </svg>
-                        Actualizar Columna
-                      </button>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        {/* Botón 1 (Actualizar Columna) */}
+                        <div className="col-btn-container">
+                          <button
+                            type="button"
+                            onClick={() => setMostrarActualizarCol(true)}
+                            className="col-btn-minimal col-btn-blue"
+                            title="Actualizar columna actual"
+                            style={{ color: '#6b7280' }}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ width: '20px', height: '20px', display: 'block', flexShrink: 0 }}
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          <div className="col-btn-tooltip">
+                            Actualizar columna actual
+                          </div>
+                        </div>
+
+                        {/* Botón 2 (Crear Nueva Columna) */}
+                        <div className="col-btn-container">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNombreNuevaColumna("");
+                              setIsOpenNuevaColumna(true);
+                            }}
+                            className="col-btn-minimal col-btn-green"
+                            title="Crear nueva columna"
+                            style={{ color: '#6b7280' }}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ width: '20px', height: '20px', display: 'block', flexShrink: 0 }}
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="12" y1="8" x2="12" y2="16" />
+                              <line x1="8" y1="12" x2="16" y2="12" />
+                            </svg>
+                          </button>
+                          <div className="col-btn-tooltip">
+                            Crear nueva columna
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <DataGrid
                       columns={rdgColumns}
@@ -853,113 +891,6 @@ export default function PanelConfiguracion({
               <p className="info_cargando">Cargando datos o selecciona un archivo...</p>
             )}
 
-            {mostrarActualizarCol && (
-              <div style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                width: "100vw",
-                height: "100vh",
-                backgroundColor: "rgba(0,0,0,0.6)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                zIndex: 99999
-              }}>
-                <div style={{
-                  background: "var(--bg-card)",
-                  padding: "25px",
-                  borderRadius: "10px",
-                  width: "450px",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
-                  border: "1px solid var(--border-color)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "15px"
-                }}>
-                  <h3 style={{ margin: 0, color: "var(--primary-color)" }}>Actualizar Datos de Columna</h3>
-                  
-                  <div>
-                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "var(--text-main)" }}>
-                      Selecciona la Columna:
-                    </label>
-                    <select
-                      value={columnaAEditar}
-                      onChange={(e) => {
-                        const col = e.target.value;
-                        setColumnaAEditar(col);
-                        const vals = excelData.map(row => row[col] !== undefined ? row[col] : "");
-                        setTextoValores(vals.join("\n"));
-                      }}
-                      style={{ width: "100%", padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)" }}
-                    >
-                      {columns.map(col => (
-                        <option key={col} value={col}>{col}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "var(--text-main)" }}>
-                      Valores (uno por línea o separados por comas):
-                    </label>
-                    <textarea
-                      value={textoValores}
-                      onChange={(e) => setTextoValores(e.target.value)}
-                      rows="10"
-                      placeholder="Escribe los nuevos valores de la columna..."
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        borderRadius: "5px",
-                        border: "1px solid var(--border-color)",
-                        background: "var(--bg-input)",
-                        color: "var(--text-main)",
-                        fontFamily: "monospace",
-                        boxSizing: "border-box",
-                        resize: "vertical"
-                      }}
-                    />
-                    <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                      Puedes copiar una columna de Excel y pegarla directamente aquí.
-                    </p>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "5px" }}>
-                    <button
-                      type="button"
-                      onClick={() => setMostrarActualizarCol(false)}
-                      style={{ padding: "8px 15px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!columnaAEditar) return;
-                        let parts = [];
-                        if (textoValores.includes("\n")) {
-                          parts = textoValores.split("\n");
-                        } else if (textoValores.includes(",")) {
-                          parts = textoValores.split(",");
-                        } else {
-                          parts = [textoValores];
-                        }
-                        const values = parts.map(p => p.trim());
-                        handleActualizarColumna(columnaAEditar, values);
-                        setMostrarActualizarCol(false);
-                      }}
-                      style={{ padding: "8px 20px", background: "var(--accent-color)", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
-                    >
-                      Actualizar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
-
             {/* <button
               onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
               style={{ width: "100%", padding: "8px", background: "#6b7280", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginTop: "10px" }}
@@ -970,6 +901,185 @@ export default function PanelConfiguracion({
           </>
         )}
       </div>
+
+      {mostrarActualizarCol && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(0,0,0,0.6)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 99999
+        }}>
+          <div style={{
+            background: "var(--bg-card)",
+            padding: "25px",
+            borderRadius: "10px",
+            width: "450px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+            border: "1px solid var(--border-color)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "15px"
+          }}>
+            <h3 style={{ margin: 0, color: "var(--primary-color)" }}>Actualizar Datos de Columna</h3>
+            
+            <div>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "var(--text-main)" }}>
+                Selecciona la Columna:
+              </label>
+              <select
+                value={columnaAEditar}
+                onChange={(e) => {
+                  const col = e.target.value;
+                  setColumnaAEditar(col);
+                  const vals = excelData.map(row => row[col] !== undefined ? row[col] : "");
+                  setTextoValores(vals.join("\n"));
+                }}
+                style={{ width: "100%", padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)" }}
+              >
+                {columns.map(col => (
+                  <option key={col} value={col}>{col}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "var(--text-main)" }}>
+                Valores (uno por línea o separados por comas):
+              </label>
+              <textarea
+                value={textoValores}
+                onChange={(e) => setTextoValores(e.target.value)}
+                rows="10"
+                placeholder="Escribe los nuevos valores de la columna..."
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid var(--border-color)",
+                  background: "var(--bg-input)",
+                  color: "var(--text-main)",
+                  fontFamily: "monospace",
+                  boxSizing: "border-box",
+                  resize: "vertical"
+                }}
+              />
+              <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                Puedes copiar una columna de Excel y pegarla directamente aquí.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "5px" }}>
+              <button
+                type="button"
+                onClick={() => setMostrarActualizarCol(false)}
+                style={{ padding: "8px 15px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!columnaAEditar) return;
+                  let parts = [];
+                  if (textoValores.includes("\n")) {
+                    parts = textoValores.split("\n");
+                  } else if (textoValores.includes(",")) {
+                    parts = textoValores.split(",");
+                  } else {
+                    parts = [textoValores];
+                  }
+                  const values = parts.map(p => p.trim());
+                  handleActualizarColumna(columnaAEditar, values);
+                  setMostrarActualizarCol(false);
+                }}
+                style={{ padding: "8px 20px", background: "var(--accent-color)", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
+              >
+                Actualizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isOpenNuevaColumna && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(0,0,0,0.6)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 99999
+        }}>
+          <div style={{
+            background: "var(--bg-card)",
+            padding: "25px",
+            borderRadius: "10px",
+            width: "450px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+            border: "1px solid var(--border-color)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "15px"
+          }}>
+            <h3 style={{ margin: 0, color: "var(--primary-color)" }}>Crear Nueva Columna</h3>
+            
+            <div>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold", color: "var(--text-main)" }}>
+                Nombre de la Columna:
+              </label>
+              <input
+                type="text"
+                value={nombreNuevaColumna}
+                onChange={(e) => setNombreNuevaColumna(e.target.value)}
+                placeholder="Ej: Edad, Calificaciones, etc."
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid var(--border-color)",
+                  background: "var(--bg-input)",
+                  color: "var(--text-main)",
+                  boxSizing: "border-box"
+                }}
+                required
+                autoFocus
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setIsOpenNuevaColumna(false)}
+                style={{ padding: "8px 15px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (nombreNuevaColumna && nombreNuevaColumna.trim()) {
+                    handleCrearColumna(nombreNuevaColumna.trim());
+                    setIsOpenNuevaColumna(false);
+                  }
+                }}
+                style={{ padding: "8px 20px", background: "var(--accent-color)", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
+              >
+                Crear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

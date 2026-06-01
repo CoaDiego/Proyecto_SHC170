@@ -8,6 +8,7 @@ import * as SeriesMath from "../utils/estadisticaSeriesTiempo";
 import * as IndicesMath from "../utils/estadisticaIndices";
 
 import { api } from "../services/api";
+import { alerta } from "../utils/Notificaciones";
 
 export function useCalculadoraExcel(filename, sheet, datosPrecargados = null, curso = "") {
   const { variables, usuario } = useModuleData();
@@ -116,6 +117,21 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null, cu
       newExcelData.push(row);
     }
     setExcelData(newExcelData);
+  };
+
+  const handleCrearColumna = (colName) => {
+    if (!colName || columns.includes(colName)) {
+      alerta.error("Nombre inválido", "El nombre de la columna está vacío o ya existe.");
+      return;
+    }
+    const newColumns = [...columns, colName];
+    setColumns(newColumns);
+    const newExcelData = excelData.map(row => ({
+      ...row,
+      [colName]: ""
+    }));
+    setExcelData(newExcelData);
+    alerta.success("Columna creada", `Se creó la columna '${colName}' con éxito.`);
   };
 
   const obtenerColumna = (colName) => {
@@ -353,6 +369,6 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null, cu
     subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
     conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple,
-    conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem, handleActualizarColumna
+    conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem, handleActualizarColumna, handleCrearColumna
   };
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useData } from "../components/excel/DataContext";
 import { alerta } from "../utils/Notificaciones";
-import api from "../services/api";
+import api, { BASE_URL } from "../services/api";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import escudoAdmin from "../assets/images/escudoAdmin.png";
@@ -181,10 +181,10 @@ export default function Grupos() {
   const cargarCursos = async () => {
     try {
       if (esDocente || esAdmin) {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_clases/${correoUsuario}`);
+        const res = await fetch(`${BASE_URL}/mis_clases/${correoUsuario}`);
         if (res.ok) setMisCursos(await res.json());
       } else {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_inscripciones/${correoUsuario}`);
+        const res = await fetch(`${BASE_URL}/mis_inscripciones/${correoUsuario}`);
         if (res.ok) setCursosInscritos(await res.json());
       }
     } catch (error) {
@@ -205,7 +205,7 @@ export default function Grupos() {
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/crear_clase`, {
+      const res = await fetch(`${BASE_URL}/crear_clase`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -248,7 +248,7 @@ export default function Grupos() {
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/actualizar_clase`, {
+      const res = await fetch(`${BASE_URL}/actualizar_clase`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -310,7 +310,7 @@ export default function Grupos() {
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/unirse_clase`, {
+      const res = await fetch(`${BASE_URL}/unirse_clase`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ codigo_acceso: codigoLimpiado, estudiante_email: correoUsuario })

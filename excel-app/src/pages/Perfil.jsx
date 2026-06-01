@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { alerta } from '../utils/Notificaciones';
-import { api } from "../services/api";
+import { api, BASE_URL } from "../services/api";
 
 export default function Perfil({ usuario, setUsuario }) {
   const navigate = useNavigate();
@@ -13,6 +13,9 @@ export default function Perfil({ usuario, setUsuario }) {
   const [passActual, setPassActual] = useState("");
   const [passNueva, setPassNueva] = useState("");
   const [passNuevaConf, setPassNuevaConf] = useState("");
+
+  const isNuevaPasswordMatch = passNueva === passNuevaConf;
+  const isNuevaPasswordTooShort = passNueva.length > 0 && passNueva.length < 6;
 
   // --- ESTADOS PARA ELIMINAR CUENTA ---
   const [mostrarConfirmarEliminar, setMostrarConfirmarEliminar] = useState(false);
@@ -27,7 +30,7 @@ export default function Perfil({ usuario, setUsuario }) {
 
   const cargarUsuarios = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/usuarios`);
+      const res = await fetch(`${BASE_URL}/usuarios`);
       if (res.ok) {
         const data = await res.json();
         setListaUsuarios(data);
@@ -39,7 +42,7 @@ export default function Perfil({ usuario, setUsuario }) {
 
   const cambiarRol = async (email, nuevoRol) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/cambiar_rol`, {
+      const res = await fetch(`${BASE_URL}/cambiar_rol`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email, nuevo_rol: nuevoRol })
@@ -66,6 +69,10 @@ export default function Perfil({ usuario, setUsuario }) {
     e.preventDefault();
     if (!passActual || !passNueva || !passNuevaConf) {
       alerta.error("Campos vacíos", "Por favor, completa todos los campos.");
+      return;
+    }
+    if (passNueva.length < 6) {
+      alerta.error("Contraseña muy corta", "La nueva contraseña debe tener al menos 6 caracteres.");
       return;
     }
     if (passNueva !== passNuevaConf) {
@@ -227,15 +234,28 @@ export default function Perfil({ usuario, setUsuario }) {
           
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
             <div style={{ textAlign: 'left', flex: 1, minWidth: '200px' }}>
-              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Nueva Contraseña</label>
+              <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Nueva Contraseña (mínimo 6 caracteres)</label>
               <input 
                 type="password" 
                 value={passNueva} 
                 onChange={(e) => setPassNueva(e.target.value)} 
-                placeholder="Nueva contraseña" 
-                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', boxSizing: 'border-box' }} 
+                placeholder="Mínimo 6 caracteres" 
+                style={{ 
+                  width: '100%', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  border: isNuevaPasswordTooShort ? '1px solid #dc2626' : '1px solid var(--border-color)', 
+                  backgroundColor: 'var(--bg-main)', 
+                  color: 'var(--text-main)', 
+                  boxSizing: 'border-box' 
+                }} 
                 required
               />
+              {isNuevaPasswordTooShort && (
+                <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '5px', display: 'block', fontWeight: 'bold' }}>
+                  Debe tener al menos 6 caracteres.
+                </span>
+              )}
             </div>
             <div style={{ textAlign: 'left', flex: 1, minWidth: '200px' }}>
               <label className="etiqueta" style={{ color: 'var(--text-main)' }}>Confirmar Nueva Contraseña</label>
@@ -244,9 +264,22 @@ export default function Perfil({ usuario, setUsuario }) {
                 value={passNuevaConf} 
                 onChange={(e) => setPassNuevaConf(e.target.value)} 
                 placeholder="Repite nueva contraseña" 
-                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)', boxSizing: 'border-box' }} 
+                style={{ 
+                  width: '100%', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  border: !isNuevaPasswordMatch && passNuevaConf !== "" ? '1px solid #dc2626' : '1px solid var(--border-color)', 
+                  backgroundColor: 'var(--bg-main)', 
+                  color: 'var(--text-main)', 
+                  boxSizing: 'border-box' 
+                }} 
                 required
               />
+              {!isNuevaPasswordMatch && passNuevaConf !== "" && (
+                <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '5px', display: 'block', fontWeight: 'bold' }}>
+                  Las contraseñas no coinciden.
+                </span>
+              )}
             </div>
           </div>
           

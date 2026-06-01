@@ -456,3 +456,89 @@
 .mobile-only {
   display: none;
 }
+
+/* =========================================
+   6. EMULACION DE CLASES DE TAILWIND PARA EL PERFIL HOVER
+   ========================================= */
+.relative {
+  position: relative;
+}
+.absolute {
+  position: absolute;
+}
+.right-0 {
+  right: 0;
+}
+.mt-2 {
+  margin-top: 8px;
+}
+.w-48 {
+  width: 12rem;
+}
+.bg-white {
+  background-color: var(--bg-card, #ffffff) !important;
+}
+.border {
+  border: 1px solid var(--border-color, #e5e7eb) !important;
+}
+.rounded-md {
+  border-radius: 0.375rem;
+}
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.block {
+  display: block;
+}
+.w-full {
+  width: 100%;
+}
+.text-left {
+  text-align: left;
+}
+.text-sm {
+  font-size: 0.875rem;
+}
+.text-gray-700 {
+  color: var(--text-main, #374151) !important;
+}
+.text-red-600 {
+  color: #dc2626 !important;
+}
+.hover\:bg-gray-100:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.z-50 {
+  z-index: 9999;
+}
+
+/* Soporte para modo oscuro */
+html.dark .dark\:bg-gray-800 {
+  background-color: #1f2937 !important;
+}
+html.dark .dark\:border-gray-700 {
+  border-color: #374151 !important;
+}
+html.dark .dark\:text-white {
+  color: #ffffff !important;
+}
+html.dark .dark\:hover\:bg-gray-700:hover {
+  background-color: #374151 !important;
+}
+
+

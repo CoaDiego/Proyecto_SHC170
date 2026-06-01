@@ -62,8 +62,8 @@ export default function PanelResultados({
     <div className="calculadora-resultados transition-all duration-300 w-full flex-1" id="tour-resultados-panel">
       {modoCreacion ? (
         <TablaDinamica
-          onTablaCreada={() => {
-            cargarArchivos();
+          onTablaCreada={(nuevoNombre) => {
+            if (cargarArchivos) cargarArchivos(nuevoNombre);
             setModoCreacion(false);
           }}
         />

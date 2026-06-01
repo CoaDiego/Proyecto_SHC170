@@ -8,7 +8,7 @@ import "driver.js/dist/driver.css";
 // --- IMPORTS DE SERVICIOS Y CONTEXTO ---
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
 import { useModuleData } from "../components/excel/DataContext";
-import { api } from "../services/api";
+import { api, BASE_URL } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 
 // --- IMPORTS DE LOS PANELES MODULARES ---
@@ -21,6 +21,68 @@ export default function Calculos() {
   const location = useLocation();
 
   const iniciarTour = () => {
+    // Si el modal de creación de tablas está abierto (se detecta por la presencia de #tour-crear-nombre)
+    if (document.querySelector('#tour-crear-nombre')) {
+      const tourCrearSteps = [
+        {
+          element: '#tour-crear-nombre',
+          popover: {
+            title: '1. Asignar un Nombre',
+            description: 'Escribe un nombre descriptivo para tu conjunto de datos. Se guardará con formato Excel (.xlsx).',
+            side: 'bottom',
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-crear-generador',
+          popover: {
+            title: '2. Generar Matriz Rápida',
+            description: 'Especifica la cantidad de Observaciones (filas) y Variables (columnas) que deseas crear inicialmente, y haz clic en "Generar". Esto creará la estructura vacía lista para usar.',
+            side: 'bottom',
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-crear-herramientas',
+          popover: {
+            title: '3. Barra de Herramientas',
+            description: 'Usa estos botones para agregar más filas, eliminar la última fila, o añadir nuevas columnas (variables). También puedes configurar el tipo de dato de cada columna (número, texto o categorías) haciendo clic en su cabecera.',
+            side: 'bottom',
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-crear-grilla',
+          popover: {
+            title: '4. Cuadrícula de Datos',
+            description: 'Haz doble clic en cualquier celda para escribir tus datos estadísticos directamente. ¡También puedes copiar rangos de celdas desde un Excel real y pegarlos aquí usando Ctrl+V!',
+            side: 'top',
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-crear-guardar',
+          popover: {
+            title: '5. Guardar la Tabla',
+            description: 'Una vez ingresados todos tus datos, haz clic en "Guardar Tabla" para guardarla en tu base de datos y empezar a analizarla en la calculadora.',
+            side: 'left',
+            align: 'start'
+          }
+        }
+      ];
+
+      const driverObj = driver({
+        showProgress: true,
+        nextBtnText: 'Siguiente',
+        prevBtnText: 'Anterior',
+        doneBtnText: 'Finalizar',
+        progressText: '{{current}} de {{total}}',
+        steps: tourCrearSteps
+      });
+      driverObj.drive();
+      return;
+    }
+
     const tourSteps = [
       {
         element: '#tour-origen-datos',
@@ -234,7 +296,7 @@ export default function Calculos() {
         element: '#tour-btn-gestion',
         popover: {
           title: 'Gestión de Datos',
-          description: 'Abre el panel de administración de tus archivos de Excel, donde podrás subir nuevos libros, eliminar los antiguos o alternar entre el espacio personal y el de tus cursos asignados.',
+          description: 'Abre el panel de administración de tus archivos de Excel, donde podrás subir nuevos libros, eliminar los antiguos o alternar entre el espacio personal y el de tus cursos asignados. (Versión de prueba (Beta) - Aún se encuentra en fase de desarrollo)',
           side: "left",
           align: 'start'
         }
@@ -322,7 +384,7 @@ export default function Calculos() {
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
     conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple,
     conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem,
-    handleActualizarColumna,
+    handleActualizarColumna, handleCrearColumna,
   } = useCalculadoraExcel(selectedFile, selectedSheet, datosHistorial, origenArchivos === "curso" ? cursoSeleccionado : "");
 
 
@@ -459,9 +521,9 @@ export default function Calculos() {
       
       let res;
       if (esDocente || esAdmin) {
-        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_clases/${correoUsuario}`);
+        res = await fetch(`${BASE_URL}/mis_clases/${correoUsuario}`);
       } else {
-        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_inscripciones/${correoUsuario}`);
+        res = await fetch(`${BASE_URL}/mis_inscripciones/${correoUsuario}`);
       }
       
       if (res.ok) {
@@ -473,7 +535,7 @@ export default function Calculos() {
     }
   };
 
-  const cargarArchivos = async () => {
+  const cargarArchivos = async (nuevoNombre = "") => {
     if (!usuario) return;
     try {
       let data;
@@ -488,6 +550,10 @@ export default function Calculos() {
       }
       if (data && data.files) {
         setFiles(data.files);
+        if (nuevoNombre) {
+          const nombreCompleto = nuevoNombre.endsWith(".xlsx") ? nuevoNombre : `${nuevoNombre}.xlsx`;
+          setSelectedFile(nombreCompleto);
+        }
       } else {
         setFiles([]);
       }
@@ -503,6 +569,17 @@ export default function Calculos() {
 
   useEffect(() => {
     cargarArchivos();
+  }, [usuario, origenArchivos, cursoSeleccionado]);
+
+  useEffect(() => {
+    const handleTablaCreada = (e) => {
+      const nuevoNombre = e.detail?.nombre;
+      cargarArchivos(nuevoNombre);
+    };
+    window.addEventListener("tabla-creada", handleTablaCreada);
+    return () => {
+      window.removeEventListener("tabla-creada", handleTablaCreada);
+    };
   }, [usuario, origenArchivos, cursoSeleccionado]);
 
   const handleGuardarResultado = async () => {
@@ -538,7 +615,7 @@ export default function Calculos() {
   };
 
   return (
-    <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: "relative" }}>
+    <>
       {/* Botón Flotante para Guía Rápida */}
       <button
         id="tour-btn-guia-rapida"
@@ -552,7 +629,9 @@ export default function Calculos() {
         </svg>
         <span className="guia-rapida-flotante-texto">Guía Rápida</span>
       </button>
-     {datosHistorial && (
+
+      <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: "relative" }}>
+      {datosHistorial && (
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, background: "#f59e0b", color: "#fff", 
           padding: "8px 15px", display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -609,6 +688,7 @@ export default function Calculos() {
         ejecutarCalculo={ejecutarCalculo} modoCreacion={modoCreacion} setModoCreacion={setModoCreacion}
         mostrarCalculadora={mostrarCalculadora} setMostrarCalculadora={setMostrarCalculadora}
         handleActualizarColumna={handleActualizarColumna}
+        handleCrearColumna={handleCrearColumna}
       />
 
       <PanelResultados
@@ -636,10 +716,8 @@ export default function Calculos() {
         modelosVisibles={modelosVisibles}
         parametros={{ tipoIntervalo, metodoK, kPersonalizado, percentilK, metodoSeries, periodosK, pesos, alfa, subTemaIndices, colPrecioBase, colCantidadBase, nuevoIndiceBase }}
       />
-    </div>
-    
+      </div>
+    </>
   );
-
-  
 }
 

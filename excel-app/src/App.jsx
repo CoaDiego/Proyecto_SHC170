@@ -84,7 +84,7 @@ function App() {
               {isAuth && (
                 <header style={{ width: '100%' }}>
                   {/* Le pasamos la variable 'usuario' como prop al componente Menu */}
-                  <Menu usuario={usuario} /> 
+                  <Menu usuario={usuario} setUsuario={setUsuario} /> 
                 </header>
               )}
 

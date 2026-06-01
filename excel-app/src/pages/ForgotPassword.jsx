@@ -24,6 +24,9 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+      console.log(`[ForgotPassword] Iniciando recuperación para: ${email}`);
+      console.log(`[ForgotPassword] POST URL: ${BASE_URL}/api/auth/forgot-password`);
+      
       const res = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,7 +41,7 @@ export default function ForgotPassword() {
         alerta.error("Error", errData.detail || "Error al procesar la solicitud.");
       }
     } catch (error) {
-      console.error(error);
+      console.error("[ForgotPassword] Error:", error);
       alerta.error("Error de conexión", "No se pudo conectar con el servidor.");
     } finally {
       setLoading(false);
