@@ -164,12 +164,12 @@ export default function Login({ onLogin }) {
             </form>
 
             <div style={{ marginTop: '15px', textAlign: 'center', fontSize: '0.9rem' }}>
-              <button 
-                onClick={() => setVista("forgot")} 
-                style={{ background: 'none', border: 'none', color: 'var(--accent-color)', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+              <Link 
+                to="/forgot-password" 
+                style={{ color: 'var(--accent-color)', fontWeight: 'bold', textDecoration: 'none', fontSize: '0.9rem' }}
               >
                 ¿Olvidaste tu contraseña?
-              </button>
+              </Link>
             </div>
 
             <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.9rem' }}>

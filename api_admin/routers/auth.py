@@ -55,6 +55,21 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def create_reset_token(email: str) -> str:
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode = {"sub": email, "exp": expire, "purpose": "password_reset"}
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_reset_token(token: str) -> str | None:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("purpose") != "password_reset":
+            return None
+        return payload.get("sub")
+    except jwt.PyJWTError:
+        return None
+
 # Dependencia para obtener el usuario autenticado a través de JWT
 security = HTTPBearer()
 
@@ -200,6 +215,81 @@ async def read_users_me(current_user: Usuario = Depends(get_current_user)):
 async def test_docente_only(current_user: Usuario = Depends(require_role("Docente"))):
     """Ruta protegida por rol de prueba"""
     return {"message": f"Acceso concedido al docente {current_user.nombre}."}
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    nueva_contrasena: str
+
+@router.post("/api/auth/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.email == data.email).first()
+    
+    if usuario:
+        token = create_reset_token(usuario.email)
+        reset_link = f"http://localhost:5173/reset-password?token={token}"
+        
+        email_sender = os.getenv("EMAIL_SENDER")
+        email_password = os.getenv("EMAIL_PASSWORD")
+        smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        
+        if email_sender and email_password:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            try:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = "Recuperacion de Contrasena - Software Estadistico"
+                msg["From"] = email_sender
+                msg["To"] = usuario.email
+                
+                html = f"""
+                <html>
+                  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f6f9; padding: 20px;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 30px; background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                      <h2 style="color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-top: 0;">Restablecer Contrasena</h2>
+                      <p>Hola, <strong>{usuario.nombre}</strong>:</p>
+                      <p>Has solicitado restablecer tu contraseña para acceder a nuestro Software Estadístico.</p>
+                      <p>Por favor, haz clic en el botón de abajo para restablecer tus credenciales. Este enlace expirará en <strong>15 minutos</strong> por tu seguridad.</p>
+                      <div style="text-align: center; margin: 35px 0;">
+                        <a href="{reset_link}" style="background-color: #3498db; color: white; padding: 14px 28px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(52,152,219,0.2);">Restablecer Contrasena</a>
+                      </div>
+                      <p>Si el botón de arriba no funciona, puedes copiar y pegar el siguiente enlace en tu navegador:</p>
+                      <p style="word-break: break-all; color: #3498db;"><a href="{reset_link}" style="color: #3498db; text-decoration: none;">{reset_link}</a></p>
+                      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;" />
+                      <p style="font-size: 0.85em; color: #7f8c8d; text-align: center; margin-bottom: 0;">Si tu no has solicitado este cambio, por favor ignora este correo electronico de forma segura.</p>
+                    </div>
+                  </body>
+                </html>
+                """
+                msg.attach(MIMEText(html, "html"))
+                
+                with smtplib.SMTP(smtp_server, smtp_port) as server:
+                    server.starttls()
+                    server.login(email_sender, email_password)
+                    server.sendmail(email_sender, usuario.email, msg.as_string())
+            except Exception as e:
+                print(f"Error al enviar correo SMTP: {str(e)}")
+                raise HTTPException(status_code=500, detail="Error interno al procesar el envio de correo.")
+                
+    return {"message": "Si el correo está registrado, recibirás un enlace en tu bandeja de entrada"}
+
+@router.post("/api/auth/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    email = verify_reset_token(data.token)
+    if not email:
+        raise HTTPException(status_code=400, detail="El token de recuperacion es invalido o ha expirado.")
+        
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        
+    usuario.password = get_password_hash(data.nueva_contrasena)
+    db.commit()
+    return {"message": "Contrasena restablecida exitosamente."}
 
 @router.post("/recuperar_password")
 async def recuperar_password(data: RecuperarPassword, db: Session = Depends(get_db)):
