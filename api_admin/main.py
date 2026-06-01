@@ -13,23 +13,19 @@ app = FastAPI()
 
 # Configuración de CORS
 origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:5173",         # Desarrollo local (Vite)
+    "http://127.0.0.1:5173",         # Desarrollo local alternativo
+    "https://calculadora-estadistica-3inh.onrender.com",  # Producción en Render
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permite GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],  # Permite todas las cabeceras
 )
 
-# Incluir los Routers modulares del proyecto
-app.include_router(auth.router)
-app.include_router(archivos.router)
-app.include_router(calculos.router)
-app.include_router(historial.router)
 # Incluir los Routers modulares del proyecto
 app.include_router(auth.router)
 app.include_router(archivos.router)
