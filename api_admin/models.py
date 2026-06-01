@@ -12,6 +12,7 @@ class Usuario(Base):
     rol = Column(String(50), default="Estudiante")
     perfil = Column(String(50), default="Estudiante Externo")
     institucion = Column(String(100), default="")
+    fecha_creacion = Column(DateTime, default=func.now())
 
 # --- TABLAS PARA GESTIÓN DE CLASES ---
 
@@ -25,6 +26,7 @@ class Clase(Base):
     
     # Llave foránea: Vincula esta clase con el ID del docente que la creó
     docente_id = Column(Integer, ForeignKey("usuarios.id")) 
+    fecha_creacion = Column(DateTime, default=func.now())
 
 class Inscripcion(Base):
     __tablename__ = "inscripciones"
@@ -33,6 +35,7 @@ class Inscripcion(Base):
     id = Column(Integer, primary_key=True, index=True)
     clase_id = Column(Integer, ForeignKey("clases.id"))
     estudiante_id = Column(Integer, ForeignKey("usuarios.id"))
+    fecha_creacion = Column(DateTime, default=func.now())
 
 
 # --- 🆕 NUEVAS TABLAS: ARCHIVOS HISTORIAL DE CÁLCULOS ---

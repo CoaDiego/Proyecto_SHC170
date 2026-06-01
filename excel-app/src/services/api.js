@@ -18,6 +18,13 @@ export const api = {
     return await res.json();
   },
 
+  // --- OBTENER PERFIL ACTUAL (JWT) ---
+  obtenerPerfilActual: async () => {
+    const res = await fetch(`${BASE_URL}/me`);
+    if (!res.ok) throw new Error("Sesión inválida o expirada");
+    return await res.json();
+  },
+
   // --- OBTENER CONTADOR DE VISITAS ---
   obtenerVisitas: async () => {
     try {
@@ -79,18 +86,50 @@ export const api = {
   },
 
   // --- ACTUALIZAR EXCEL ---
-  actualizarExcel: async (filename, hoja, datos, autor = "", curso = "") => {
-    const payload = { datos, autor, curso };
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+  actualizarExcel: async (filename, hoja, datos, autor = "", curso = "", estrategia_guardado = "overwrite") => {
+    const payload = { 
+      filename, 
+      hoja_index: hoja, 
+      datos, 
+      autor, 
+      curso,
+      estrategia_guardado
+    };
     const response = await fetch(
-      `${BASE_URL}/update/${encodeURIComponent(filename)}?hoja=${hoja}`,
+      `${BASE_URL}/update_excel`,
       {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       },
     );
-    if (!response.ok) throw new Error("Error al actualizar el archivo");
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Error al actualizar el archivo");
+    }
+    return response.json();
+  },
+
+  // --- AÑADIR HOJA DE CAMBIOS (NO DESTRUCTIVO) ---
+  agregarHojaCambios: async (filename, datos, autor = "", curso = "") => {
+    const payload = { 
+      filename, 
+      datos, 
+      autor, 
+      curso 
+    };
+    const response = await fetch(
+      `${BASE_URL}/add_edit_sheet`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Error al añadir la hoja de cambios");
+    }
     return response.json();
   },
 
@@ -190,12 +229,11 @@ export const api = {
     }
   },
 
-  eliminarArchivo: async (filename, autor) => {
+  eliminarArchivo: async (filename, autor, curso = "") => {
     try {
-      const res = await fetch(
-        `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`,
-        { method: "DELETE" },
-      );
+      let url = `${BASE_URL}/files/${encodeURIComponent(filename)}?autor=${encodeURIComponent(autor)}`;
+      if (curso) url += `&curso=${encodeURIComponent(curso)}`;
+      const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar el archivo");
       return true;
     } catch (error) {

@@ -8,9 +8,11 @@ import TablasUnidimensionales from "./TablasUnidimensionales";
 import PanelGraficos from "./PanelGraficos";
 
 export default function ReportePDF({ 
-  usuario, calculo, selectedFile, selectedSheet, selectedColumn, 
+  usuario, calculo, selectedFile, selectedSheet, selectedColumn, selectedColumnY,
   resultado, esBivariada, esUnidimensional, esIntervalo,
   formatearCelda, filtroFractil, setFiltroFractil, ordenGraficos,
+  tablasDesarrolloReporte,
+  modelosVisibles,
   parametros 
 }) {
   const {
@@ -208,7 +210,12 @@ export default function ReportePDF({
           {resultado && (
             <>
               {calculo === "regresion_simple" && resultado.tipo === "regresion" && (
-                <div id="pdf-tabla-regresion" className="pdf-section"><TablaRegresion resultado={resultado} /></div>
+                <TablaRegresion 
+                  resultado={resultado} 
+                  modoImpresion={true} 
+                  modelosVisibles={modelosVisibles}
+                  tablasDesarrolloReporte={tablasDesarrolloReporte} 
+                />
               )}
               {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && (
                 <div id="pdf-tabla-series-tiempo" className="pdf-section"><TablaSeriesTiempo resultado={resultado} /></div>
@@ -226,7 +233,15 @@ export default function ReportePDF({
               )}
 
               <div>
-                <PanelGraficos resultado={resultado} esIntervalo={esIntervalo} calculo={calculo} orden={ordenGraficos} />
+                <PanelGraficos 
+                  resultado={resultado} 
+                  esIntervalo={esIntervalo} 
+                  calculo={calculo} 
+                  orden={ordenGraficos} 
+                  modelosVisibles={modelosVisibles}
+                  selectedColumn={selectedColumn}
+                  selectedColumnY={selectedColumnY}
+                />
               </div>
             </>
           )}

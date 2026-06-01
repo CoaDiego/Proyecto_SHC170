@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Menu from "./components/ui/Menu";
 import Pie_pagina from "./components/ui/Pie_pagina"; 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sileo, Toaster } from "sileo";
 
 import Inicio from "./pages/Inicio";
@@ -21,15 +21,48 @@ import { DataProvider, CalculadoraDataProvider, MAT251DataProvider, ActiveModule
 import LtiTester from "./pages/LtiTester";
 import Historial from "./pages/Historial";
 import Grupos from './pages/Grupos';
+import api from "./services/api";
 
 import "./App.css"; 
 
 function App() {
   // 🆕 1. Cambiamos el estado para que guarde los datos del usuario (null = nadie logueado)
   const [usuario, setUsuario] = useState(null);
+  const [cargandoSesion, setCargandoSesion] = useState(true);
+
+  // Intentar restaurar sesión desde localStorage al montar el componente (F5)
+  useEffect(() => {
+    const restaurarSesion = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const perfil = await api.obtenerPerfilActual();
+          setUsuario(perfil);
+        } catch (error) {
+          console.error("Error al restaurar sesión:", error);
+          localStorage.removeItem("token");
+        }
+      }
+      setCargandoSesion(false);
+    };
+
+    restaurarSesion();
+  }, []);
 
   // 🆕 2. Variable derivada: Si usuario no es nulo, significa que alguien inició sesión
   const isAuth = usuario !== null;
+
+  if (cargandoSesion) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '40px', border: '4px solid var(--border-color)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 15px' }} />
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+          <p style={{ fontWeight: 'bold' }}>Validando sesión...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     // 👇 2. ENVOLVEMOS TODA LA APLICACIÓN CON EL DATAPROVIDER Y LOS PROVIDERS DE MÓDULOS

@@ -7,9 +7,15 @@ import { api } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 import "../styles/pages/Archivos.css";
 
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+import escudoAdmin from "../assets/images/escudoAdmin.png";
 
 export default function Archivos({ usuario }) {
+  const navigate = useNavigate();
+  const [panelAbierto, setPanelAbierto] = useState(true);
+
   // Estados para Archivos Personales
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -19,15 +25,75 @@ export default function Archivos({ usuario }) {
 
   const location = useLocation();
 
+  const iniciarTour = () => {
+    const driverObj = driver({
+      showProgress: true,
+      nextBtnText: 'Siguiente',
+      prevBtnText: 'Anterior',
+      doneBtnText: 'Finalizar',
+      progressText: '{{current}} de {{total}}',
+      steps: [
+        {
+          element: '#tour-titulo',
+          popover: {
+            title: 'Gestión de Archivos',
+            description: '¡Bienvenido! Aquí puedes gestionar todos tus archivos personales y de cursos.',
+            side: "bottom",
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-pestanas',
+          popover: {
+            title: 'Organización por Pestañas',
+            description: 'Cambia entre "Mi Espacio" para tus archivos privados y "Mis Cursos" para el material académico.',
+            side: "bottom",
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-subida',
+          popover: {
+            title: 'Subir Archivos',
+            description: 'Arrastra tus archivos de Excel (.xlsx) o búscalos en tu equipo para cargarlos al sistema.',
+            side: "bottom",
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-visor',
+          popover: {
+            title: 'Explorador de Archivos',
+            description: 'Aquí verás todos tus archivos. Puedes seleccionarlos para verlos o eliminarlos.',
+            side: "top",
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-vista-previa',
+          popover: {
+            title: 'Vista Previa del Excel',
+            description: 'Al seleccionar un archivo, se desplegará una vista previa interactiva en esta sección.',
+            side: "left",
+            align: 'start'
+          }
+        }
+      ]
+    });
+
+    driverObj.drive();
+  };
+
   // EFECTO PARA DETECTAR SI VENIMOS DE LA PÁGINA DE GRUPOS
   useEffect(() => {
     if (location.state && location.state.cursoIdSeleccionado) {
       // Si recibimos un código, saltamos a la pestaña de cursos y lo seleccionamos
       setTabActiva("cursos");
       setCursoSeleccionado(location.state.cursoIdSeleccionado);
-      window.history.replaceState({}, document.title);
+      // Limpiamos de forma segura el estado de react-router
+      navigate("/archivos", { replace: true, state: {} });
     }
-  }, [location]);
+  }, [location, navigate]);
 
   // Estados para la lógica de Cursos
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
@@ -125,7 +191,7 @@ export default function Archivos({ usuario }) {
     if (!confirmar) return;
 
     try {
-      await api.eliminarArchivo(filename, usuario.nombre);
+      await api.eliminarArchivo(filename, usuario.nombre, tabActiva === "cursos" ? cursoSeleccionado : "");
       setFiles((prev) => prev.filter((f) => f.filename !== filename));
       if (selectedFile === filename) setSelectedFile(null);
       alerta.success("Archivo eliminado correctamente");
@@ -134,25 +200,125 @@ export default function Archivos({ usuario }) {
     }
   };
 
+  const handleDownload = async (filename) => {
+    try {
+      const autorParam = encodeURIComponent(usuario.nombre);
+      const cursoParam = tabActiva === "cursos" && cursoSeleccionado ? `&curso=${encodeURIComponent(cursoSeleccionado)}` : "";
+      const url = `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/files/${encodeURIComponent(filename)}?autor=${autorParam}${cursoParam}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el archivo del servidor.");
+      }
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      alerta.success("Archivo descargado", `El archivo "${filename}" se ha descargado correctamente.`);
+    } catch (err) {
+      console.error(err);
+      alerta.error("Error al descargar", err.message || "Ocurrió un error al descargar el archivo.");
+    }
+  };
+
   return (
     <div className="page-container">
-      <div className="archivos-header">
-        <h2 className="archivos-titulo">
-          Gestión de Datos y Archivos
-        </h2>
-        <p className="archivos-subtitulo">
-          Espacio de trabajo de: <strong>{usuario?.nombre}</strong> (
-          {usuario?.rol})
-        </p>
+      {/* Marca de agua de fondo */}
+      <div 
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "450px",
+          height: "450px",
+          backgroundImage: `url(${escudoAdmin})`,
+          backgroundSize: "contain",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          opacity: 0.04,
+          zIndex: 0,
+          pointerEvents: "none"
+        }}
+      />
+      {/* Botón flotante para colapsar panel izquierdo */}
+      <button
+        onClick={() => setPanelAbierto(!panelAbierto)}
+        className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
+        title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: 0,
+          transform: "translateY(-50%)",
+          zIndex: 9999,
+          backgroundColor: "var(--accent-color, #FF7000)",
+          color: "white",
+          border: "1px solid var(--border-color, #eee)",
+          borderLeft: "none",
+          borderRadius: "0 8px 8px 0",
+          width: "24px",
+          height: "50px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.2)",
+          transition: "all 0.3s ease"
+        }}
+      >
+        <span
+          className={`icono-toggle ${panelAbierto ? "abierto" : "cerrado"}`}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: "bold", fontSize: "14px", color: "#ffffff",
+            transform: panelAbierto ? "scaleX(1)" : "scaleX(-1)",
+            transition: "transform 0.3s ease", lineHeight: 0,
+            marginTop: "-2px", marginLeft: "-1px",
+          }}
+        >
+          ❮
+        </span>
+      </button>
+
+      <div className="archivos-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <div>
+          <h2 className="archivos-titulo" id="tour-titulo">
+            Gestión de Datos y Archivos
+          </h2>
+          <p className="archivos-subtitulo" style={{ margin: 0 }}>
+            Espacio de trabajo de: <strong>{usuario?.nombre}</strong> ({usuario?.rol})
+          </p>
+        </div>
+        <button
+          onClick={iniciarTour}
+          className="guia-rapida-flotante"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span className="guia-rapida-flotante-texto">Guía Rápida</span>
+        </button>
       </div>
 
       <div className="files-layout">
         {/* ========================================================= */}
         {/* COLUMNA IZQUIERDA: Pestañas y Gestión (35%)               */}
         {/* ========================================================= */}
-        <div className="archivos-col-izq">
+        {panelAbierto && (
+          <div className="archivos-col-izq">
           {/* 🆕 SELECTOR DE PESTAÑAS */}
           <div
+            id="tour-pestanas"
             style={{
               display: "flex",
               background: "var(--bg-card)",
@@ -252,7 +418,7 @@ export default function Archivos({ usuario }) {
                     -- Elige un curso para ver material --
                   </option>
                   {misCursos.map((c) => (
-                    <option key={c.id} value={c.nombre} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)" }}>
+                    <option key={c.id} value={c.id} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)" }}>
                       {c.nombre}
                     </option>
                   ))}
@@ -276,7 +442,9 @@ export default function Archivos({ usuario }) {
                   {["Docente", "Administrador"].includes(usuario?.rol)
                     ? "Estás gestionando el material del curso:"
                     : "Viendo material de estudio del curso:"}{" "}
-                  <strong>{cursoSeleccionado}</strong>
+                  <strong>
+                    {misCursos.find((c) => String(c.id) === String(cursoSeleccionado))?.nombre || cursoSeleccionado}
+                  </strong>
                 </p>
               </div>
             )}
@@ -284,6 +452,7 @@ export default function Archivos({ usuario }) {
             {/* Subida de archivos: Oculta para estudiantes en la pestaña de cursos */}
             {!(tabActiva === "cursos" && usuario?.rol === "Estudiante") && (
               <div
+                id="tour-subida"
                 style={{
                   marginBottom: "20px",
                   paddingBottom: "20px",
@@ -303,32 +472,37 @@ export default function Archivos({ usuario }) {
               {tabActiva === "cursos" ? "Material Compartido" : "Mis Archivos"}
             </h3>
 
-            {/* Si es curso y no ha seleccionado uno, no mostramos la lista */}
-            {tabActiva === "cursos" && !cursoSeleccionado ? (
-              <p
-                style={{
-                  color: "var(--text-muted)",
-                  fontStyle: "italic",
-                  textAlign: "center",
-                }}
-              >
-                Selecciona un curso arriba para ver sus archivos.
-              </p>
-            ) : (
-              <ExcelViewer
-                files={files}
-                onSelect={setSelectedFile}
-                onDelete={handleDeleteFile}
-                rol={usuario?.rol}
-              />
-            )}
+            <div id="tour-visor">
+              {/* Si es curso y no ha seleccionado uno, no mostramos la lista */}
+              {tabActiva === "cursos" && !cursoSeleccionado ? (
+                <p
+                  style={{
+                    color: "var(--text-muted)",
+                    fontStyle: "italic",
+                    textAlign: "center",
+                  }}
+                >
+                  Selecciona un curso arriba para ver sus archivos.
+                </p>
+              ) : (
+                <ExcelViewer
+                  files={files}
+                  onSelect={setSelectedFile}
+                  onDelete={handleDeleteFile}
+                  onDownload={handleDownload}
+                  rol={usuario?.rol}
+                  esPersonal={tabActiva === "personales"}
+                />
+              )}
+            </div>
           </div>
         </div>
+      )}
 
         {/* ========================================================= */}
         {/* COLUMNA DERECHA: Vista Previa                            */}
         {/* ========================================================= */}
-        <div className="archivos-col-der">
+        <div className="archivos-col-der" id="tour-vista-previa">
           <h3
             style={{
               margin: "0 0 15px 0",

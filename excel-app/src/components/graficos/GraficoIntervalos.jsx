@@ -1,7 +1,7 @@
 import React from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area, ComposedChart, Legend
+  LineChart, Line, ComposedChart, Legend
 } from "recharts";
 
 // =========================================================
@@ -11,7 +11,22 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma', selected
   
   if (!datos || datos.length === 0) return <p style={{ color: "var(--text-muted)", padding: "20px" }}>No hay datos para graficar.</p>;
 
-  // 1. PROCESAMIENTO EXCLUSIVO PARA EL EJE X NUMÉRICO
+  // 1. CALCULO DE LA AMPLITUD DE LOS INTERVALOS
+  let amplitud = 10;
+  if (datos.length > 0) {
+    const primerItem = datos[0];
+    const intervaloStr = primerItem["Haber básico"] || primerItem["Intervalos"] || primerItem["Intervalo"] || primerItem["Marca de Clase"] || "";
+    let partes = [0, 0];
+    if (typeof intervaloStr === 'string') {
+      const numeros = intervaloStr.match(/-?\d+(\.\d+)?/g);
+      if (numeros && numeros.length >= 2) {
+        partes = [parseFloat(numeros[0]), parseFloat(numeros[1])];
+        amplitud = partes[1] - partes[0];
+      }
+    }
+  }
+
+  // 2. PROCESAMIENTO EXCLUSIVO PARA EL EJE X NUMÉRICO
   const limitesSet = new Set();
   const datosProcesados = datos.map(item => {
     // Busca la columna correcta (nuestra nueva tabla usa "Intervalo")
@@ -19,7 +34,7 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma', selected
     let partes = [0, 0];
     
     if (typeof intervaloStr === 'string') {
-      // 🚀 LA MAGIA: Extrae cualquier número ignorando corchetes, comas o guiones
+      // Extrae cualquier número ignorando corchetes, comas o guiones
       const numeros = intervaloStr.match(/-?\d+(\.\d+)?/g);
       
       if (numeros && numeros.length >= 2) {
@@ -45,9 +60,42 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma', selected
     };
   });
 
-  const limites = Array.from(limitesSet).sort((a, b) => a - b);
+  let limites = Array.from(limitesSet).sort((a, b) => a - b);
 
-  // 2. CONFIGURACIÓN COMÚN DE RECHARTS
+  // Ampliar límites y generar datos del polígono para cerrar la línea en el eje X
+  let datosPoligono = datosProcesados;
+  if ((tipo === 'poligono' || tipo === 'mixto') && limites.length >= 2) {
+    // Agregar límites virtuales en los extremos para la visualización del eje
+    limitesSet.add(limites[0] - amplitud);
+    limitesSet.add(limites[limites.length - 1] + amplitud);
+    limites = Array.from(limitesSet).sort((a, b) => a - b);
+
+    // Insertar puntos con frecuencia 0 al inicio y al final
+    if (datosProcesados.length > 0) {
+      const primerMidpoint = datosProcesados[0].midpoint;
+      const ultimoMidpoint = datosProcesados[datosProcesados.length - 1].midpoint;
+      
+      const virtualStart = {
+        Intervalo: "",
+        midpoint: primerMidpoint - amplitud,
+        f_i: 0,
+        F_i: 0,
+        F_i_inv: 0
+      };
+      
+      const virtualEnd = {
+        Intervalo: "",
+        midpoint: ultimoMidpoint + amplitud,
+        f_i: 0,
+        F_i: 0,
+        F_i_inv: 0
+      };
+
+      datosPoligono = [virtualStart, ...datosProcesados, virtualEnd];
+    }
+  }
+
+  // 3. CONFIGURACIÓN COMÚN DE RECHARTS
   const currentAxisStyle = { fontSize: 12, fill: 'var(--text-main)' };
   const commonProps = { margin: { top: 20, right: 30, bottom: 35, left: 35 } };
   const commonGrid = <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color, #e0e0e0)" />;
@@ -60,19 +108,20 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma', selected
   const commonTooltip = <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} />;
   const commonLegend = <Legend wrapperStyle={{ fontSize: '0.9rem', color: 'var(--text-main)', paddingTop: '10px' }} />;
 
+  const domainX = limites.length >= 2 ? [limites[0], limites[limites.length - 1]] : [0, 'auto'];
   const commonX = (
     <XAxis 
       type="number" 
       dataKey="midpoint" 
       ticks={limites} 
-      domain={[0, 'auto']} 
+      domain={domainX} 
       tick={currentAxisStyle} 
       stroke="var(--text-main)" 
       label={{ value: selectedColumn || "Intervalos", position: 'insideBottom', offset: -10, fill: 'var(--text-main)', fontSize: 12, fontWeight: 'bold' }}
     />
   );
 
-  // 3. RENDERIZADO CONDICIONAL SEGÚN LA ORDEN RECIBIDA
+  // 4. RENDERIZADO CONDICIONAL SEGÚN LA ORDEN RECIBIDA
   const renderChart = () => {
     switch (tipo) {
       case 'histograma':
@@ -84,7 +133,7 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma', selected
         );
       case 'poligono':
         return (
-          <LineChart data={datosProcesados} {...commonProps}>
+          <LineChart data={datosPoligono} {...commonProps}>
             {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
             <Line type="linear" dataKey="f_i" stroke="#1976d2" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} name="Frecuencia Absoluta" />
           </LineChart>
@@ -92,18 +141,17 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma', selected
       case 'ojiva':
       case 'ojiva_creciente':
         return (
-          <AreaChart data={datosProcesados} {...commonProps}>
+          <LineChart data={datosProcesados} {...commonProps}>
             {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
-            <Area type="linear" dataKey="F_i" stroke="#388e3c" fill="rgba(56, 142, 60, 0.3)" strokeWidth={3} dot={{ r: 3 }} name="Frecuencia Acumulada Menor que" />
-          </AreaChart>
+            <Line type="linear" dataKey="F_i" stroke="#388e3c" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} name="Frecuencia Acumulada Menor que" />
+          </LineChart>
         );
       case 'ojiva_decreciente':
         return (
-          <AreaChart data={datosProcesados} {...commonProps}>
+          <LineChart data={datosProcesados} {...commonProps}>
             {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
-            {/* Usamos F_i_inv que es la variable corregida */}
-            <Area type="linear" dataKey="F_i_inv" stroke="#d32f2f" fill="rgba(211, 47, 47, 0.3)" strokeWidth={3} dot={{ r: 3 }} name="Frecuencia Acumulada Mayor que" />
-          </AreaChart>
+            <Line type="linear" dataKey="F_i_inv" stroke="#d32f2f" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} name="Frecuencia Acumulada Mayor que" />
+          </LineChart>
         );
       case 'interseccion_ojivas':
         return (
@@ -116,7 +164,7 @@ export default function GraficoIntervalos({ datos, tipo = 'histograma', selected
       case 'mixto':
       default:
         return (
-          <ComposedChart data={datosProcesados} {...commonProps} barCategoryGap={0}>
+          <ComposedChart data={datosPoligono} {...commonProps} barCategoryGap={0}>
             {commonGrid}{commonX}{commonY}{commonTooltip}{commonLegend}
             <Bar dataKey="f_i" fill="rgba(25, 118, 210, 0.5)" name="Histograma" />
             <Line type="linear" dataKey="f_i" stroke="#1976d2" strokeWidth={3} dot={{ r: 5 }} name="Polígono" />

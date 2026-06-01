@@ -3,10 +3,146 @@ import { useNavigate } from "react-router-dom";
 import { useData } from "../components/excel/DataContext";
 import { alerta } from "../utils/Notificaciones";
 import api from "../services/api";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+import escudoAdmin from "../assets/images/escudoAdmin.png";
 
 export default function Grupos() {
   const { usuario } = useData();
   const navigate = useNavigate();
+
+  const iniciarTour = () => {
+    const esEstudiante = usuario.rol === "Estudiante";
+    const tourSteps = esEstudiante ? [
+      {
+        element: '#tour-matriculacion-seccion',
+        popover: {
+          title: 'Matricularse a un Curso',
+          description: 'Introduce el código único de matriculación (proporcionado por tu docente) para registrarte en tu clase.',
+          side: "bottom",
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-btn-unirse',
+        popover: {
+          title: 'Confirmar Inscripción',
+          description: 'Haz clic aquí para validar tu código y agregarte a la asignatura/materia correspondiente de forma inmediata.',
+          side: "left",
+          align: 'center'
+        }
+      },
+      {
+        element: '#tour-clases-activas',
+        popover: {
+          title: 'Materias/Cursos',
+          description: 'Aquí se listarán todas las materias en las que te has matriculado exitosamente.',
+          side: "top",
+          align: 'start'
+        }
+      }
+    ] : [
+      {
+        element: '#tour-titulo-cursos',
+        popover: {
+          title: 'Gestión Académica',
+          description: '¡Bienvenido al panel docente! Aquí puedes administrar tus clases y el material de estudio para tus alumnos.',
+          side: "bottom",
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-btn-crear-curso',
+        popover: {
+          title: 'Crear una Clase',
+          description: 'Crea un nuevo grupo ingresando el nombre de la materia y fijando una fecha límite de matriculación opcional.',
+          side: "left",
+          align: 'center'
+        }
+      },
+      {
+        element: '#tour-lista-cursos',
+        popover: {
+          title: 'Tus Cursos Activos',
+          description: 'En esta sección se muestran todas las clases que tienes a tu cargo actualmente.',
+          side: "top",
+          align: 'start'
+        }
+      }
+    ];
+
+    if (!esEstudiante && document.querySelector('.tour-curso-codigo')) {
+      tourSteps.push({
+        element: '.tour-curso-codigo',
+        popover: {
+          title: 'Código de Acceso',
+          description: 'Este es el código único y seguro autogenerado. Compártelo con tus estudiantes para que puedan matricularse.',
+          side: "right",
+          align: 'center'
+        }
+      });
+    }
+
+    if (!esEstudiante && document.querySelector('.tour-curso-gestionar')) {
+      tourSteps.push({
+        element: '.tour-curso-gestionar',
+        popover: {
+          title: 'Administrar Clase',
+          description: 'Usa este botón para cambiar el nombre del curso, modificar la fecha límite de matrícula o ver estadísticas del grupo.',
+          side: "bottom",
+          align: 'center'
+        }
+      });
+    }
+
+    if (document.querySelector('.tour-curso-subir')) {
+      tourSteps.push({
+        element: '.tour-curso-subir',
+        popover: {
+          title: 'Cargar Material Excel',
+          description: esEstudiante 
+            ? 'Accede al gestor de archivos para descargar o visualizar los libros de trabajo compartidos por tu profesor.'
+            : 'Accede al gestor de archivos para subir bases de datos de Excel que tus estudiantes usarán en sus análisis.',
+          side: "bottom",
+          align: 'center'
+        }
+      });
+    }
+
+    if (!esEstudiante && document.querySelector('.tour-curso-eliminar')) {
+      tourSteps.push({
+        element: '.tour-curso-eliminar',
+        popover: {
+          title: 'Eliminar Materia',
+          description: 'Elimina de forma permanente el curso del sistema. Se te pedirá ingresar la confirmación "ELIMINAR" para evitar errores.',
+          side: "top",
+          align: 'center'
+        }
+      });
+    }
+
+    if (esEstudiante && document.querySelector('.tour-ir-material')) {
+      tourSteps.push({
+        element: '.tour-ir-material',
+        popover: {
+          title: 'Ir a los Archivos',
+          description: 'Abre directamente el material de estudio y los libros de datos de esta asignatura para empezar a trabajar.',
+          side: "bottom",
+          align: 'center'
+        }
+      });
+    }
+
+    const driverObj = driver({
+      showProgress: true,
+      nextBtnText: 'Siguiente',
+      prevBtnText: 'Anterior',
+      doneBtnText: 'Finalizar',
+      progressText: '{{current}} de {{total}}',
+      steps: tourSteps
+    });
+    driverObj.drive();
+  };
 
   // Estados vacíos (se llenarán desde la Base de Datos)
   const [misCursos, setMisCursos] = useState([]);
@@ -23,6 +159,7 @@ export default function Grupos() {
   const [cursoAEditar, setCursoAEditar] = useState(null);
   const [editarNombre, setEditarNombre] = useState("");
   const [editarFechaLimite, setEditarFechaLimite] = useState("");
+  const [resetearCodigo, setResetearCodigo] = useState(false);
 
   // Estados para la eliminación de cursos
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
@@ -30,17 +167,20 @@ export default function Grupos() {
   const [palabraConfirmar, setPalabraConfirmar] = useState("");
 
   // Extraemos el correo con seguridad
-  const correoUsuario = usuario.email || usuario.id;
+  const correoUsuario = usuario?.email || usuario?.id;
 
   if (!usuario) {
     navigate("/login");
     return null;
   }
 
+  const esAdmin = usuario.rol === "Administrador" || usuario.isAdmin === true;
+  const esDocente = usuario.rol === "Docente";
+
   // 1. CARGAR DATOS DESDE MYSQL AL ABRIR LA PÁGINA
   const cargarCursos = async () => {
     try {
-      if (["Docente", "Administrador"].includes(usuario.rol)) {
+      if (esDocente || esAdmin) {
         const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_clases/${correoUsuario}`);
         if (res.ok) setMisCursos(await res.json());
       } else {
@@ -96,6 +236,7 @@ export default function Grupos() {
     setCursoAEditar(curso);
     setEditarNombre(curso.nombre);
     setEditarFechaLimite(curso.fecha_limite_matriculacion || "");
+    setResetearCodigo(false);
     setMostrarModalEditar(true);
   };
 
@@ -113,7 +254,8 @@ export default function Grupos() {
         body: JSON.stringify({
           id: cursoAEditar.id,
           nombre: editarNombre,
-          fecha_limite_matriculacion: editarFechaLimite || null
+          fecha_limite_matriculacion: editarFechaLimite || null,
+          resetear_codigo: resetearCodigo
         })
       });
 
@@ -123,6 +265,7 @@ export default function Grupos() {
         alerta.success("Curso actualizado", "Los datos del curso han sido actualizados correctamente.");
         setMostrarModalEditar(false);
         setCursoAEditar(null);
+        setResetearCodigo(false);
         cargarCursos(); // Recargamos la lista desde la BD
       } else {
         alerta.error("Error", data.error || "No se pudo actualizar el curso.");
@@ -188,7 +331,25 @@ export default function Grupos() {
   };
   
   return (
-    <div style={{ padding: "30px", maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
+    <div className="page-container" style={{ position: "relative" }}>
+      {/* Marca de agua de fondo */}
+      <div 
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "450px",
+          height: "450px",
+          backgroundImage: `url(${escudoAdmin})`,
+          backgroundSize: "contain",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          opacity: 0.04,
+          zIndex: 0,
+          pointerEvents: "none"
+        }}
+      />
       <div style={{ marginBottom: "30px", borderBottom: "2px solid var(--border-color)", paddingBottom: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ color: "var(--text-main)", margin: 0 }}>Gestión Académica y Cursos</h1>
@@ -196,19 +357,35 @@ export default function Grupos() {
             Bienvenido, {usuario.nombre || usuario.nombres}
           </p>
         </div>
-        <span style={{ backgroundColor: "var(--accent-color)", color: "white", padding: "5px 15px", borderRadius: "20px", fontWeight: "bold", fontSize: "0.9rem" }}>
-          Rol: {usuario.rol}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <button
+            onClick={iniciarTour}
+            className="guia-rapida-flotante"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span className="guia-rapida-flotante-texto">Guía Rápida</span>
+          </button>
+          <span style={{ backgroundColor: "var(--accent-color)", color: "white", padding: "5px 15px", borderRadius: "20px", fontWeight: "bold", fontSize: "0.9rem" }}>
+            Rol: {usuario.rol}
+          </span>
+        </div>
       </div>
 
       {/* ========================================= */}
       {/* VISTA DEL DOCENTE / ADMINISTRADOR         */}
       {/* ========================================= */}
-      {["Docente", "Administrador"].includes(usuario.rol) && (
+      {(esDocente || esAdmin) && (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <h2 style={{ color: "var(--primary-color)", margin: 0 }}>Cursos Disponibles (Global)</h2>
+            <h2 id="tour-titulo-cursos" style={{ color: "var(--primary-color)", margin: 0 }}>
+              {esAdmin ? "Todos los Cursos del Sistema (Vista Global)" : "Mis Cursos Creados"}
+            </h2>
             <button
+              id="tour-btn-crear-curso"
               onClick={() => setMostrarModal(true)}
               style={{ background: "var(--accent-color)", color: "white", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold", transition: "background 0.3s" }}
             >
@@ -216,76 +393,86 @@ export default function Grupos() {
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-            {misCursos.map((curso) => (
-              <div key={curso.id} style={{ background: "var(--bg-card, white)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border-color, #eee)", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-                <h3 style={{ margin: "0 0 10px 0", color: "var(--text-main, #333)" }}>{curso.nombre}</h3>
-                <p style={{ margin: "0 0 5px 0", color: "var(--text-muted, #666)" }}>
-                  <strong>Código de Matriculación:</strong> {curso.codigo}
-                </p>
-                {curso.fecha_limite_matriculacion && (
-                  <p style={{ margin: "5px 0 0 0", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                    <strong>Límite de Matrícula:</strong> {curso.fecha_limite_matriculacion}
+          <div id="tour-lista-cursos" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
+            {misCursos.map((curso) => {
+              const puedeGestionar = esAdmin || curso.docente_email === correoUsuario;
+              return (
+                <div key={curso.id} style={{ background: "var(--bg-card, white)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border-color, #eee)", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+                  <h3 style={{ margin: "0 0 10px 0", color: "var(--text-main, #333)" }}>{curso.nombre}</h3>
+                  <p style={{ margin: "0 0 5px 0", color: "var(--text-muted, #666)" }}>
+                    <strong>Código de Matriculación:</strong> <span className="tour-curso-codigo" style={{ color: "var(--accent-color)", fontWeight: "bold" }}>{curso.codigo}</span>
                   </p>
-                )}
-                {usuario.rol === "Administrador" && (
-                  <p style={{ margin: "5px 0 0 0", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                    <strong>Docente:</strong> {curso.docente_nombre || "Desconocido"}
-                  </p>
-                )}
-                <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-                  <button
-                    onClick={() => handleOpenEditar(curso)}
-                    onMouseEnter={() => setHoveredCursoId(curso.id)}
-                    onMouseLeave={() => setHoveredCursoId(null)}
-                    style={{
-                      flex: 1,
-                      padding: "8px",
-                      background: hoveredCursoId === curso.id ? "#374151" : "#4b5563",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                      color: "#ffffff",
-                      transition: "background-color 0.2s"
-                    }}
-                  >
-                    Gestionar
-                  </button>
-                  <button
-                    onClick={() => navigate("/archivos", { state: { cursoIdSeleccionado: curso.nombre } })}
-                    style={{ flex: 1, padding: "8px", background: "var(--primary-color)", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}
-                  >
-                    Subir Material
-                  </button>
+                  {curso.fecha_limite_matriculacion && (
+                    <p style={{ margin: "5px 0 0 0", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                      <strong>Límite de Matrícula:</strong> {curso.fecha_limite_matriculacion}
+                    </p>
+                  )}
+                  {curso.docente_nombre && (
+                    <p style={{ margin: "5px 0 0 0", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                      <strong>Docente:</strong> {curso.docente_nombre}
+                    </p>
+                  )}
+                  <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                    {puedeGestionar && (
+                      <button
+                        onClick={() => handleOpenEditar(curso)}
+                        className="tour-curso-gestionar"
+                        onMouseEnter={() => setHoveredCursoId(curso.id)}
+                        onMouseLeave={() => setHoveredCursoId(null)}
+                        style={{
+                          flex: 1,
+                          padding: "8px",
+                          background: hoveredCursoId === curso.id ? "#374151" : "#4b5563",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                          color: "#ffffff",
+                          transition: "background-color 0.2s"
+                        }}
+                      >
+                        Gestionar
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate("/archivos", { state: { cursoIdSeleccionado: curso.id } })}
+                      className="tour-curso-subir"
+                      style={{ flex: 1, padding: "8px", background: "var(--primary-color)", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}
+                    >
+                      Subir Material
+                    </button>
+                  </div>
+                  {puedeGestionar && (
+                    <button
+                      onClick={() => handleOpenEliminar(curso)}
+                      className="tour-curso-eliminar"
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        marginTop: "10px",
+                        background: "rgba(220, 38, 38, 0.1)",
+                        border: "1px solid rgba(220, 38, 38, 0.3)",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        color: "#dc2626",
+                        transition: "all 0.2s"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#dc2626";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)";
+                        e.currentTarget.style.color = "#dc2626";
+                      }}
+                    >
+                      🗑️ Eliminar Curso
+                    </button>
+                  )}
                 </div>
-                <button
-                  onClick={() => handleOpenEliminar(curso)}
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    marginTop: "10px",
-                    background: "rgba(220, 38, 38, 0.1)",
-                    border: "1px solid rgba(220, 38, 38, 0.3)",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                    color: "#dc2626",
-                    transition: "all 0.2s"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#dc2626";
-                    e.currentTarget.style.color = "#ffffff";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)";
-                    e.currentTarget.style.color = "#dc2626";
-                  }}
-                >
-                  🗑️ Eliminar Curso
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -295,7 +482,7 @@ export default function Grupos() {
       {/* ========================================= */}
       {usuario.rol === "Estudiante" && (
         <div>
-          <div style={{ background: "var(--bg-card, white)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border-color, #eee)", marginBottom: "30px" }}>
+          <div id="tour-matriculacion-seccion" style={{ background: "var(--bg-card, white)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border-color, #eee)", marginBottom: "30px" }}>
             <h3 style={{ margin: "0 0 15px 0", color: "var(--text-main, #333)" }}>Matricularse a un Curso</h3>
             <div style={{ display: "flex", gap: "10px" }}>
               <input
@@ -306,36 +493,41 @@ export default function Grupos() {
                 placeholder="Ingresa el código proporcionado por tu docente (Ej: MAT-205)..."
                 style={{ padding: "10px", flex: 1, borderRadius: "5px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)", textTransform: "uppercase" }}
               />
-              <button onClick={handleUnirseCurso} style={{ background: "#27ae60", color: "white", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
+              <button id="tour-btn-unirse" onClick={handleUnirseCurso} style={{ background: "#27ae60", color: "white", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
                 Unirse al Curso
               </button>
             </div>
           </div>
 
-          <h2 style={{ color: "#27ae60", marginBottom: "20px" }}>Mis Clases Activas</h2>
+          <div id="tour-clases-activas">
+            <h2 style={{ color: "#27ae60", marginBottom: "20px" }}>Mis Clases Activas</h2>
 
-          {cursosInscritos.length === 0 ? (
-            <div style={{ padding: "30px", textAlign: "center", background: "var(--bg-main)", borderRadius: "8px", color: "var(--text-muted)" }}>
-              Aún no estás inscrito en ninguna materia. Usa el buscador de arriba.
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-              {cursosInscritos.map((curso) => (
-                <div key={curso.id} style={{ background: "var(--bg-card, white)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border-color, #eee)", borderTop: "4px solid #27ae60" }}>
-                  <h3 style={{ margin: "0 0 10px 0", color: "var(--text-main, #333)" }}>{curso.nombre}</h3>
-                  <p style={{ margin: "0 0 15px 0", color: "var(--text-muted, #666)" }}>
-                    <strong>Código:</strong> {curso.codigo}
-                  </p>
-                  <button
-                    onClick={() => navigate("/archivos", { state: { cursoIdSeleccionado: curso.nombre } })}
-                    style={{ width: "100%", padding: "10px", background: "transparent", border: "1px solid #27ae60", color: "#27ae60", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", transition: "all 0.3s" }}
-                  >
-                    Ir a Material de Estudio
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+            {cursosInscritos.length === 0 ? (
+              <div style={{ padding: "30px", textAlign: "center", background: "var(--bg-main)", borderRadius: "8px", color: "var(--text-muted)" }}>
+                Aún no estás inscrito en ninguna materia. Usa el buscador de arriba.
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
+                {cursosInscritos.map((curso) => (
+                  <div key={curso.id} style={{ background: "var(--bg-card, white)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border-color, #eee)", borderTop: "4px solid #27ae60" }}>
+                    <h3 style={{ margin: "0 0 10px 0", color: "var(--text-main, #333)" }}>{curso.nombre}</h3>
+                    {usuario.rol === "Docente" && (
+                      <p style={{ margin: "0 0 15px 0", color: "var(--text-muted, #666)" }}>
+                        <strong>Código:</strong> {curso.codigo}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => navigate("/archivos", { state: { cursoIdSeleccionado: curso.id } })}
+                      className="tour-ir-material"
+                      style={{ width: "100%", padding: "10px", background: "transparent", border: "1px solid #27ae60", color: "#27ae60", borderRadius: "4px", cursor: "pointer", fontWeight: "bold", transition: "all 0.3s" }}
+                    >
+                      Ir a Material de Estudio
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -418,6 +610,19 @@ export default function Grupos() {
                   onChange={(e) => setEditarFechaLimite(e.target.value)}
                   style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid var(--border-color)", boxSizing: "border-box", background: "var(--bg-input)", color: "var(--text-main)" }}
                 />
+              </div>
+
+              <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <input
+                  type="checkbox"
+                  id="resetear-codigo-chk"
+                  checked={resetearCodigo}
+                  onChange={(e) => setResetearCodigo(e.target.checked)}
+                  style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "var(--accent-color)" }}
+                />
+                <label htmlFor="resetear-codigo-chk" style={{ fontWeight: "bold", color: "var(--text-main)", cursor: "pointer", fontSize: "0.95rem", userSelect: "none" }}>
+                  Reasignar/Resetear Código
+                </label>
               </div>
 
               <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>

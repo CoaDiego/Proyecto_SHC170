@@ -111,14 +111,14 @@ export const calcularDistribucionIntervalos = (datos, config) => {
     let f = 0;
     const esUltimo = i === intervalos.length - 1;
     datos.forEach((v) => {
-      if (tipoIntervalo === "cerrado") {
+      if (esUltimo) {
         if (v >= desde && v <= hasta) f++;
-      } else if (tipoIntervalo === "abierto") {
-        if (v > desde && v < hasta) f++;
-      } else { 
-        if (esUltimo) {
+      } else {
+        if (tipoIntervalo === "cerrado") {
           if (v >= desde && v <= hasta) f++;
-        } else {
+        } else if (tipoIntervalo === "abierto") {
+          if (v > desde && v < hasta) f++;
+        } else { 
           if (v >= desde && v < hasta) f++;
         }
       }
@@ -139,11 +139,17 @@ export const calcularDistribucionIntervalos = (datos, config) => {
 
   return intervalos.map((intv, i) => {
     let etiquetaIntervalo;
-    if (tipoIntervalo === "cerrado") etiquetaIntervalo = `[${intv.desde}, ${intv.hasta}]`;
-    else if (tipoIntervalo === "abierto") etiquetaIntervalo = `(${intv.desde}, ${intv.hasta})`;
-    else {
-      if (i === intervalos.length - 1) etiquetaIntervalo = `[${intv.desde}, ${intv.hasta}]`;
-      else etiquetaIntervalo = `[${intv.desde}, ${intv.hasta})`;
+    const esUltimo = i === intervalos.length - 1;
+    if (esUltimo) {
+      etiquetaIntervalo = `[${intv.desde}, ${intv.hasta}]`;
+    } else {
+      if (tipoIntervalo === "cerrado") {
+        etiquetaIntervalo = `[${intv.desde}, ${intv.hasta}]`;
+      } else if (tipoIntervalo === "abierto") {
+        etiquetaIntervalo = `(${intv.desde}, ${intv.hasta})`;
+      } else {
+        etiquetaIntervalo = `[${intv.desde}, ${intv.hasta})`;
+      }
     }
 
     return {
@@ -260,9 +266,17 @@ export const calcularTendenciaCentral = (datos, config) => {
       let intv = intervalos[i];
       let match = false;
       let esUltimo = i === k - 1;
-      if (tipoIntervalo === "cerrado") { if (v >= intv.desde && v <= intv.hasta) match = true; }
-      else if (tipoIntervalo === "abierto") { if (v > intv.desde && v < intv.hasta) match = true; }
-      else { if (esUltimo) { if (v >= intv.desde && v <= intv.hasta) match = true; } else { if (v >= intv.desde && v < intv.hasta) match = true; } }
+      if (esUltimo) {
+        if (v >= intv.desde && v <= intv.hasta) match = true;
+      } else {
+        if (tipoIntervalo === "cerrado") {
+          if (v >= intv.desde && v <= intv.hasta) match = true;
+        } else if (tipoIntervalo === "abierto") {
+          if (v > intv.desde && v < intv.hasta) match = true;
+        } else {
+          if (v >= intv.desde && v < intv.hasta) match = true;
+        }
+      }
       if (match) { f[i]++; break; }
     }
   });
@@ -320,8 +334,21 @@ export const calcularTendenciaCentral = (datos, config) => {
   let F_acumulada_grafico = 0;
   const dataGraficos = intervalos.map((intv, i) => {
     F_acumulada_grafico += f[i];
+    const esUltimo = i === k - 1;
+    let etiquetaIntervalo;
+    if (esUltimo) {
+      etiquetaIntervalo = `[${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)}]`;
+    } else {
+      if (tipoIntervalo === "cerrado") {
+        etiquetaIntervalo = `[${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)}]`;
+      } else if (tipoIntervalo === "abierto") {
+        etiquetaIntervalo = `(${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)})`;
+      } else {
+        etiquetaIntervalo = `[${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)})`;
+      }
+    }
     return {
-      rango: `[${intv.desde.toFixed(1)}-${intv.hasta.toFixed(1)})`,
+      rango: etiquetaIntervalo,
       frecuencia: f[i],
       F_i: F_acumulada_grafico,
       P_i: Number((F_acumulada_grafico / n).toFixed(4)), 
@@ -395,9 +422,17 @@ export const calcularVariabilidadYForma = (datos, config) => {
   datos.forEach((v) => {
     for (let i = 0; i < k; i++) {
       let match = false; let intv = intervalos[i]; let esUltimo = i === k - 1;
-      if (tipoIntervalo === "cerrado") { if (v >= intv.desde && v <= intv.hasta) match = true; }
-      else if (tipoIntervalo === "abierto") { if (v > intv.desde && v < intv.hasta) match = true; }
-      else { if (esUltimo) { if (v >= intv.desde && v <= intv.hasta) match = true; } else { if (v >= intv.desde && v < intv.hasta) match = true; } }
+      if (esUltimo) {
+        if (v >= intv.desde && v <= intv.hasta) match = true;
+      } else {
+        if (tipoIntervalo === "cerrado") {
+          if (v >= intv.desde && v <= intv.hasta) match = true;
+        } else if (tipoIntervalo === "abierto") {
+          if (v > intv.desde && v < intv.hasta) match = true;
+        } else {
+          if (v >= intv.desde && v < intv.hasta) match = true;
+        }
+      }
       if (match) { f[i]++; break; }
     }
   });
@@ -517,8 +552,21 @@ export const calcularVariabilidadYForma = (datos, config) => {
   const dataHistograma = intervalos.map((intv, i) => {
     const exponente = -0.5 * Math.pow((intv.xm - media) / (desvStdInd || 1), 2);
     const curva = (1 / ((desvStdInd || 1) * Math.sqrt(2 * Math.PI))) * Math.exp(exponente);
+    const esUltimo = i === k - 1;
+    let etiquetaIntervalo;
+    if (esUltimo) {
+      etiquetaIntervalo = `[${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)}]`;
+    } else {
+      if (tipoIntervalo === "cerrado") {
+        etiquetaIntervalo = `[${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)}]`;
+      } else if (tipoIntervalo === "abierto") {
+        etiquetaIntervalo = `(${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)})`;
+      } else {
+        etiquetaIntervalo = `[${intv.desde.toFixed(1)}, ${intv.hasta.toFixed(1)})`;
+      }
+    }
     return {
-      rango: `[${intv.desde.toFixed(1)}-${intv.hasta.toFixed(1)})`,
+      rango: etiquetaIntervalo,
       frecuencia: f[i],
       curvaNormal: curva * n * amplitud
     };
@@ -590,9 +638,17 @@ export const calcularFractiles = (datos, kPerc, config) => {
       let match = false;
       let intv = intervalos[i];
       let esUltimo = i === k_int - 1;
-      if (tipoIntervalo === "cerrado") { if (v >= intv.desde && v <= intv.hasta) match = true; }
-      else if (tipoIntervalo === "abierto") { if (v > intv.desde && v < intv.hasta) match = true; }
-      else { if (esUltimo) { if (v >= intv.desde && v <= intv.hasta) match = true; } else { if (v >= intv.desde && v < intv.hasta) match = true; } }
+      if (esUltimo) {
+        if (v >= intv.desde && v <= intv.hasta) match = true;
+      } else {
+        if (tipoIntervalo === "cerrado") {
+          if (v >= intv.desde && v <= intv.hasta) match = true;
+        } else if (tipoIntervalo === "abierto") {
+          if (v > intv.desde && v < intv.hasta) match = true;
+        } else {
+          if (v >= intv.desde && v < intv.hasta) match = true;
+        }
+      }
       if (match) { f[i]++; break; }
     }
   });

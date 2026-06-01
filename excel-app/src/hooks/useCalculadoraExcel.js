@@ -9,7 +9,7 @@ import * as IndicesMath from "../utils/estadisticaIndices";
 
 import { api } from "../services/api";
 
-export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
+export function useCalculadoraExcel(filename, sheet, datosPrecargados = null, curso = "") {
   const { variables, usuario } = useModuleData();
   const [exceldataoriginal, setExcelDataOriginal] = useState([]);
   const [excelData, setExcelData] = useState([]);
@@ -57,7 +57,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
 
     const caragarDatos = async () => {
       try {
-        const data = await api.obtenerDatosHoja(filename, Number(sheet), usuario.nombre);
+        const data = await api.obtenerDatosHoja(filename, Number(sheet), usuario.nombre, curso);
         if (Array.isArray(data) && data.length > 0) {
           const headerRow = Object.keys(data[0]);
           setColumns(headerRow);
@@ -83,7 +83,7 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
       }
     };
     caragarDatos();
-  }, [filename, sheet, usuario?.nombre, datosPrecargados]);
+  }, [filename, sheet, usuario?.nombre, datosPrecargados, curso]);
 
   const handleChangeDato = (index, colName, value) => {
     const esNumero = !isNaN(Number(value)) && value.trim() !== "";
@@ -94,6 +94,28 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
       newData[index][colName] = nuevoValor;
       setExcelData(newData);
     }
+  };
+
+  const handleActualizarColumna = (colName, nuevosValores) => {
+    const maxLen = Math.max(excelData.length, nuevosValores.length);
+    const newExcelData = [];
+    for (let i = 0; i < maxLen; i++) {
+      const row = excelData[i] ? { ...excelData[i] } : {};
+      columns.forEach(col => {
+        if (!(col in row)) {
+          row[col] = "";
+        }
+      });
+      const val = nuevosValores[i];
+      if (val !== undefined && val !== null) {
+        const esNumero = !isNaN(Number(val)) && val.toString().trim() !== "";
+        row[colName] = esNumero ? Number(val) : val;
+      } else {
+        row[colName] = "";
+      }
+      newExcelData.push(row);
+    }
+    setExcelData(newExcelData);
   };
 
   const obtenerColumna = (colName) => {
@@ -331,6 +353,6 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null) {
     subTemaIndices, setSubTemaIndices, colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
     conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple,
-    conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem
+    conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem, handleActualizarColumna
   };
 }

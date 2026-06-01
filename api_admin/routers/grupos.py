@@ -1,4 +1,6 @@
 import random
+import os
+import shutil
 from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
@@ -57,12 +59,28 @@ async def actualizar_clase(datos: ActualizarClase, db: Session = Depends(get_db)
     
     clase.nombre = datos.nombre
     clase.fecha_limite_matriculacion = datos.fecha_limite_matriculacion
+    
+    if datos.resetear_codigo:
+        import string
+        import random
+        # Generar 4 caracteres aleatorios en mayúsculas/números
+        caracteres_aleatorios = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        codigo_nuevo = f"MAT-{clase.id}-{caracteres_aleatorios}"
+        
+        # Garantizar unicidad en la base de datos
+        while db.query(Clase).filter(Clase.codigo_acceso == codigo_nuevo).first() is not None:
+            caracteres_aleatorios = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            codigo_nuevo = f"MAT-{clase.id}-{caracteres_aleatorios}"
+            
+        clase.codigo_acceso = codigo_nuevo
+        
     db.commit()
     return {
         "message": "Clase actualizada exitosamente",
         "id": clase.id,
         "nombre": clase.nombre,
-        "fecha_limite_matriculacion": clase.fecha_limite_matriculacion
+        "fecha_limite_matriculacion": clase.fecha_limite_matriculacion,
+        "codigo_acceso": clase.codigo_acceso
     }
 
 @router.post("/unirse_clase")
@@ -114,6 +132,7 @@ async def obtener_clases_docente(email: str, db: Session = Depends(get_db)):
     for c in clases:
         docente_creador = db.query(Usuario).filter(Usuario.id == c.docente_id).first()
         docente_nombre = docente_creador.nombre if docente_creador else "Desconocido"
+        docente_email = docente_creador.email if docente_creador else ""
         res_list.append({
             "id": c.id,
             "nombre": c.nombre,
@@ -121,7 +140,8 @@ async def obtener_clases_docente(email: str, db: Session = Depends(get_db)):
             "alumnos": 0,
             "archivos": 0,
             "fecha_limite_matriculacion": c.fecha_limite_matriculacion,
-            "docente_nombre": docente_nombre
+            "docente_nombre": docente_nombre,
+            "docente_email": docente_email
         })
     return res_list
 
@@ -166,6 +186,14 @@ async def eliminar_clase(clase_id: int, user_email: str = Query(...), db: Sessio
     db.query(Archivo).filter(Archivo.clase_id == clase.id).delete(synchronize_session=False)
     db.query(HistorialCalculo).filter(HistorialCalculo.clase_id == clase.id).delete(synchronize_session=False)
     
+    # Eliminar físicamente la carpeta de archivos del curso si existe
+    target_folder = os.path.join("excels", "_cursos", str(clase.id))
+    if os.path.exists(target_folder):
+        try:
+            shutil.rmtree(target_folder)
+        except Exception as e:
+            print(f"Error al eliminar la carpeta física de la clase {clase.id}: {e}")
+            
     # 5. Eliminar la clase de la base de datos
     db.delete(clase)
     db.commit()

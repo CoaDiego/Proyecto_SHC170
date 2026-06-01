@@ -68,7 +68,33 @@ export default function TablasUnidimensionales({
         
         <SelectorVista />
 
-        <h4>1. Análisis de Tendencia Central</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+          <h4 style={{ margin: 0 }}>1. Análisis de Tendencia Central</h4>
+          <button 
+            data-html2canvas-ignore="true" 
+            onClick={() => {
+              const datosExport = resultado.tendencia.map(row => {
+                const res = { Medida: row["Medida"].split(" (")[0] };
+                if (vistaDatos === "individuales" || vistaDatos === "ambos") {
+                  res["Datos Individuales"] = row["D. Individuales"];
+                }
+                if (vistaDatos === "agrupados" || vistaDatos === "ambos") {
+                  res["Datos Agrupados"] = row["D. Agrupados"];
+                }
+                if (vistaDatos === "ambos") {
+                  res["Error (Proporción)"] = row["Error %"];
+                }
+                return res;
+              });
+              copiarTablaAExcel(datosExport, "tendencia_central");
+            }} 
+            className="btn-icon"
+            style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', border: 'none' }}
+            title="Copiar datos puros para Excel"
+          >
+            Copiar Tabla
+          </button>
+        </div>
         {/* 🚀 Colchón de 70px para evitar que el tooltip active el scroll */}
        <div className="container_tablas_academica" style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
           <table className="tabla-academica">
@@ -108,7 +134,39 @@ export default function TablasUnidimensionales({
           </table>
         </div>
 
-        <h4 style={{ marginTop: "25px" }}>2. Medidas de Posición</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: "25px", marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+          <h4 style={{ margin: 0 }}>2. Medidas de Posición</h4>
+          {!modoImpresion && (
+            <button 
+              data-html2canvas-ignore="true" 
+              onClick={() => {
+                const datosFiltrados = resultado.posicion.filter(r => (r.Medida || r.Tipo) === filtroFractil);
+                const datosExport = datosFiltrados.map(row => {
+                  const res = { 
+                    Medida: row.Medida || row.Tipo,
+                    Símbolo: row.Símbolo
+                  };
+                  if (vistaDatos === "individuales" || vistaDatos === "ambos") {
+                    res["Datos Individuales"] = row["D. Individuales"];
+                  }
+                  if (vistaDatos === "agrupados" || vistaDatos === "ambos") {
+                    res["Datos Agrupados"] = row["D. Agrupados"];
+                  }
+                  if (vistaDatos === "ambos") {
+                    res["Error (Proporción)"] = row["Error %"];
+                  }
+                  return res;
+                });
+                copiarTablaAExcel(datosExport, `medidas_de_posicion_${filtroFractil.toLowerCase()}es`);
+              }} 
+              className="btn-icon"
+              style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', border: 'none' }}
+              title="Copiar datos puros para Excel"
+            >
+              Copiar Tabla
+            </button>
+          )}
+        </div>
         
         {modoImpresion ? (
           <div className="pdf-medidas-posicion">
@@ -224,7 +282,36 @@ export default function TablasUnidimensionales({
         
         <SelectorVista />
 
-        <h4>3. Medidas de Dispersión</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+          <h4 style={{ margin: 0 }}>3. Medidas de Dispersión</h4>
+          <button 
+            data-html2canvas-ignore="true" 
+            onClick={() => {
+              const datosExport = resultado.dispersion.map(row => {
+                const res = { 
+                  Estadígrafo: row["Estadígrafo"],
+                  Sigla: row["Sigla"]
+                };
+                if (vistaDatos === "individuales" || vistaDatos === "ambos") {
+                  res["Datos Individuales"] = row["D. Individuales"];
+                }
+                if (vistaDatos === "agrupados" || vistaDatos === "ambos") {
+                  res["Datos Agrupados"] = row["D. Agrupados"];
+                }
+                if (vistaDatos === "ambos") {
+                  res["Error (Proporción)"] = row["Error %"];
+                }
+                return res;
+              });
+              copiarTablaAExcel(datosExport, "medidas_de_dispersion");
+            }} 
+            className="btn-icon"
+            style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', border: 'none' }}
+            title="Copiar datos puros para Excel"
+          >
+            Copiar Tabla
+          </button>
+        </div>
         {/* 🚀 Colchón de 70px aplicado a Medidas de Dispersión */}
         <div style={{ overflowX: "auto", overflowY: "hidden", marginBottom: "30px", paddingBottom: "70px" }}>
           <table className="tabla-academica">
@@ -253,9 +340,30 @@ export default function TablasUnidimensionales({
           </table>
         </div>
         
-        <h4 style={{ color: "var(--primary-color)", borderBottom: "2px solid var(--border-color)", paddingBottom: "5px" }}>
-          4. Medidas de Forma
-        </h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: "2px solid var(--border-color)", paddingBottom: "5px", marginBottom: "10px", flexWrap: 'wrap', gap: '10px' }}>
+          <h4 style={{ margin: 0, color: "var(--primary-color)" }}>
+            4. Medidas de Forma
+          </h4>
+          <button 
+            data-html2canvas-ignore="true" 
+            onClick={() => {
+              const datosExport = resultado.forma.map(row => {
+                const esAsimetria = row["Estadígrafo"].includes("Asimetría");
+                return {
+                  Estadígrafo: esAsimetria ? "Asimetría de Fisher" : "Curtosis",
+                  "Valor Calculado": row["Valor Calculado"],
+                  "Interpretación": row["Interpretación"]
+                };
+              });
+              copiarTablaAExcel(datosExport, "medidas_de_forma");
+            }} 
+            className="btn-icon"
+            style={{ backgroundColor: '#107c41', color: 'white', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', border: 'none' }}
+            title="Copiar datos puros para Excel"
+          >
+            Copiar Tabla
+          </button>
+        </div>
         {/* 🚀 Colchón de 70px aplicado a Medidas de Forma */}
        <div style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
           <table className="tabla-academica">

@@ -30,6 +30,9 @@ function textEditor({ row, column, onRowChange, onClose }) {
 export default function PanelConfiguracion({
   panelAbierto, setPanelAbierto,
   files, selectedFile, setSelectedFile,
+  origenArchivos, setOrigenArchivos,
+  misCursos,
+  cursoSeleccionado, setCursoSeleccionado,
   usuario, setSelectedSheet,
   columns, variables,
   calculo, setCalculo,
@@ -48,7 +51,8 @@ export default function PanelConfiguracion({
   tipoIntervalo, setTipoIntervalo, metodoK, setMetodoK, kPersonalizado, setKPersonalizado, percentilK, setPercentilK,
   mostrarTabla, excelData, handleGridChange,
   ejecutarCalculo, modoCreacion, setModoCreacion,
-  mostrarCalculadora, setMostrarCalculadora
+  mostrarCalculadora, setMostrarCalculadora,
+  handleActualizarColumna
 }) {
   const containerRef = React.useRef(null);
   const [containerWidth, setContainerWidth] = React.useState(284);
@@ -64,6 +68,23 @@ export default function PanelConfiguracion({
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
+
+  const [mostrarActualizarCol, setMostrarActualizarCol] = React.useState(false);
+  const [columnaAEditar, setColumnaAEditar] = React.useState("");
+  const [textoValores, setTextoValores] = React.useState("");
+
+  React.useEffect(() => {
+    if (mostrarActualizarCol) {
+      const initialCol = selectedColumn || (columns.length > 0 ? columns[0] : "");
+      setColumnaAEditar(initialCol);
+      if (initialCol) {
+        const vals = excelData.map(row => row[initialCol] !== undefined ? row[initialCol] : "");
+        setTextoValores(vals.join("\n"));
+      } else {
+        setTextoValores("");
+      }
+    }
+  }, [mostrarActualizarCol, selectedColumn, columns, excelData]);
 
   // 3️⃣ Aquí es el ÚNICO lugar donde se crea rdgColumns
   const rdgColumns = [];
@@ -176,9 +197,30 @@ export default function PanelConfiguracion({
   return (
     <>
       <button
+        id="tour-btn-toggle-panel"
         onClick={() => setPanelAbierto(!panelAbierto)}
         className={`boton-toggle-medio ${panelAbierto ? "abierto" : "cerrado"}`}
         title={panelAbierto ? "Ocultar panel" : "Mostrar panel"}
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: 0,
+          transform: "translateY(-50%)",
+          zIndex: 9999,
+          backgroundColor: "var(--accent-color, #FF7000)",
+          color: "white",
+          border: "1px solid var(--border-color, #eee)",
+          borderLeft: "none",
+          borderRadius: "0 8px 8px 0",
+          width: "24px",
+          height: "50px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.2)",
+          transition: "all 0.3s ease"
+        }}
       >
         <span
           className={`icono-toggle ${panelAbierto ? "abierto" : "cerrado"}`}
@@ -194,7 +236,16 @@ export default function PanelConfiguracion({
         </span>
       </button>
 
-      <div className="calculadora-datos" style={{ padding: "15px", display: "flex", flexDirection: "column", gap: "15px" }}>
+      <div 
+        className={`calculadora-datos transition-all duration-300 ${panelAbierto ? "" : "w-0 overflow-hidden opacity-0 p-0 border-none"}`}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: panelAbierto ? "15px" : "0px",
+          padding: panelAbierto ? "15px" : "0px",
+          border: panelAbierto ? "1px solid var(--border-color)" : "none"
+        }}
+      >
         
         <div style={{ borderBottom: panelAbierto ? "1px solid var(--border-color)" : "none", paddingBottom: "5px", marginBottom: panelAbierto ? "5px" : "0" }}>
           {panelAbierto && <h3 style={{ margin: 0 }}> Configuración de Análisis </h3>}
@@ -202,20 +253,131 @@ export default function PanelConfiguracion({
 
         {panelAbierto && (
           <>
-            <div>
-              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Selecciona un archivo:</label>
+            {/* Selector de origen de archivos (Personal vs Cursos) */}
+            <div
+              id="tour-origen-datos"
+              style={{
+                display: "flex",
+                background: "var(--bg-card)",
+                borderRadius: "8px",
+                padding: "5px",
+                border: "1px solid var(--border-color)",
+                marginBottom: "15px"
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setOrigenArchivos("personal");
+                  setCursoSeleccionado("");
+                  setSelectedFile(""); // Limpiar archivo seleccionado
+                  setModoCreacion(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  fontSize: "0.85rem",
+                  transition: "all 0.3s ease",
+                  background:
+                    origenArchivos === "personal"
+                      ? "var(--accent-color)"
+                      : "transparent",
+                  color:
+                    origenArchivos === "personal" ? "white" : "var(--text-muted)",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Mi Espacio
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOrigenArchivos("curso");
+                  setSelectedFile(""); // Limpiar archivo seleccionado
+                  setModoCreacion(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  fontSize: "0.85rem",
+                  transition: "all 0.3s ease",
+                  background:
+                    origenArchivos === "curso"
+                      ? "var(--primary-color)"
+                      : "transparent",
+                  color:
+                    origenArchivos === "curso" ? "white" : "var(--text-muted)",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                Mis Cursos
+              </button>
+            </div>
+
+            {/* Selector de curso (desplegable) si se elige origen de Cursos */}
+            {origenArchivos === "curso" && (
+              <div>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "0.9rem", color: "var(--text-main)" }}>Selecciona tu curso:</label>
+                <select
+                  value={cursoSeleccionado}
+                  onChange={(e) => {
+                    setCursoSeleccionado(e.target.value);
+                    setSelectedFile(""); // Limpiar al cambiar de curso
+                  }}
+                  style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)" }}
+                >
+                  <option value="">-- Selecciona un curso --</option>
+                  {misCursos.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div id="tour-seleccion-archivo">
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "var(--text-main)" }}>
+                {origenArchivos === "curso" ? "Archivo de la clase:" : "Selecciona un archivo:"}
+              </label>
               <select
                 value={selectedFile}
                 onChange={(e) => {
                   setSelectedFile(e.target.value);
                   setModoCreacion(false);
                 }}
-                style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid var(--border-color)" }}
+                style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)" }}
               >
-                <option value="">-- Selecciona un archivo para empezar --</option>
+                <option value="">
+                  {origenArchivos === "curso" 
+                    ? (cursoSeleccionado ? "-- Selecciona un archivo de este curso --" : "-- Selecciona un curso primero --") 
+                    : "-- Selecciona un archivo personal --"}
+                </option>
                 {files.map((file) => (
                   <option key={file.filename} value={file.filename}>
-                    {file.filename} ({file.author || "Desconocido"})
+                    {file.filename}
                   </option>
                 ))}
               </select>
@@ -224,13 +386,14 @@ export default function PanelConfiguracion({
             <ExcelContent
               filename={selectedFile}
               autor={usuario?.nombre}
+              curso={origenArchivos === "curso" ? cursoSeleccionado : ""}
               mostrarTabla={false}
               onSheetChange={setSelectedSheet}
             />
 
             {columns.length > 0 || variables.length > 0 ? (
               <div style={{ background: "var(--bg-card)", padding: "15px", borderRadius: "8px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "15px" }}>
-                <div>
+                <div id="tour-seleccion-operacion">
                   <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Operación:</label>
                   <select
                     value={calculo}
@@ -263,7 +426,7 @@ export default function PanelConfiguracion({
                 </div>
 
                 {calculo === "numeros_indices" ? (
-                  <div style={{ padding: "10px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "4px", marginBottom: "15px" }}>
+                  <div id="tour-seleccion-variables" style={{ padding: "10px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "4px", marginBottom: "15px" }}>
                     <label style={{ fontWeight: "bold", color: "var(--primary-color)" }}>Módulo de Análisis:</label>
                     <select value={subTemaIndices} onChange={(e) => setSubTemaIndices(e.target.value)} style={{ width: "100%", marginBottom: "15px", padding: "5px" }}>
                       <option value="compuestos">1. Índices Compuestos (Laspeyres/Paasche/Fisher)</option>
@@ -548,7 +711,7 @@ export default function PanelConfiguracion({
                     )}
                   </div>
                 ) : (
-                  <>
+                  <div id="tour-seleccion-variables">
                     <label>{calculo === "series_tiempo" ? "Eje de Tiempo X:" : esBivariada || calculo === "regresion_simple" ? "Variable X:" : "Columna Seleccionada:"}</label>
                     <select value={selectedColumn} onChange={(e) => setSelectedColumn(e.target.value)} style={{ width: "100%", marginBottom: "10px" }}>{renderOpcionesColumnas()}</select>
 
@@ -558,7 +721,7 @@ export default function PanelConfiguracion({
                         <select value={selectedColumnY} onChange={(e) => setSelectedColumnY(e.target.value)} style={{ width: "100%", padding: "5px" }}><option value="">-- Seleccionar Variable Y --</option>{renderOpcionesColumnas()}</select>
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
 
                 {calculo === "series_tiempo" && (
@@ -646,8 +809,34 @@ export default function PanelConfiguracion({
                 )}
 
                 {mostrarTabla && excelData.length > 0 && (
-                  <div ref={containerRef} className="container_dataset" style={{ marginTop: "10px", width: "100%" }}>
-                    <p className="info_vista">Vista Previa (Doble clic para editar):</p>
+                  <div id="tour-tabla-grid" ref={containerRef} className="container_dataset" style={{ marginTop: "10px", width: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <p className="info_vista" style={{ margin: 0 }}>Vista Previa (Doble clic para editar):</p>
+                      <button
+                        type="button"
+                        onClick={() => setMostrarActualizarCol(true)}
+                        style={{
+                          background: "var(--primary-color, #3b82f6)",
+                          color: "white",
+                          border: "none",
+                          padding: "5px 12px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.85rem",
+                          fontWeight: "bold",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          transition: "background 0.3s ease"
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9"/>
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                        Actualizar Columna
+                      </button>
+                    </div>
                     <DataGrid
                       columns={rdgColumns}
                       rows={mappedRows}
@@ -658,19 +847,118 @@ export default function PanelConfiguracion({
                   </div>
                 )}
 
-                <button onClick={ejecutarCalculo} className="button_calcular" style={{ marginTop: "15px" }}>CALCULAR</button>
+                <button id="tour-btn-calcular" onClick={ejecutarCalculo} className="button_calcular" style={{ marginTop: "15px" }}>CALCULAR</button>
               </div>
             ) : (
               <p className="info_cargando">Cargando datos o selecciona un archivo...</p>
             )}
 
-            <button
-              onClick={() => setModoCreacion(!modoCreacion)}
-              className="button_resultados"
-              style={{ backgroundColor: modoCreacion ? "var(--text-muted)" : "var(--accent-color)", marginTop: "20px" }}
-            >
-              {modoCreacion ? "Volver a Resultados" : "Crear Tabla de Datos"}
-            </button>
+            {mostrarActualizarCol && (
+              <div style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100vw",
+                height: "100vh",
+                backgroundColor: "rgba(0,0,0,0.6)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 99999
+              }}>
+                <div style={{
+                  background: "var(--bg-card)",
+                  padding: "25px",
+                  borderRadius: "10px",
+                  width: "450px",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+                  border: "1px solid var(--border-color)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "15px"
+                }}>
+                  <h3 style={{ margin: 0, color: "var(--primary-color)" }}>Actualizar Datos de Columna</h3>
+                  
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "var(--text-main)" }}>
+                      Selecciona la Columna:
+                    </label>
+                    <select
+                      value={columnaAEditar}
+                      onChange={(e) => {
+                        const col = e.target.value;
+                        setColumnaAEditar(col);
+                        const vals = excelData.map(row => row[col] !== undefined ? row[col] : "");
+                        setTextoValores(vals.join("\n"));
+                      }}
+                      style={{ width: "100%", padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)" }}
+                    >
+                      {columns.map(col => (
+                        <option key={col} value={col}>{col}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "var(--text-main)" }}>
+                      Valores (uno por línea o separados por comas):
+                    </label>
+                    <textarea
+                      value={textoValores}
+                      onChange={(e) => setTextoValores(e.target.value)}
+                      rows="10"
+                      placeholder="Escribe los nuevos valores de la columna..."
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        borderRadius: "5px",
+                        border: "1px solid var(--border-color)",
+                        background: "var(--bg-input)",
+                        color: "var(--text-main)",
+                        fontFamily: "monospace",
+                        boxSizing: "border-box",
+                        resize: "vertical"
+                      }}
+                    />
+                    <p style={{ margin: "5px 0 0 0", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      Puedes copiar una columna de Excel y pegarla directamente aquí.
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "5px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setMostrarActualizarCol(false)}
+                      style={{ padding: "8px 15px", background: "var(--bg-main)", color: "var(--text-main)", border: "1px solid var(--border-color)", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!columnaAEditar) return;
+                        let parts = [];
+                        if (textoValores.includes("\n")) {
+                          parts = textoValores.split("\n");
+                        } else if (textoValores.includes(",")) {
+                          parts = textoValores.split(",");
+                        } else {
+                          parts = [textoValores];
+                        }
+                        const values = parts.map(p => p.trim());
+                        handleActualizarColumna(columnaAEditar, values);
+                        setMostrarActualizarCol(false);
+                      }}
+                      style={{ padding: "8px 20px", background: "var(--accent-color)", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
+                    >
+                      Actualizar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+
 
             {/* <button
               onClick={() => setMostrarCalculadora(!mostrarCalculadora)}

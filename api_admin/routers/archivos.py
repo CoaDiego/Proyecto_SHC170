@@ -4,46 +4,131 @@ import urllib.parse
 import gc
 import time
 import json
+import unicodedata
+import re
 import pandas as pd
-from fastapi import APIRouter, File, UploadFile, Form, Query, Body
+from fastapi import APIRouter, File, UploadFile, Form, Query, Body, Depends
 from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy.orm import Session
+from database import get_db
+import models
 
 router = APIRouter()
 EXCEL_FOLDER = "excels"
 os.makedirs(EXCEL_FOLDER, exist_ok=True)
+
+def sanitizar_nombre_carpeta(nombre: str) -> str:
+    if not nombre:
+        return "desconocido"
+    # Normalizar para descomponer caracteres con tildes (NFD)
+    nombre_normalizado = unicodedata.normalize('NFD', nombre)
+    # Filtrar caracteres que no sean ASCII básicos
+    nombre_sin_tildes = "".join([c for c in nombre_normalizado if not unicodedata.combining(c)])
+    # Mantener solo letras, números, guiones, guiones bajos y espacios
+    nombre_limpio = re.sub(r'[^a-zA-Z0-9\s_-]', '', nombre_sin_tildes)
+    # Reemplazar espacios y guiones múltiples por un solo guion bajo
+    nombre_con_guiones = re.sub(r'[\s_-]+', '_', nombre_limpio)
+    # Quitar guiones iniciales y finales y pasar a minúsculas
+    res = nombre_con_guiones.strip('_').lower()
+    return res if res else "desconocido"
+
+def obtener_ruta_carpeta(autor: str, visibilidad: str, curso: str, db: Session) -> str:
+    if visibilidad == "privado" and curso:
+        # Es una clase/curso
+        clase_id = int(curso) if str(curso).isdigit() else None
+        if clase_id:
+            clase = db.query(models.Clase).filter(models.Clase.id == clase_id).first()
+        else:
+            clase = db.query(models.Clase).filter(models.Clase.nombre == curso).first()
+        
+        if clase:
+            nombre_sanitizado = sanitizar_nombre_carpeta(clase.nombre)
+            carpeta_nombre = f"{nombre_sanitizado}_{clase.id}"
+        else:
+            nombre_sanitizado = sanitizar_nombre_carpeta(str(curso))
+            carpeta_nombre = nombre_sanitizado
+        return os.path.join(EXCEL_FOLDER, "_cursos", carpeta_nombre)
+    else:
+        # Es un usuario (personal)
+        user = db.query(models.Usuario).filter(models.Usuario.nombre == autor).first()
+        if user:
+            nombre_sanitizado = sanitizar_nombre_carpeta(user.nombre)
+            carpeta_nombre = f"{nombre_sanitizado}_{user.id}"
+        else:
+            nombre_sanitizado = sanitizar_nombre_carpeta(autor)
+            carpeta_nombre = nombre_sanitizado
+        return os.path.join(EXCEL_FOLDER, carpeta_nombre)
 
 @router.post("/upload")
 async def upload_file(
     file: UploadFile = File(...), 
     autor: str = Form(...),
     visibilidad: str = Form("personal"), 
-    curso: str = Form(None)
+    curso: str = Form(None),
+    db: Session = Depends(get_db)
 ):
+    clase_id = None
     if visibilidad == "privado" and curso:
-        safe_curso = urllib.parse.quote(curso)
-        target_folder = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso)
-    else:
-        safe_author = urllib.parse.quote(autor)
-        target_folder = os.path.join(EXCEL_FOLDER, safe_author)
+        clase_id = int(curso) if str(curso).isdigit() else None
+        if clase_id:
+            clase = db.query(models.Clase).filter(models.Clase.id == clase_id).first()
+        else:
+            clase = db.query(models.Clase).filter(models.Clase.nombre == curso).first()
+        if not clase:
+            return JSONResponse(status_code=404, content={"error": "Clase no encontrada"})
+        clase_id = clase.id
 
+    target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
     os.makedirs(target_folder, exist_ok=True)
     file_path = os.path.join(target_folder, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    if clase_id:
+        user = db.query(models.Usuario).filter(models.Usuario.nombre == autor).first()
+        user_id = user.id if user else 1
+        
+        existente = db.query(models.Archivo).filter(
+            models.Archivo.nombre_original == file.filename,
+            models.Archivo.clase_id == clase_id
+        ).first()
+        if not existente:
+            nuevo_archivo = models.Archivo(
+                nombre_original=file.filename,
+                ruta_servidor=file_path.replace("\\", "/"),
+                clase_id=clase_id,
+                usuario_id=user_id
+            )
+            db.add(nuevo_archivo)
+            db.commit()
+
     return {"message": f"Archivo subido correctamente a {target_folder}"}
 
 @router.get("/files")
-def list_files(autor: str = Query(None), visibilidad: str = Query("personal"), curso: str = Query(None)):
+def list_files(
+    autor: str = Query(None), 
+    visibilidad: str = Query("personal"), 
+    curso: str = Query(None),
+    db: Session = Depends(get_db)
+):
     files_list = []
     if visibilidad == "privado" and curso:
-        safe_curso = urllib.parse.quote(curso)
-        target_folder = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso)
-    else:
-        if not autor: return {"files": []}
-        safe_author = urllib.parse.quote(autor)
-        target_folder = os.path.join(EXCEL_FOLDER, safe_author)
-    
+        clase_id = int(curso) if str(curso).isdigit() else None
+        if not clase_id:
+            clase = db.query(models.Clase).filter(models.Clase.nombre == curso).first()
+            if clase:
+                clase_id = clase.id
+        if clase_id:
+            archivos = db.query(models.Archivo).filter(models.Archivo.clase_id == clase_id).all()
+            for arc in archivos:
+                files_list.append({
+                    "filename": arc.nombre_original,
+                    "autor": autor,
+                    "es_curso": True
+                })
+            return {"files": files_list}
+
+    target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
     if os.path.exists(target_folder):
         for fname in os.listdir(target_folder):
             if fname.endswith(".xlsx") or fname.endswith(".xls"):
@@ -55,15 +140,16 @@ def list_files(autor: str = Query(None), visibilidad: str = Query("personal"), c
     return {"files": files_list}
 
 @router.get("/view/{filename}")
-async def view_excel(filename: str, hoja: int = 0, autor: str = Query(None), curso: str = Query(None)):
-    if curso:
-        safe_curso = urllib.parse.quote(curso)
-        file_path = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso, filename)
-    elif autor:
-        safe_author = urllib.parse.quote(autor)
-        file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
-    else:
-        file_path = os.path.join(EXCEL_FOLDER, filename)
+async def view_excel(
+    filename: str, 
+    hoja: int = 0, 
+    autor: str = Query(None), 
+    curso: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    visibilidad = "privado" if curso else "personal"
+    target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
+    file_path = os.path.join(target_folder, filename)
         
     if not os.path.exists(file_path):
         return {"error": "Archivo no encontrado en el servidor"}
@@ -82,15 +168,15 @@ async def view_excel(filename: str, hoja: int = 0, autor: str = Query(None), cur
         return {"error": f"Error al leer el Excel: {str(e)}"}
 
 @router.get("/sheets/{filename}")
-async def get_sheets(filename: str, autor: str = Query(None), curso: str = Query(None)):
-    if curso:
-        safe_curso = urllib.parse.quote(curso)
-        file_path = os.path.join(EXCEL_FOLDER, "_cursos", safe_curso, filename)
-    elif autor:
-        safe_author = urllib.parse.quote(autor)
-        file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
-    else:
-        file_path = os.path.join(EXCEL_FOLDER, filename)
+async def get_sheets(
+    filename: str, 
+    autor: str = Query(None), 
+    curso: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    visibilidad = "privado" if curso else "personal"
+    target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
+    file_path = os.path.join(target_folder, filename)
 
     if not os.path.exists(file_path):
         return {"error": "Archivo no encontrado en el servidor"}
@@ -102,12 +188,15 @@ async def get_sheets(filename: str, autor: str = Query(None), curso: str = Query
         return {"error": f"Error al leer hojas: {str(e)}"}
 
 @router.get("/files/{filename}")
-async def download_file(filename: str, autor: str = Query(None)):
-    if autor:
-        safe_author = urllib.parse.quote(autor)
-        file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
-    else:
-        file_path = os.path.join(EXCEL_FOLDER, filename)
+async def download_file(
+    filename: str, 
+    autor: str = Query(None), 
+    curso: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    visibilidad = "privado" if curso else "personal"
+    target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
+    file_path = os.path.join(target_folder, filename)
 
     if not os.path.exists(file_path):
         return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
@@ -119,9 +208,23 @@ async def download_file(filename: str, autor: str = Query(None)):
     )
 
 @router.delete("/files/{filename}")
-async def delete_file(filename: str, autor: str = Query(...)):
-    safe_author = urllib.parse.quote(autor)
-    file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
+async def delete_file(
+    filename: str, 
+    autor: str = Query(...), 
+    curso: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    clase_id = None
+    if curso:
+        clase_id = int(curso) if str(curso).isdigit() else None
+        if not clase_id:
+            clase = db.query(models.Clase).filter(models.Clase.nombre == curso).first()
+            if clase:
+                clase_id = clase.id
+
+    visibilidad = "privado" if curso else "personal"
+    target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
+    file_path = os.path.join(target_folder, filename)
 
     if not os.path.exists(file_path):
         return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
@@ -133,6 +236,14 @@ async def delete_file(filename: str, autor: str = Query(...)):
             meta_path = file_path + ".meta"
             if os.path.exists(meta_path):
                 os.remove(meta_path)
+            
+            if clase_id:
+                db.query(models.Archivo).filter(
+                    models.Archivo.nombre_original == filename,
+                    models.Archivo.clase_id == clase_id
+                ).delete()
+                db.commit()
+
             return {"message": f"Archivo {filename} eliminado correctamente"}
         except PermissionError:
             time.sleep(0.3)
@@ -142,7 +253,7 @@ async def delete_file(filename: str, autor: str = Query(...)):
     return JSONResponse(status_code=500, content={"error": "Archivo en uso. Intente de nuevo."})
 
 @router.post("/save_table_hojas")
-async def save_table_hojas(body: dict = Body(...)):
+async def save_table_hojas(body: dict = Body(...), db: Session = Depends(get_db)):
     try:
         nombre = body.get("nombre", "Ejemplo")
         autor  = body.get("autor", "Desconocido")
@@ -151,8 +262,7 @@ async def save_table_hojas(body: dict = Body(...)):
         if not hojas:
             return {"error": "No se recibieron hojas para guardar"}
 
-        safe_author = urllib.parse.quote(autor)
-        user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+        user_folder = obtener_ruta_carpeta(autor, "personal", None, db)
         os.makedirs(user_folder, exist_ok=True)
 
         filepath = os.path.join(user_folder, f"{nombre}.xlsx")
@@ -186,7 +296,13 @@ async def save_table_hojas(body: dict = Body(...)):
         return {"error": str(e)}
 
 @router.post("/create_table")
-async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_filas: int = 1, autor: str = Query(None)):
+async def create_table(
+    nombre: str = Query(None), 
+    num_columnas: int = 1, 
+    num_filas: int = 1, 
+    autor: str = Query(None),
+    db: Session = Depends(get_db)
+):
     if not nombre:
         existing_files = [f for f in os.listdir(EXCEL_FOLDER) if f.endswith(".xlsx")]
         nombre = f"Ejemplo {len(existing_files)+1}"
@@ -196,8 +312,7 @@ async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_fil
     filename = f"{nombre}.xlsx"
     
     if autor:
-        safe_author = urllib.parse.quote(autor)
-        user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+        user_folder = obtener_ruta_carpeta(autor, "personal", None, db)
         os.makedirs(user_folder, exist_ok=True)
         file_path = os.path.join(user_folder, filename)
     else:
@@ -207,7 +322,7 @@ async def create_table(nombre: str = Query(None), num_columnas: int = 1, num_fil
     return {"message": "Tabla creada correctamente", "filename": filename}
 
 @router.post("/save_table")
-async def save_table(body: dict = Body(...)):
+async def save_table(body: dict = Body(...), db: Session = Depends(get_db)):
     try:
         nombre = body.get("nombre", "Ejemplo")
         tabla = body.get("tabla", [])
@@ -217,8 +332,7 @@ async def save_table(body: dict = Body(...)):
             return {"error": "No se recibieron datos para la tabla"}
 
         df = pd.DataFrame(tabla)
-        safe_author = urllib.parse.quote(autor) 
-        user_folder = os.path.join(EXCEL_FOLDER, safe_author)
+        user_folder = obtener_ruta_carpeta(autor, "personal", None, db)
         os.makedirs(user_folder, exist_ok=True)
 
         filepath = os.path.join(user_folder, f"{nombre}.xlsx")
@@ -239,29 +353,118 @@ async def save_table(body: dict = Body(...)):
         return {"error": str(e)}
 
 @router.post("/update_excel")
-async def update_excel(body: dict = Body(...)):
+async def update_excel(body: dict = Body(...), db: Session = Depends(get_db)):
     try:
         filename = body.get("filename")
         hoja_index = body.get("hoja_index", 0)
         datos = body.get("datos", [])
         autor = body.get("autor")
+        curso = body.get("curso")
+        estrategia_guardado = body.get("estrategia_guardado", "overwrite")
 
-        if autor:
-            safe_author = urllib.parse.quote(autor)
-            file_path = os.path.join(EXCEL_FOLDER, safe_author, filename)
-        else:
-            file_path = os.path.join(EXCEL_FOLDER, filename)
+        visibilidad = "privado" if curso else "personal"
+        target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
+        file_path = os.path.join(target_folder, filename)
+
+        if not os.path.exists(file_path):
+            return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
             
         df_nuevo = pd.DataFrame(datos)
         for col in df_nuevo.columns:
             df_nuevo = df_nuevo[df_nuevo[col] != col]
 
         with pd.ExcelFile(file_path) as xls:
-            nombre_hoja = xls.sheet_names[hoja_index]
+            sheet_names = xls.sheet_names
+            nombre_hoja = sheet_names[hoja_index]
 
-        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-            df_nuevo.to_excel(writer, sheet_name=nombre_hoja, index=False, header=True)
+        if estrategia_guardado == "new_column":
+            df_original = pd.read_excel(file_path, sheet_name=nombre_hoja)
+            
+            # Formateamos ambas para que no den fallos por valores vacíos/nulos
+            df_original_comp = df_original.fillna("")
+            df_nuevo_comp = df_nuevo.fillna("")
+            
+            any_modified = False
+            # Comparar las columnas comunes
+            for col in df_original.columns:
+                if col in df_nuevo_comp.columns:
+                    # Si no son iguales, añadimos la nueva versión de la columna
+                    # usando f"{col} (Editado)"
+                    if not df_original_comp[col].equals(df_nuevo_comp[col]):
+                        nombre_nueva_col = f"{col} (Editado)"
+                        df_original[nombre_nueva_col] = df_nuevo[col]
+                        any_modified = True
+            
+            # Buscar columnas completamente nuevas añadidas por el usuario en el grid
+            for col in df_nuevo.columns:
+                if col not in df_original.columns and not col.startswith("__extra_col_"):
+                    df_original[col] = df_nuevo[col]
+                    any_modified = True
+                    
+            with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                df_original.to_excel(writer, sheet_name=nombre_hoja, index=False, header=True)
+            return {"message": "Columna agregada correctamente", "strategy": "new_column"}
 
-        return {"message": "Actualizado correctamente"}
+        elif estrategia_guardado == "new_sheet":
+            edited_sheets = [s for s in sheet_names if s.startswith("Datos_Editados_")]
+            indices = []
+            for s in edited_sheets:
+                try:
+                    idx = int(s.replace("Datos_Editados_", ""))
+                    indices.append(idx)
+                except ValueError:
+                    pass
+            next_idx = max(indices) + 1 if indices else 1
+            new_sheet_name = f"Datos_Editados_{next_idx}"
+
+            with pd.ExcelWriter(file_path, engine='openpyxl', mode='a') as writer:
+                df_nuevo.to_excel(writer, sheet_name=new_sheet_name, index=False, header=True)
+            return {"message": "Nueva hoja agregada correctamente", "new_sheet": new_sheet_name, "strategy": "new_sheet"}
+
+        else: # "overwrite"
+            with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                df_nuevo.to_excel(writer, sheet_name=nombre_hoja, index=False, header=True)
+            return {"message": "Actualizado correctamente", "strategy": "overwrite"}
+
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@router.post("/add_edit_sheet")
+async def add_edit_sheet(body: dict = Body(...), db: Session = Depends(get_db)):
+    try:
+        filename = body.get("filename")
+        datos = body.get("datos", [])
+        autor = body.get("autor")
+        curso = body.get("curso")
+
+        visibilidad = "privado" if curso else "personal"
+        target_folder = obtener_ruta_carpeta(autor, visibilidad, curso, db)
+        file_path = os.path.join(target_folder, filename)
+
+        if not os.path.exists(file_path):
+            return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
+
+        df_nuevo = pd.DataFrame(datos)
+        for col in df_nuevo.columns:
+            df_nuevo = df_nuevo[df_nuevo[col] != col]
+
+        with pd.ExcelFile(file_path) as xls:
+            sheet_names = xls.sheet_names
+
+        edited_sheets = [s for s in sheet_names if s.startswith("Datos_Editados_")]
+        indices = []
+        for s in edited_sheets:
+            try:
+                idx = int(s.replace("Datos_Editados_", ""))
+                indices.append(idx)
+            except ValueError:
+                pass
+        next_idx = max(indices) + 1 if indices else 1
+        new_sheet_name = f"Datos_Editados_{next_idx}"
+
+        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a') as writer:
+            df_nuevo.to_excel(writer, sheet_name=new_sheet_name, index=False, header=True)
+
+        return {"message": "Hoja agregada correctamente", "new_sheet": new_sheet_name}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Error al agregar hoja de cambios: {str(e)}"})

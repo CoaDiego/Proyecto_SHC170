@@ -1,0 +1,31 @@
+# Entorno virtual y caché
+venv/
+api_admin/venv/
+__pycache__/
+api_admin/__pycache__/
+api_admin/routers/__pycache__/
+*.pyc
+
+# Configuración y secretos (Muy importante para producción)
+.env
+api_admin/.env
+excel-app/.env
+
+# Datos del usuario y cargas locales
+excels/
+api_admin/excels/
+api_admin/historial/
+api_admin/visitas.txt
+
+# Node / Frontend build
+node_modules/
+excel-app/node_modules/
+excel-app/dist/
+excel-app/dist-ssr/
+
+# Logs y temporales
+*.log
+logs/
+.vscode/
+.idea/
+.DS_Store

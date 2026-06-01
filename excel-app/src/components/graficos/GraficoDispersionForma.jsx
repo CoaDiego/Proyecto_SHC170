@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ComposedChart, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Line, Cell, ReferenceLine, ReferenceArea, Scatter 
@@ -39,11 +39,47 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
   if (!resultado || !resultado.graficos) return null;
   const { estadisticas, graficos } = resultado;
 
+  const [zoomActivo, setZoomActivo] = useState(false);
+
   // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
   const isMobile = window.innerWidth < 768;
   const fontSmall = isMaximized && !isMobile ? 16 : 11;
   const fontMed = isMaximized && !isMobile ? 20 : 14;
   const fontAxis = isMaximized && !isMobile ? 14 : 12;
+
+  const renderZoomToggle = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span style={{ fontSize: '0.85em', fontWeight: 'bold', color: 'var(--text-muted)' }}>Ajustar Escala (Zoom)</span>
+      <button 
+        type="button"
+        onClick={() => setZoomActivo(!zoomActivo)}
+        style={{
+          width: '38px',
+          height: '20px',
+          borderRadius: '10px',
+          backgroundColor: zoomActivo ? 'var(--primary-color)' : '#9ca3af',
+          position: 'relative',
+          padding: 0,
+          border: 'none',
+          cursor: 'pointer',
+          transition: 'background-color 0.2s ease',
+          outline: 'none'
+        }}
+      >
+        <div style={{
+          width: '14px',
+          height: '14px',
+          borderRadius: '50%',
+          backgroundColor: '#ffffff',
+          position: 'absolute',
+          top: '3px',
+          left: zoomActivo ? '21px' : '3px',
+          transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.3)'
+        }} />
+      </button>
+    </div>
+  );
 
   // ------------------------------------------
   // 1. DIBUJAR BOXPLOT ACADÉMICO (Método Nativo INFALIBLE)
@@ -68,45 +104,52 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
     const ticksX = [minAdyacente, q1, mediana, q3, maxAdyacente];
 
     return (
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
-        <ComposedChart margin={{ top: 50, right: 30, bottom: 35, left: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} opacity={0.2} />
-          {/* Ejes numéricos reales */}
-          <XAxis 
-            type="number" dataKey="x" domain={[0, 'auto']} name="Valores" ticks={ticksX} 
-            tick={{ fontSize: fontAxis, fontWeight: 'bold', fill: 'var(--text-variable)' }} 
-            tickFormatter={tick => tick.toFixed(2)} stroke="var(--text-variable)"
-            label={{ value: selectedColumn || "Valores", position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }}
-          />
-          <YAxis type="number" dataKey="y" domain={[0, 2]} hide />
-          
-          <Tooltip content={<BoxplotTooltip estadisticas={estadisticas} />} cursor={{strokeDasharray: '3 3'}} />
-          
-          {/* Etiquetas con variables CSS para Modo Oscuro */}
-          <ReferenceLine x={minAdyacente} stroke="var(--border-color)" strokeDasharray="3 3" label={{ value: 'Min', position: 'top', fill: 'var(--text-variable)', fontSize: fontSmall, fontWeight: 'bold', dy: -10 }} />
-          <ReferenceLine x={maxAdyacente} stroke="var(--border-color)" strokeDasharray="3 3" label={{ value: 'Max', position: 'top', fill: 'var(--text-variable)', fontSize: fontSmall, fontWeight: 'bold', dy: -10 }} />
-          <ReferenceLine x={q1} stroke="#0099ff" strokeDasharray="3 3" label={{ value: 'Q1', position: 'top', fill: 'var(--text-main)', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
-          <ReferenceLine x={mediana} stroke="#f93b3b" strokeDasharray="3 3" label={{ value: 'Me', position: 'top', fill: '#e74c3c', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
-          <ReferenceLine x={q3} stroke="#0099ff" strokeDasharray="3 3" label={{ value: 'Q3', position: 'top', fill: 'var(--text-main)', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }} data-html2canvas-ignore="true">
+          {renderZoomToggle()}
+        </div>
+        <div style={{ flexGrow: 1, minHeight: 280 }}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 100, height: 100 }}>
+            <ComposedChart margin={{ top: 50, right: 30, bottom: 35, left: 30 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} opacity={0.2} />
+              {/* Ejes numéricos reales */}
+              <XAxis 
+                type="number" dataKey="x" domain={zoomActivo ? [minDomain, maxDomain] : [0, 'auto']} name="Valores" ticks={ticksX} 
+                tick={{ fontSize: fontAxis, fontWeight: 'bold', fill: 'var(--text-variable)' }} 
+                tickFormatter={tick => tick.toFixed(2)} stroke="var(--text-variable)"
+                label={{ value: selectedColumn || "Valores", position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', fontSize: fontAxis, fontWeight: 'bold' }}
+              />
+              <YAxis type="number" dataKey="y" domain={[0, 2]} hide />
+              
+              <Tooltip content={<BoxplotTooltip estadisticas={estadisticas} />} cursor={{strokeDasharray: '3 3'}} />
+              
+              {/* Etiquetas con variables CSS para Modo Oscuro */}
+              <ReferenceLine x={minAdyacente} stroke="var(--border-color)" strokeDasharray="3 3" label={{ value: 'Min', position: 'top', fill: 'var(--text-variable)', fontSize: fontSmall, fontWeight: 'bold', dy: -10 }} />
+              <ReferenceLine x={maxAdyacente} stroke="var(--border-color)" strokeDasharray="3 3" label={{ value: 'Max', position: 'top', fill: 'var(--text-variable)', fontSize: fontSmall, fontWeight: 'bold', dy: -10 }} />
+              <ReferenceLine x={q1} stroke="#0099ff" strokeDasharray="3 3" label={{ value: 'Q1', position: 'top', fill: 'var(--text-main)', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
+              <ReferenceLine x={mediana} stroke="#f93b3b" strokeDasharray="3 3" label={{ value: 'Me', position: 'top', fill: '#e74c3c', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
+              <ReferenceLine x={q3} stroke="#0099ff" strokeDasharray="3 3" label={{ value: 'Q3', position: 'top', fill: 'var(--text-main)', fontSize: fontMed, fontWeight: 'bold', dy: -25 }} />
 
-          {/* 1. LA CAJA CENTRAL (Usa área nativa de Recharts) */}
-          <ReferenceArea x1={q1} x2={q3} y1={0.7} y2={1.3} fill="rgba(52, 152, 219, 0.2)" stroke="#3498db" strokeWidth={isMaximized ? 3 : 2} />
+              {/* 1. LA CAJA CENTRAL (Usa área nativa de Recharts) */}
+              <ReferenceArea x1={q1} x2={q3} y1={0.7} y2={1.3} fill="rgba(52, 152, 219, 0.2)" stroke="#3498db" strokeWidth={isMaximized ? 3 : 2} />
 
-          {/* 2. LOS BIGOTES Y LÍNEAS (Usan conexiones nativas de Scatter) */}
-          <Scatter data={whiskerData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
-          <Scatter data={leftStopperData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
-          <Scatter data={rightStopperData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
-          <Scatter data={medianData} line={{ stroke: '#e74c3c', strokeWidth: isMaximized ? 4 : 3 }} shape={<EmptyShape />} isAnimationActive={false} />
+              {/* 2. LOS BIGOTES Y LÍNEAS (Usan conexiones nativas de Scatter) */}
+              <Scatter data={whiskerData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
+              <Scatter data={leftStopperData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
+              <Scatter data={rightStopperData} line={{ stroke: '#3498db', strokeWidth: isMaximized ? 3 : 2 }} shape={<EmptyShape />} isAnimationActive={false} />
+              <Scatter data={medianData} line={{ stroke: '#e74c3c', strokeWidth: isMaximized ? 4 : 3 }} shape={<EmptyShape />} isAnimationActive={false} />
 
-          {/* 3. VALORES ATÍPICOS (Puntos Rojos) */}
-          {outliersData.length > 0 && (
-            <Scatter data={outliersData} fill="#e74c3c" shape="circle" isAnimationActive={true} />
-          )}
-          
-          {/* Truco: Punto invisible en la caja para que el Tooltip reaccione fácilmente al pasar el mouse */}
-          <Scatter data={[{x: mediana, y: 1}]} fill="transparent" shape={<EmptyShape />} />
-        </ComposedChart>
-      </ResponsiveContainer>
+              {/* 3. VALORES ATÍPICOS (Puntos Rojos) */}
+              {outliersData.length > 0 && (
+                <Scatter data={outliersData} fill="#e74c3c" shape="circle" isAnimationActive={true} />
+              )}
+              
+              {/* Truco: Punto invisible en la caja para que el Tooltip reaccione fácilmente al pasar el mouse */}
+              <Scatter data={[{x: mediana, y: 1}]} fill="transparent" shape={<EmptyShape />} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     );
   }
 

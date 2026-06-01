@@ -26,7 +26,8 @@ export default function Calculadora() {
   const stats = useCalculadoraExcel(
     selectedFile,
     selectedSheet,
-    snapshot // Si viene del historial, esto llenará los datos al instante
+    snapshot, // Si viene del historial, esto llenará los datos al instante
+    selectedCourse
   );
 
   return (
@@ -38,6 +39,7 @@ export default function Calculadora() {
 
       <div className="flotante-lateral-datos">
         <button
+          id="tour-btn-gestion"
           className="btn-flotante-datos"
           onClick={() => setMostrarDatos(true)}
           title="Abrir Gestión de Datos"
@@ -60,6 +62,7 @@ export default function Calculadora() {
         </button>
 
         <button
+          id="tour-btn-crear-tabla"
           className="btn-flotante-datos btn-crear-tabla"
           onClick={() => setMostrarCreacion(true)}
           title="Crear Nueva Tabla de Datos"

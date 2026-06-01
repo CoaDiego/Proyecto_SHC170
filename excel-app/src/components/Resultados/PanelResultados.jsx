@@ -36,9 +36,12 @@ export default function PanelResultados({
   ordenGraficos, setOrdenGraficos,
   handleGuardarResultado,
   selectedColumn,
-  selectedColumnY
+  selectedColumnY,
+  tablasDesarrolloReporte,
+  setTablasDesarrolloReporte,
+  modelosVisibles,
+  setModelosVisibles
 }) {
-  const [modelosVisibles, setModelosVisibles] = useState({});
 
   useEffect(() => {
     if (resultado && resultado.tipo === "regresion" && resultado.comparativa && resultado.comparativa.length > 0) {
@@ -56,7 +59,7 @@ export default function PanelResultados({
   }, [resultado]);
 
   return (
-    <div className="calculadora-resultados">
+    <div className="calculadora-resultados transition-all duration-300 w-full flex-1" id="tour-resultados-panel">
       {modoCreacion ? (
         <TablaDinamica
           onTablaCreada={() => {
@@ -102,7 +105,12 @@ export default function PanelResultados({
             {resultado && (
               <>
                 {calculo === "regresion_simple" && resultado.tipo === "regresion" && (
-                  <TablaRegresion resultado={resultado} modelosVisibles={modelosVisibles} />
+                  <TablaRegresion 
+                    resultado={resultado} 
+                    modelosVisibles={modelosVisibles} 
+                    tablasDesarrolloReporte={tablasDesarrolloReporte}
+                    setTablasDesarrolloReporte={setTablasDesarrolloReporte}
+                  />
                 )}
                 {calculo === "series_tiempo" && resultado.tipo === "series_tiempo" && (
                   <TablaSeriesTiempo resultado={resultado} />
@@ -142,7 +150,7 @@ export default function PanelResultados({
           />
 
           {/* BARRA DE ACCIONES FINAL */}
-          <div className="barra-acciones-final" style={{ display: "flex", gap: "12px", marginTop: "25px" }}>
+          <div className="barra-acciones-final" id="tour-acciones-finales" style={{ display: "flex", gap: "12px", marginTop: "25px" }}>
             <button
               onClick={() => generarPDFReporte("reporte-formal-pdf", `Reporte_${calculo}`)}
               className="btn-icon btn-export-pdf"

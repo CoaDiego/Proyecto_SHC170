@@ -12,42 +12,39 @@
   grid-template-columns: 350px minmax(0, 1fr);
   gap: 10px;
   margin-top: 20px;
-  transition: grid-template-columns 0.3s ease;
+  transition: all 0.3s ease;
   position: relative;
 }
 
 .calculadora-layout.colapsado {
-  grid-template-columns: 45px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 0px minmax(0, 1fr);
+  gap: 0px;
 }
 
 .boton-toggle-medio {
-  position: absolute;
-  top: 15px;
-  left: 355px;
-  transform: translateY(-50%) translateX(-50%);
-  z-index: 2;
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 50;
   background-color: var(--accent-color);
   color: white;
   border: 1px solid var(--border-color);
-  border-radius: 5px;
-  width: 25px;
-  height: 25px;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  width: 24px;
+  height: 50px;
   font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: left 0.3s ease, transform 0.2s, background-color 0.2s;
+  transition: transform 0.2s, background-color 0.2s;
 }
 
 .boton-toggle-medio:hover {
   background-color: #e65c00;
-  transform: translateY(-50%) translateX(-50%) scale(1.1);
-}
-
-.calculadora-layout.colapsado .boton-toggle-medio {
-  left: 30px;
+  transform: translateY(-50%) scale(1.08);
 }
 
 
@@ -93,10 +90,13 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 20px;
+  padding: 15px;
   height: fit-content;
   overflow: hidden;
-  transition: padding 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transition: all 0.3s ease;
 }
 
 .btn-icon {
@@ -140,6 +140,7 @@
   border: none;
   opacity: 0;
   margin: 0;
+  width: 0px;
 }
 
 .etiqueta {
@@ -531,4 +532,4 @@ body.dark-mode .logo-espera {
 
 .input-percentil {
   -moz-appearance: number-input !important; /* Para Firefox */
-}
+}

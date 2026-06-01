@@ -5,15 +5,40 @@ from sqlalchemy import text
 print("Iniciando migración de base de datos...")
 try:
     with engine.connect() as con:
-        # Verificar si la columna existe en MySQL
+        # 1. fecha_limite_matriculacion en clases
         res = con.execute(text("SHOW COLUMNS FROM clases LIKE 'fecha_limite_matriculacion'"))
-        exists = res.fetchone()
-        if not exists:
-            # Ejecutar ALTER TABLE
+        if not res.fetchone():
             con.execute(text("ALTER TABLE clases ADD COLUMN fecha_limite_matriculacion VARCHAR(10) DEFAULT NULL;"))
-            print("Columna 'fecha_limite_matriculacion' agregada con éxito a la tabla 'clases'.")
+            print("Columna 'fecha_limite_matriculacion' agregada a 'clases'.")
         else:
-            print("La columna 'fecha_limite_matriculacion' ya existe en la tabla 'clases'.")
+            print("La columna 'fecha_limite_matriculacion' ya existe en 'clases'.")
+        
+        # 2. fecha_creacion en usuarios
+        res = con.execute(text("SHOW COLUMNS FROM usuarios LIKE 'fecha_creacion'"))
+        if not res.fetchone():
+            con.execute(text("ALTER TABLE usuarios ADD COLUMN fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP;"))
+            print("Columna 'fecha_creacion' agregada a 'usuarios'.")
+        else:
+            print("La columna 'fecha_creacion' ya existe en 'usuarios'.")
+
+        # 3. fecha_creacion en clases
+        res = con.execute(text("SHOW COLUMNS FROM clases LIKE 'fecha_creacion'"))
+        if not res.fetchone():
+            con.execute(text("ALTER TABLE clases ADD COLUMN fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP;"))
+            print("Columna 'fecha_creacion' agregada a 'clases'.")
+        else:
+            print("La columna 'fecha_creacion' ya existe en 'clases'.")
+
+        # 4. fecha_creacion en inscripciones
+        res = con.execute(text("SHOW COLUMNS FROM inscripciones LIKE 'fecha_creacion'"))
+        if not res.fetchone():
+            con.execute(text("ALTER TABLE inscripciones ADD COLUMN fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP;"))
+            print("Columna 'fecha_creacion' agregada a 'inscripciones'.")
+        else:
+            print("La columna 'fecha_creacion' ya existe en 'inscripciones'.")
+
+        print("¡Migración completada con éxito!")
+
 except Exception as e:
     print(f"Error durante la migración: {e}")
     sys.exit(1)

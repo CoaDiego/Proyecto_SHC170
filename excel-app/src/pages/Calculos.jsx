@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import "react-data-grid/lib/styles.css";
 import "../styles/pages/Calculos.css";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 // --- IMPORTS DE SERVICIOS Y CONTEXTO ---
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
@@ -18,6 +20,274 @@ export default function Calculos() {
   const { variables, usuario } = useModuleData();
   const location = useLocation();
 
+  const iniciarTour = () => {
+    const tourSteps = [
+      {
+        element: '#tour-origen-datos',
+        popover: {
+          title: 'Origen de los Datos',
+          description: 'Elige entre "Mis Archivos" para tus hojas de cálculo personales, o "Cursos / Grupos" para usar los datos compartidos por tus docentes.',
+          side: "right",
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-seleccion-archivo',
+        popover: {
+          title: 'Selección de Archivo',
+          description: 'Elige el libro de Excel y la hoja de trabajo en la que se encuentran los datos estadísticos que deseas analizar.',
+          side: "right",
+          align: 'start'
+        }
+      }
+    ];
+
+    if (document.querySelector('#tour-seleccion-operacion')) {
+      tourSteps.push({
+        element: '#tour-seleccion-operacion',
+        popover: {
+          title: 'Operación Estadística',
+          description: 'Selecciona el tema de análisis que vas a realizar (Frecuencias, Intervalos, Regresión, Series de Tiempo, Números Índices, etc.). El tour se adaptará automáticamente a tu elección.',
+          side: "right",
+          align: 'start'
+        }
+      });
+    }
+
+    // Pasos específicos según la operación seleccionada
+    switch (calculo) {
+      case "frecuencias_completas":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Variable de Frecuencias',
+              description: 'Selecciona una única columna de tipo categórica o cuantitativa discreta para contar sus frecuencias absolutas y relativas.',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      case "distribucion_intervalos":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Variable Continua e Intervalos',
+              description: 'Selecciona una variable numérica continua. Podrás configurar el tipo de intervalo [semiabierto, cerrado, abierto] y el método para calcular el número de clases (como Sturges o manual).',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      case "tendencia_y_posicion":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Variable y Medidas de Posición',
+              description: 'Configura la variable a analizar. En la parte inferior de este panel podrás definir qué Percentil (de 1 a 99) deseas calcular específicamente.',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      case "variabilidad_y_forma":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Variabilidad, Forma y Boxplot',
+              description: 'Estudia la dispersión (Varianza, Desviación Estándar, Coeficiente de Variación) y la simetría de tus datos. Generará un diagrama de caja (Boxplot) interactivo.',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      case "distribucion_bivariada_avanzada":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Variables Bidimensionales',
+              description: 'Para la tabla de contingencia bivariante, debes seleccionar dos variables: la Variable X (filas) y la Variable Y (columnas).',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      case "regresion_simple":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Regresión y Correlación',
+              description: 'Selecciona la Variable X (independiente) y la Variable Y (dependiente) para analizar su relación matemática.',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      case "series_tiempo":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Eje de Tiempo y Valores Históricos',
+              description: 'Selecciona el Eje de Tiempo X (años, meses) y los Valores Históricos Y. Abajo podrás elegir el método de pronóstico (Promedio Móvil Simple, Ponderado o Suavizamiento Exponencial).',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      case "numeros_indices":
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Módulo de Números Índices',
+              description: 'Selecciona si deseas calcular Índices Compuestos (Laspeyres, Paasche, Fisher), hacer un Empalme/Cambio de base o realizar una Deflación. Configura los precios y cantidades base y actuales correspondientes.',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+
+      default:
+        if (document.querySelector('#tour-seleccion-variables')) {
+          tourSteps.push({
+            element: '#tour-seleccion-variables',
+            popover: {
+              title: 'Configurar Variables',
+              description: 'Define qué columnas actuarán como variables (X para análisis unidimensional, X e Y para análisis bidimensional o regresión).',
+              side: "right",
+              align: 'start'
+            }
+          });
+        }
+        break;
+    }
+
+    if (document.querySelector('#tour-tabla-grid')) {
+      tourSteps.push({
+        element: '#tour-tabla-grid',
+        popover: {
+          title: 'Editor de Datos en Tiempo Real',
+          description: '¡Los cálculos se procesan de forma inmediata en la interfaz! Haz doble clic en cualquier celda para corregir o cambiar valores, y verás cómo los coeficientes y gráficos se actualizan automáticamente al presionar Calcular.',
+          side: "right",
+          align: 'start'
+        }
+      });
+    }
+
+    if (document.querySelector('#tour-btn-calcular')) {
+      tourSteps.push({
+        element: '#tour-btn-calcular',
+        popover: {
+          title: 'Procesar Cálculos',
+          description: 'Haz clic aquí para ejecutar el motor estadístico sobre tus datos y rellenar el panel de resultados.',
+          side: "right",
+          align: 'start'
+        }
+      });
+    }
+
+    if (document.querySelector('#tour-btn-toggle-panel')) {
+      tourSteps.push({
+        element: '#tour-btn-toggle-panel',
+        popover: {
+          title: 'Ocultar/Mostrar Panel',
+          description: 'Haz clic aquí para colapsar por completo el panel de configuración lateral y ampliar el área de resultados, brindando mayor espacio de visualización de tablas y gráficos.',
+          side: "right",
+          align: 'start'
+        }
+      });
+    }
+
+    tourSteps.push({
+      element: '#tour-resultados-panel',
+      popover: {
+        title: 'Panel de Resultados',
+        description: 'Aquí verás las tablas de distribución, estadígrafos calculados, fórmulas paso a paso y los gráficos dinámicos del análisis.',
+        side: "left",
+        align: 'start'
+      }
+    });
+
+    if (document.querySelector('#tour-btn-gestion')) {
+      tourSteps.push({
+        element: '#tour-btn-gestion',
+        popover: {
+          title: 'Gestión de Datos',
+          description: 'Abre el panel de administración de tus archivos de Excel, donde podrás subir nuevos libros, eliminar los antiguos o alternar entre el espacio personal y el de tus cursos asignados.',
+          side: "left",
+          align: 'start'
+        }
+      });
+    }
+
+    if (document.querySelector('#tour-btn-crear-tabla')) {
+      tourSteps.push({
+        element: '#tour-btn-crear-tabla',
+        popover: {
+          title: 'Crear Tabla',
+          description: 'Diseña y crea tablas dinámicas personalizadas de datos desde cero, ingresando directamente valores en filas y columnas sin requerir un archivo de Excel previo.',
+          side: "left",
+          align: 'start'
+        }
+      });
+    }
+
+    if (document.querySelector('#tour-acciones-finales')) {
+      tourSteps.push({
+        element: '#tour-acciones-finales',
+        popover: {
+          title: 'Exportar y Guardar',
+          description: 'Descarga un reporte académico formal en formato PDF o guarda este cálculo en tu Historial para reabrirlo más tarde.',
+          side: "top",
+          align: 'center'
+        }
+      });
+    }
+
+    if (document.querySelector('#tour-btn-guia-rapida')) {
+      tourSteps.push({
+        element: '#tour-btn-guia-rapida',
+        popover: {
+          title: 'Guía Rápida',
+          description: 'Reinicia este tour interactivo en cualquier momento si necesitas recordar el propósito de algún componente.',
+          side: "right",
+          align: 'start'
+        }
+      });
+    }
+
+    const driverObj = driver({
+      showProgress: true,
+      nextBtnText: 'Siguiente',
+      prevBtnText: 'Anterior',
+      doneBtnText: 'Finalizar',
+      progressText: '{{current}} de {{total}}',
+      steps: tourSteps
+    });
+    driverObj.drive();
+  };
+
   const [files, setFiles] = useState([]);
   const [ordenGraficos, setOrdenGraficos] = useState([]);
   const [selectedFile, setSelectedFile] = useState("");
@@ -28,9 +298,20 @@ export default function Calculos() {
   const [panelAbierto, setPanelAbierto] = useState(true);
   const [modoCreacion, setModoCreacion] = useState(false);
 
+  // Estados para diferenciar origen de archivos y gestionar selección de cursos
+  const [origenArchivos, setOrigenArchivos] = useState("personal"); // "personal" o "curso"
+  const [misCursos, setMisCursos] = useState([]);
+  const [cursoSeleccionado, setCursoSeleccionado] = useState("");
+
   // 1. ESTADO DEL HISTORIAL
   const snapshotInicial = location.state?.snapshot?.datosSnapshot || null;
   const [datosHistorial, setDatosHistorial] = useState(snapshotInicial);
+  
+  // Estado para controlar qué tablas de desarrollo se incluyen en el reporte PDF
+  const [tablasDesarrolloReporte, setTablasDesarrolloReporte] = useState({});
+  
+  // Estado para controlar qué modelos de regresión están activos (visibles) en el gráfico y las tablas
+  const [modelosVisibles, setModelosVisibles] = useState({});
 
   const {
     excelData, columns, selectedColumn, setSelectedColumn, selectedColumnY, setSelectedColumnY,
@@ -41,7 +322,8 @@ export default function Calculos() {
     colPrecioActual, setColPrecioActual, colCantidadActual, setColCantidadActual, nuevoIndiceBase, setNuevoIndiceBase,
     conPonderacion, setConPonderacion, tipoIndiceSimple, setTipoIndiceSimple,
     conColumnaItem, setConColumnaItem, columnaItem, setColumnaItem,
-  } = useCalculadoraExcel(selectedFile, selectedSheet, datosHistorial);
+    handleActualizarColumna,
+  } = useCalculadoraExcel(selectedFile, selectedSheet, datosHistorial, origenArchivos === "curso" ? cursoSeleccionado : "");
 
 
   // 🚀 2. EL BLINDAJE: Memoria interna para detectar cambios REALES
@@ -168,19 +450,60 @@ export default function Calculos() {
     return valor;
   };
 
+  const cargarCursos = async () => {
+    if (!usuario) return;
+    try {
+      const correoUsuario = usuario.email || usuario.id;
+      const esAdmin = usuario.rol === "Administrador" || usuario.isAdmin === true;
+      const esDocente = usuario.rol === "Docente";
+      
+      let res;
+      if (esDocente || esAdmin) {
+        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_clases/${correoUsuario}`);
+      } else {
+        res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mis_inscripciones/${correoUsuario}`);
+      }
+      
+      if (res.ok) {
+        const data = await res.json();
+        setMisCursos(data);
+      }
+    } catch (error) {
+      console.error("Error al cargar cursos para la calculadora:", error);
+    }
+  };
+
   const cargarArchivos = async () => {
     if (!usuario) return;
     try {
-      const data = await api.obtenerArchivos(usuario.nombre);
-      if (data && data.files) setFiles(data.files);
+      let data;
+      if (origenArchivos === "curso") {
+        if (!cursoSeleccionado) {
+          setFiles([]);
+          return;
+        }
+        data = await api.obtenerArchivos(usuario.nombre, "privado", cursoSeleccionado);
+      } else {
+        data = await api.obtenerArchivos(usuario.nombre, "personal");
+      }
+      if (data && data.files) {
+        setFiles(data.files);
+      } else {
+        setFiles([]);
+      }
     } catch (error) {
       console.error("Error al cargar archivos:", error);
+      setFiles([]);
     }
   };
 
   useEffect(() => {
-    cargarArchivos();
+    cargarCursos();
   }, [usuario]);
+
+  useEffect(() => {
+    cargarArchivos();
+  }, [usuario, origenArchivos, cursoSeleccionado]);
 
   const handleGuardarResultado = async () => {
     if (!usuario) return;
@@ -216,6 +539,19 @@ export default function Calculos() {
 
   return (
     <div className={`calculadora-layout ${panelAbierto ? "" : "colapsado"}`} style={{ position: "relative" }}>
+      {/* Botón Flotante para Guía Rápida */}
+      <button
+        id="tour-btn-guia-rapida"
+        onClick={iniciarTour}
+        className="guia-rapida-flotante"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span className="guia-rapida-flotante-texto">Guía Rápida</span>
+      </button>
      {datosHistorial && (
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, background: "#f59e0b", color: "#fff", 
@@ -245,6 +581,9 @@ export default function Calculos() {
       <PanelConfiguracion
         panelAbierto={panelAbierto} setPanelAbierto={setPanelAbierto}
         files={files} 
+        origenArchivos={origenArchivos} setOrigenArchivos={setOrigenArchivos}
+        misCursos={misCursos}
+        cursoSeleccionado={cursoSeleccionado} setCursoSeleccionado={setCursoSeleccionado}
         selectedFile={selectedFile} setSelectedFile={handleCambioArchivo}
         selectedSheet={selectedSheet} setSelectedSheet={handleCambioHoja}
         selectedColumn={selectedColumn} setSelectedColumn={handleCambioColX}
@@ -269,6 +608,7 @@ export default function Calculos() {
         mostrarTabla={mostrarTabla} excelData={excelData} handleGridChange={handleGridChange}
         ejecutarCalculo={ejecutarCalculo} modoCreacion={modoCreacion} setModoCreacion={setModoCreacion}
         mostrarCalculadora={mostrarCalculadora} setMostrarCalculadora={setMostrarCalculadora}
+        handleActualizarColumna={handleActualizarColumna}
       />
 
       <PanelResultados
@@ -280,13 +620,20 @@ export default function Calculos() {
         handleGuardarResultado={handleGuardarResultado}
         selectedColumn={selectedColumn}
         selectedColumnY={selectedColumnY}
+        tablasDesarrolloReporte={tablasDesarrolloReporte}
+        setTablasDesarrolloReporte={setTablasDesarrolloReporte}
+        modelosVisibles={modelosVisibles}
+        setModelosVisibles={setModelosVisibles}
       />
 
       <ReportePDF
         usuario={usuario} calculo={calculo} selectedFile={selectedFile} selectedSheet={selectedSheet} selectedColumn={selectedColumn}
+        selectedColumnY={selectedColumnY}
         resultado={resultado} esBivariada={esBivariada} esUnidimensional={esUnidimensional} esIntervalo={esIntervalo}
         formatearCelda={formatearCelda} filtroFractil={filtroFractil} setFiltroFractil={setFiltroFractil}
         ordenGraficos={ordenGraficos}
+        tablasDesarrolloReporte={tablasDesarrolloReporte}
+        modelosVisibles={modelosVisibles}
         parametros={{ tipoIntervalo, metodoK, kPersonalizado, percentilK, metodoSeries, periodosK, pesos, alfa, subTemaIndices, colPrecioBase, colCantidadBase, nuevoIndiceBase }}
       />
     </div>

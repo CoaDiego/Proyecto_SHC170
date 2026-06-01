@@ -57,6 +57,7 @@ export default function Perfil({ usuario, setUsuario }) {
   };
 
   const handleCerrarSesion = () => {
+    localStorage.removeItem("token");
     setUsuario(null); 
     navigate('/login'); 
   };
@@ -95,6 +96,7 @@ export default function Perfil({ usuario, setUsuario }) {
     try {
       await api.eliminarCuenta(usuario.email, passEliminar);
       alerta.success("Cuenta eliminada", "Tu cuenta ha sido eliminada permanentemente.");
+      localStorage.removeItem("token");
       setUsuario(null);
       navigate("/login");
     } catch (err) {

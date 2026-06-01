@@ -1,20 +1,96 @@
 import urllib.parse
 import random
-from datetime import datetime
-from fastapi import APIRouter, Request, Depends
+import os
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import jwt
+
+from fastapi import APIRouter, Request, Depends, HTTPException, status
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from passlib.context import CryptContext
 
 # Importamos la base de datos y modelos
 from database import get_db
 from models import Usuario, Inscripcion, Archivo, HistorialCalculo, Clase
+
+load_dotenv()
 
 router = APIRouter()
 
 # Configuración global de matriculación
 FECHA_LIMITE_MATRICULACION = "2026-06-30"  # Formato YYYY-MM-DD
 recovery_tokens = {}
+
+# Configuración de JWT
+SECRET_KEY = os.getenv("SECRET_KEY", "943e8bb8ef8f8a846174a7d77b4d18ea65bf6b1424e6a066cf8b22a613589b3f")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+
+# Configuración de passlib con bcrypt
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    try:
+        # Intentar verificar usando bcrypt
+        if pwd_context.verify(plain_password, hashed_password):
+            return True
+    except Exception:
+        # Si da error (ej: es texto plano preexistente), verificar directamente
+        pass
+    return plain_password == hashed_password
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# Dependencia para obtener el usuario autenticado a través de JWT
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    token = credentials.credentials
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="No se pudo validar la credencial de acceso. Sesión inválida o expirada.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("email")
+        if email is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+        
+    user = db.query(Usuario).filter(Usuario.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+# Dependencia para validar roles (RBAC)
+def require_role(allowed_roles: list[str] | str):
+    if isinstance(allowed_roles, str):
+        allowed_roles = [allowed_roles]
+        
+    async def role_checker(current_user: Usuario = Depends(get_current_user)):
+        if current_user.rol not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Acceso denegado. Se requiere uno de los siguientes roles: {', '.join(allowed_roles)}"
+            )
+        return current_user
+    return role_checker
 
 class UsuarioRegistro(BaseModel):
     nombre: str
@@ -66,11 +142,11 @@ async def registrar_usuario(user_data: UsuarioRegistro, db: Session = Depends(ge
     if usuario_existente:
         return JSONResponse(status_code=400, content={"error": "Este correo electrónico ya está registrado."})
     
-    # 2. Creamos el nuevo usuario
+    # 2. Creamos el nuevo usuario con contraseña hasheada
     nuevo_usuario = Usuario(
         email=user_data.email,
         nombre=user_data.nombre,
-        password=user_data.password,
+        password=get_password_hash(user_data.password),
         rol="Estudiante",
         perfil="Estudiante",
         institucion=""
@@ -88,12 +164,18 @@ async def login_local(credentials: UsuarioLogin, db: Session = Depends(get_db)):
     # 1. Buscamos al usuario por su email
     user_info = db.query(Usuario).filter(Usuario.email == credentials.email).first()
     
-    # 2. Verificamos que exista y que la contraseña coincida
-    if not user_info or user_info.password != credentials.password:
+    # 2. Verificamos que exista y que la contraseña coincida (con hash o fallback plano)
+    if not user_info or not verify_password(credentials.password, user_info.password):
         return JSONResponse(status_code=401, content={"error": "Correo o contraseña incorrectos"})
     
-    # 3. Devolvemos los datos al frontend
+    # 3. Generamos el token JWT firmado
+    access_token = create_access_token(
+        data={"id": user_info.id, "email": user_info.email, "rol": user_info.rol}
+    )
+    
+    # 4. Devolvemos los datos y el token al frontend
     return {
+        "token": access_token,
         "id": user_info.email,
         "nombre": user_info.nombre,
         "rol": user_info.rol,
@@ -101,6 +183,23 @@ async def login_local(credentials: UsuarioLogin, db: Session = Depends(get_db)):
         "perfil": user_info.perfil,
         "institucion": user_info.institucion
     }
+
+@router.get("/me")
+async def read_users_me(current_user: Usuario = Depends(get_current_user)):
+    """Retorna los datos del usuario logueado en base a su token JWT"""
+    return {
+        "id": current_user.email,
+        "nombre": current_user.nombre,
+        "rol": current_user.rol,
+        "email": current_user.email,
+        "perfil": current_user.perfil,
+        "institucion": current_user.institucion
+    }
+
+@router.get("/docente-only")
+async def test_docente_only(current_user: Usuario = Depends(require_role("Docente"))):
+    """Ruta protegida por rol de prueba"""
+    return {"message": f"Acceso concedido al docente {current_user.nombre}."}
 
 @router.post("/recuperar_password")
 async def recuperar_password(data: RecuperarPassword, db: Session = Depends(get_db)):
@@ -128,7 +227,8 @@ async def resetear_password(data: ResetearPassword, db: Session = Depends(get_db
     if not usuario:
         return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
     
-    usuario.password = data.nuevo_password
+    # Hasheamos la nueva contraseña al resetearla
+    usuario.password = get_password_hash(data.nuevo_password)
     db.commit()
     
     recovery_tokens.pop(data.email, None)
@@ -137,17 +237,18 @@ async def resetear_password(data: ResetearPassword, db: Session = Depends(get_db
 @router.put("/cambiar_password_perfil")
 async def cambiar_password_perfil(data: CambiarPasswordPerfil, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.email == data.email).first()
-    if not usuario or usuario.password != data.password_actual:
+    if not usuario or not verify_password(data.password_actual, usuario.password):
         return JSONResponse(status_code=400, content={"error": "La contraseña actual es incorrecta."})
     
-    usuario.password = data.password_nuevo
+    # Hasheamos la nueva contraseña
+    usuario.password = get_password_hash(data.password_nuevo)
     db.commit()
     return {"message": "Contraseña cambiada exitosamente."}
 
 @router.post("/eliminar_cuenta")
 async def eliminar_cuenta(datos: UsuarioLogin, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
-    if not usuario or usuario.password != datos.password:
+    if not usuario or not verify_password(datos.password, usuario.password):
         return JSONResponse(status_code=401, content={"error": "Contraseña de confirmación incorrecta"})
     
     # 1. Eliminar inscripciones de este estudiante
@@ -181,7 +282,7 @@ class CambiarRol(BaseModel):
     nuevo_rol: str
 
 @router.put("/cambiar_rol")
-async def cambiar_rol(datos: CambiarRol, db: Session = Depends(get_db)):
+async def cambiar_rol(datos: CambiarRol, db: Session = Depends(get_db), current_user: Usuario = Depends(require_role("Administrador"))):
     usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
     if not usuario:
         return JSONResponse(status_code=404, content={"error": "Usuario no encontrado"})
@@ -192,6 +293,6 @@ async def cambiar_rol(datos: CambiarRol, db: Session = Depends(get_db)):
     return {"message": f"El rol del usuario ha sido actualizado a {datos.nuevo_rol}"}
 
 @router.get("/usuarios")
-async def obtener_usuarios(db: Session = Depends(get_db)):
+async def obtener_usuarios(db: Session = Depends(get_db), current_user: Usuario = Depends(require_role("Administrador"))):
     usuarios = db.query(Usuario).all()
     return [{"email": u.email, "nombre": u.nombre, "rol": u.rol} for u in usuarios]

@@ -226,3 +226,76 @@ html.dark .pie-logo-usfx, html.dark .pie-logo-siglos { filter: invert(0); }
     opacity: 1;
   }
 }
+
+/* =========================================
+   BOTÓN FLOTANTE "GUÍA RÁPIDA" DE LA APP (FAB COLAPSABLE)
+   ========================================= */
+.guia-rapida-flotante {
+  position: fixed;
+  bottom: 25px;
+  left: 25px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  background-color: var(--accent-color, #d97706);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.guia-rapida-flotante-texto {
+  max-width: 0;
+  opacity: 0;
+  white-space: nowrap;
+  font-weight: bold;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  overflow: hidden;
+}
+
+.guia-rapida-flotante:hover {
+  width: 146px;
+  padding: 0 16px;
+  gap: 8px;
+  border-radius: 30px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.05);
+}
+
+.guia-rapida-flotante:hover .guia-rapida-flotante-texto {
+  max-width: 100px;
+  opacity: 1;
+}
+
+.guia-rapida-flotante svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guia-rapida-flotante:hover svg {
+  transform: rotate(360deg);
+}
+
+.guia-rapida-flotante:active {
+  transform: scale(0.95);
+}
+
+/* =========================================
+   MARCA DE AGUA GLOBAL (ESCUDO)
+   ========================================= */
+.page-container {
+  position: relative;
+  min-height: calc(100vh - 120px);
+}
