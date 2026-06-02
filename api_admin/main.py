@@ -18,6 +18,7 @@ origins = [
     "https://calculadora-estadistica-3inh.onrender.com",  # Producción en Render
     "https://administracion-calculadora.vercel.app",  # Enlace oficial Vercel
     "https://proyecto-shc-170-54eovb4bb-coadiegos-projects.vercel.app", # Enlace temporal Vercel
+    "https://proyecto-shc-170.vercel.app", # Enlace limpio Vercel
 ]
 
 app.add_middleware(
