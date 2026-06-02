@@ -80,7 +80,7 @@ export default function PanelResultados({
           <div className="frecuencias">
             <div style={{ marginBottom: "15px" }}>
               <h3 style={{ margin: 0 }}>
-                Resultados: {calculo.replace(/_/g, " ").toUpperCase()}
+                Resultados: {calculo.replace(/_/g, " ").toUpperCase().replace(" (CONJUNTO)", "").replace("(CONJUNTO)", "").trim()}
               </h3>
             </div>
 

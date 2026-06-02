@@ -51,10 +51,6 @@ export default function TablasUnidimensionales({
           <input type="radio" name="vistaDatos" value="agrupados" checked={vistaDatos === "agrupados"} onChange={() => setVistaDatos("agrupados")} />
           Datos en Conjuntos (Agrupados)
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: vistaDatos === "ambos" ? "bold" : "normal" }}>
-          <input type="radio" name="vistaDatos" value="ambos" checked={vistaDatos === "ambos"} onChange={() => setVistaDatos("ambos")} />
-          Comparativa y Error
-        </label>
       </div>
     );
   };
@@ -75,14 +71,11 @@ export default function TablasUnidimensionales({
             onClick={() => {
               const datosExport = resultado.tendencia.map(row => {
                 const res = { Medida: row["Medida"].split(" (")[0] };
-                if (vistaDatos === "individuales" || vistaDatos === "ambos") {
+                if (vistaDatos === "individuales") {
                   res["Datos Individuales"] = row["D. Individuales"];
                 }
-                if (vistaDatos === "agrupados" || vistaDatos === "ambos") {
+                if (vistaDatos === "agrupados") {
                   res["Datos Agrupados"] = row["D. Agrupados"];
-                }
-                if (vistaDatos === "ambos") {
-                  res["Error (Proporción)"] = row["Error %"];
                 }
                 return res;
               });
@@ -101,9 +94,8 @@ export default function TablasUnidimensionales({
             <thead>
               <tr>
                 <th>Medida</th>
-                {(vistaDatos === "individuales" || vistaDatos === "ambos") && <th>D. Individuales</th>}
-                {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <th>D. Agrupados</th>}
-                {vistaDatos === "ambos" && <th>Error (Proporción)</th>}
+                {vistaDatos === "individuales" && <th>D. Individuales</th>}
+                {vistaDatos === "agrupados" && <th>D. Agrupados</th>}
               </tr>
             </thead>
             <tbody>
@@ -120,13 +112,8 @@ export default function TablasUnidimensionales({
                       {row["Medida"].includes("(G)") && <StatLabel formulaKey="G" align="left" />}
                       {row["Medida"].includes("(H)") && <StatLabel formulaKey="H" align="left" />}
                     </td>
-                    {(vistaDatos === "individuales" || vistaDatos === "ambos") && <td>{formatearCelda(row["D. Individuales"])}</td>}
-                    {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <td>{formatearCelda(row["D. Agrupados"])}</td>}
-                    {vistaDatos === "ambos" && (
-                      <td style={{ color: parseFloat(row["Error %"]) > 0.05 ? "#e74c3c" : "inherit", fontWeight: "bold" }}>
-                        {row["Error %"]}
-                      </td>
-                    )}
+                    {vistaDatos === "individuales" && <td>{formatearCelda(row["D. Individuales"])}</td>}
+                    {vistaDatos === "agrupados" && <td>{formatearCelda(row["D. Agrupados"])}</td>}
                   </tr>
                 );
               })}
@@ -146,14 +133,11 @@ export default function TablasUnidimensionales({
                     Medida: row.Medida || row.Tipo,
                     Símbolo: row.Símbolo
                   };
-                  if (vistaDatos === "individuales" || vistaDatos === "ambos") {
+                  if (vistaDatos === "individuales") {
                     res["Datos Individuales"] = row["D. Individuales"];
                   }
-                  if (vistaDatos === "agrupados" || vistaDatos === "ambos") {
+                  if (vistaDatos === "agrupados") {
                     res["Datos Agrupados"] = row["D. Agrupados"];
-                  }
-                  if (vistaDatos === "ambos") {
-                    res["Error (Proporción)"] = row["Error %"];
                   }
                   return res;
                 });
@@ -185,9 +169,8 @@ export default function TablasUnidimensionales({
                         <tr>
                           <th>Medida</th>
                           <th>Símbolo</th>
-                          {(vistaDatos === "individuales" || vistaDatos === "ambos") && <th>D. Individuales</th>}
-                          {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <th>D. Agrupados</th>}
-                          {vistaDatos === "ambos" && <th>Error (Proporción)</th>}
+                           {vistaDatos === "individuales" && <th>D. Individuales</th>}
+                           {vistaDatos === "agrupados" && <th>D. Agrupados</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -195,13 +178,8 @@ export default function TablasUnidimensionales({
                           <tr key={i}>
                             <td>{row.Medida || row.Tipo}</td>
                             <td style={{ fontWeight: "bold" }}>{row.Símbolo}</td>
-                            {(vistaDatos === "individuales" || vistaDatos === "ambos") && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Individuales"])}</td>}
-                            {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Agrupados"])}</td>}
-                            {vistaDatos === "ambos" && (
-                              <td style={{ color: parseFloat(row["Error %"]) > 0.05 ? "#e74c3c" : "inherit", fontWeight: "bold" }}>
-                                {row["Error %"]}
-                              </td>
-                            )}
+                            {vistaDatos === "individuales" && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Individuales"])}</td>}
+                            {vistaDatos === "agrupados" && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Agrupados"])}</td>}
                           </tr>
                         ))}
                       </tbody>
@@ -237,9 +215,8 @@ export default function TablasUnidimensionales({
                   <tr>
                     <th>Medida</th>
                     <th>Símbolo</th>
-                    {(vistaDatos === "individuales" || vistaDatos === "ambos") && <th>D. Individuales</th>}
-                    {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <th>D. Agrupados</th>}
-                    {vistaDatos === "ambos" && <th>Error (Proporción)</th>}
+                    {vistaDatos === "individuales" && <th>D. Individuales</th>}
+                    {vistaDatos === "agrupados" && <th>D. Agrupados</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -254,13 +231,8 @@ export default function TablasUnidimensionales({
                         <td style={{ fontWeight: "bold" }}>
                           <StatLabel formulaKey={claveDiccionario} formulaLatex={`${letra}_{${numero}}`} align="left" />
                         </td>
-                        {(vistaDatos !== "agrupados") && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Individuales"])}</td>}
-                        {(vistaDatos !== "individuales") && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Agrupados"])}</td>}
-                        {vistaDatos === "ambos" && (
-                          <td style={{ color: parseFloat(row["Error %"]) > 0.05 ? "#e74c3c" : "inherit", fontWeight: "bold" }}>
-                            {row["Error %"]}
-                          </td>
-                        )}
+                        {vistaDatos === "individuales" && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Individuales"])}</td>}
+                        {vistaDatos === "agrupados" && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Agrupados"])}</td>}
                       </tr>
                     );
                   })}
@@ -292,14 +264,11 @@ export default function TablasUnidimensionales({
                   Estadígrafo: row["Estadígrafo"],
                   Sigla: row["Sigla"]
                 };
-                if (vistaDatos === "individuales" || vistaDatos === "ambos") {
+                if (vistaDatos === "individuales") {
                   res["Datos Individuales"] = row["D. Individuales"];
                 }
-                if (vistaDatos === "agrupados" || vistaDatos === "ambos") {
+                if (vistaDatos === "agrupados") {
                   res["Datos Agrupados"] = row["D. Agrupados"];
-                }
-                if (vistaDatos === "ambos") {
-                  res["Error (Proporción)"] = row["Error %"];
                 }
                 return res;
               });
@@ -319,9 +288,8 @@ export default function TablasUnidimensionales({
               <tr>
                 <th>Estadígrafo</th>
                 <th>Sigla</th>
-                {(vistaDatos === "individuales" || vistaDatos === "ambos") && <th>D. Individuales</th>}
-                {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <th>D. Agrupados</th>}
-                {vistaDatos === "ambos" && <th>Error (Proporción)</th>}
+                {vistaDatos === "individuales" && <th>D. Individuales</th>}
+                {vistaDatos === "agrupados" && <th>D. Agrupados</th>}
               </tr>
             </thead>
             <tbody>
@@ -329,11 +297,8 @@ export default function TablasUnidimensionales({
                 <tr key={i}>
                   <td>{row["Estadígrafo"]}</td>
                   <td style={{ fontWeight: "bold" }}><StatLabel formulaKey={row["Sigla"]} /></td>
-                  {(vistaDatos === "individuales" || vistaDatos === "ambos") && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Individuales"])}</td>}
-                  {(vistaDatos === "agrupados" || vistaDatos === "ambos") && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Agrupados"])}</td>}
-                  {vistaDatos === "ambos" && (
-                    <td style={{ color: parseFloat(row["Error %"]) > 0.05 ? "#e74c3c" : "inherit", fontWeight: "bold" }}>{row["Error %"]}</td>
-                  )}
+                  {vistaDatos === "individuales" && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Individuales"])}</td>}
+                  {vistaDatos === "agrupados" && <td style={{ fontFamily: "monospace", fontSize: "1.1em" }}>{formatearCelda(row["D. Agrupados"])}</td>}
                 </tr>
               ))}
             </tbody>

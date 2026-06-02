@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import OscuroClaro from "./oscuro_claro";
 import escudoAdmin from "../../assets/images/Logo-Adm.png";
 import '../../styles/components/ui/Menu.css';
+import { alerta } from "../../utils/Notificaciones";
 
 export default function Menu({ usuario, setUsuario }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -111,8 +112,16 @@ export default function Menu({ usuario, setUsuario }) {
                 </NavLink>
               </li>
               <li className="dropdown-li" style={{ transitionDelay: '0.1s' }}>
-                <NavLink to="/MAT251" onClick={closeMenu} className="dropdown-item">
-                  Estadística Matemática
+                <NavLink
+                  to="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alerta.advertencia("Próximamente", "Estadística Matemática estará disponible en una futura versión.");
+                  }}
+                  className="dropdown-item"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                >
+                  <span>Estadística Matemática 🔒</span>
                 </NavLink>
               </li>
             </ul>

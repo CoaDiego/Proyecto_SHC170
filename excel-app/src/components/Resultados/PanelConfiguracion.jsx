@@ -181,7 +181,6 @@ export default function PanelConfiguracion({
     handleGridChange(originalRows, { indexes, column: originalColumn });
   };
 
-  // 4️⃣ Función para pintar los selects
   const renderOpcionesColumnas = () => (
     <>
       <optgroup label="Columnas del Excel">
@@ -408,7 +407,7 @@ export default function PanelConfiguracion({
                       <option value="distribucion_intervalos">Distribución por Intervalos</option>
                     </optgroup>
                     <optgroup label="Tema 3: Tendencia y Posición">
-                      <option value="tendencia_y_posicion">Tendencia y Posición (Conjunto)</option>
+                      <option value="tendencia_y_posicion">Tendencia y Posición</option>
                     </optgroup>
                     <optgroup label="Tema 4: Dispersión y Forma">
                       <option value="variabilidad_y_forma">Análisis de Variabilidad y Forma</option>

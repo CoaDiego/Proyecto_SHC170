@@ -143,7 +143,7 @@ export default function ReportePDF({
         {/* FICHA TÉCNICA */}
         <div id="pdf-ficha-tecnica" className="pdf-section" style={{ marginBottom: "30px", backgroundColor: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #ddd" }}>
           <h1 style={{ textAlign: "center", fontSize: "16pt", margin: "0 0 15px 0", color: "#2c3e50" }}>
-            ANÁLISIS ESTADÍSTICO: {calculo.replace(/_/g, " ").toUpperCase()}
+            ANÁLISIS ESTADÍSTICO: {calculo.replace(/_/g, " ").toUpperCase().replace(" (CONJUNTO)", "").replace("(CONJUNTO)", "").trim()}
           </h1>
 
           <table style={{ width: "100%", fontSize: "10pt", borderCollapse: "collapse" }}>
