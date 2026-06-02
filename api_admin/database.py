@@ -1,9 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Cambia "root" y "" por tu usuario y contraseña de MySQL (típico en XAMPP)
-# Crea una base de datos en MySQL llamada "estadistica_db"
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:@localhost/estadistica_db"
+import os
+
+# En producción, leemos la URL de la base de datos desde variables de entorno.
+# Si no está definida, usamos la conexión por defecto de XAMPP local.
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL") or "mysql+pymysql://root:@localhost/estadistica_db"
+
+# Si la URL empieza con mysql:// (sin especificar driver), forzamos mysql+pymysql:// para SQLAlchemy
+if SQLALCHEMY_DATABASE_URL.startswith("mysql://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, 
