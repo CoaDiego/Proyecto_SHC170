@@ -62,6 +62,55 @@ input, select {
   border-radius: 4px;
 }
 
+select option {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+
+/* Tabla Responsiva para dispositivos móviles (< 768px) */
+@media (max-width: 768px) {
+  table.tabla-responsive thead {
+    display: none;
+  }
+  table.tabla-responsive, 
+  table.tabla-responsive tbody, 
+  table.tabla-responsive tr, 
+  table.tabla-responsive td {
+    display: block;
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+  table.tabla-responsive tr {
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-card);
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  table.tabla-responsive td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    text-align: right;
+  }
+  table.tabla-responsive td:last-child {
+    border-bottom: none !important;
+    justify-content: center;
+  }
+  table.tabla-responsive td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: left;
+    margin-right: 15px;
+    flex-shrink: 0;
+  }
+}
+
 button {
   background-color: var(--primary-color);
   color: white;
@@ -298,4 +347,111 @@ html.dark .pie-logo-usfx, html.dark .pie-logo-siglos { filter: invert(0); }
 .page-container {
   position: relative;
   min-height: calc(100vh - 120px);
+}
+
+/* =========================================
+   ESTILOS RESPONSIVOS - PANEL DE ADMINISTRACIÓN
+   ========================================= */
+@media screen and (max-width: 768px) {
+  /* Título y Búsqueda apilados al 100% */
+  .admin-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .admin-title-container,
+  .admin-search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Ocultar cabecera de la tabla */
+  table.tabla-responsiva-panel thead {
+    display: none !important;
+  }
+
+  /* Filas y celdas como bloques apilados */
+  table.tabla-responsiva-panel, 
+  table.tabla-responsiva-panel tbody, 
+  table.tabla-responsiva-panel tr, 
+  table.tabla-responsiva-panel td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  table.tabla-responsiva-panel tr {
+    margin-bottom: 20px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    background-color: var(--bg-card) !important;
+    padding: 15px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  }
+  table.tabla-responsiva-panel td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 12px 10px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    text-align: right !important;
+  }
+  table.tabla-responsiva-panel td:last-child {
+    border-bottom: none !important;
+    justify-content: space-between !important;
+  }
+
+  /* Pseudo-elementos ::before para etiquetas legibles */
+  table.tabla-responsiva-panel td::before {
+    font-weight: bold !important;
+    color: var(--text-muted) !important;
+    font-size: 0.85rem !important;
+    text-align: left !important;
+    margin-right: 15px !important;
+    flex-shrink: 0 !important;
+    text-transform: uppercase !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Nombre / Correo"]::before {
+    content: "USUARIO:" !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Rol"]::before {
+    content: "ROL:" !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Estado"]::before {
+    content: "ESTADO:" !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Registro"]::before {
+    content: "REGISTRO:" !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Acciones"]::before {
+    content: "ACCIONES:" !important;
+  }
+
+  /* Ajustes táctiles para dropdown de Rol y botones de Acción */
+  table.tabla-responsiva-panel td[data-label="Rol"] select {
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+    min-height: 38px !important;
+    min-width: 130px !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Acciones"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Acciones"]::before {
+    align-self: flex-start !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Acciones"] div {
+    display: flex !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  table.tabla-responsiva-panel td[data-label="Acciones"] button {
+    flex: 1 !important;
+    padding: 10px 14px !important;
+    font-size: 0.85rem !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
 }

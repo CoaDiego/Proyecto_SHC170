@@ -37,8 +37,17 @@ try:
         else:
             print("La columna 'fecha_creacion' ya existe en 'inscripciones'.")
 
+        # 5. activo en usuarios
+        res = con.execute(text("SHOW COLUMNS FROM usuarios LIKE 'activo'"))
+        if not res.fetchone():
+            con.execute(text("ALTER TABLE usuarios ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1;"))
+            print("Columna 'activo' agregada a 'usuarios'.")
+        else:
+            print("La columna 'activo' ya existe en 'usuarios'.")
+
         print("¡Migración completada con éxito!")
 
 except Exception as e:
     print(f"Error durante la migración: {e}")
     sys.exit(1)
+

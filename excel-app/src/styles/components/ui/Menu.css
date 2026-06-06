@@ -541,4 +541,224 @@ html.dark .dark\:hover\:bg-gray-700:hover {
   background-color: #374151 !important;
 }
 
+/* =========================================
+   7. NOTIFICACIONES BELL & DROPDOWN
+   ========================================= */
+.notificaciones-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bell-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.bell-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.bell-btn:active {
+  transform: scale(0.95);
+}
+
+.notif-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background-color: #ef4444; /* Rojo vibrante */
+  color: white;
+  font-size: 0.65rem;
+  font-weight: bold;
+  border-radius: 50%;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-nav);
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 320px;
+  background-color: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notif-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+html.dark .notif-header {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.notif-title {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.notif-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent-color, #d35400);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.notif-clear-btn:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+.notif-list {
+  max-height: 280px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notif-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  position: relative;
+}
+
+.notif-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+html.dark .notif-item:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.notif-item.unread {
+  background-color: rgba(230, 126, 34, 0.04); /* Tono naranja suave de fondo */
+  border-left: 4px solid var(--accent-color);
+}
+
+html.dark .notif-item.unread {
+  background-color: rgba(230, 126, 34, 0.08);
+}
+
+.notif-item-msg {
+  color: var(--text-main);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.notif-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.notif-badge-type {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.notif-badge-type.sistema {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #2980b9;
+}
+
+html.dark .notif-badge-type.sistema {
+  background-color: rgba(52, 152, 219, 0.2);
+  color: #54a0ff;
+}
+
+.notif-badge-type.personal {
+  background-color: rgba(155, 89, 182, 0.1);
+  color: #8e44ad;
+}
+
+html.dark .notif-badge-type.personal {
+  background-color: rgba(155, 89, 182, 0.2);
+  color: #c8d6e5;
+}
+
+.notif-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+
 

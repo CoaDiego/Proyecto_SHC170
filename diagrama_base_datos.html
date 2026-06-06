@@ -75,6 +75,7 @@
                 usuarios ||--o{ inscripciones : "se inscribe (estudiante_id)"
                 usuarios ||--o{ archivos : "sube (usuario_id)"
                 usuarios ||--o{ historial_calculos : "realiza (usuario_id)"
+                usuarios ||--o{ notificaciones : "recibe (usuario_id)"
                 
                 clases ||--o{ inscripciones : "contiene (clase_id)"
                 clases ||--o{ archivos : "contiene (clase_id)"
@@ -91,6 +92,7 @@
                     string perfil
                     string institucion
                     datetime fecha_creacion
+                    boolean activo
                 }
 
                 clases {
@@ -128,6 +130,15 @@
                     int usuario_id FK
                     int clase_id FK
                     int archivo_id FK
+                }
+
+                notificaciones {
+                    int id PK
+                    string tipo
+                    text mensaje
+                    boolean leido
+                    datetime fecha_creacion
+                    int usuario_id FK
                 }
         </div>
 

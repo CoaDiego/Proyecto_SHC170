@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom"; 
 import logoCarrera from "../assets/images/Logo-Adm.png";
 import { api } from "../services/api";
@@ -13,6 +13,47 @@ export default function Login({ onLogin }) {
   const [pass, setPass] = useState("");
   const [error, setError] = useState(""); 
   const [showPassword, setShowPassword] = useState(false);
+  const [servidorListo, setServidorListo] = useState(false);
+  const [mensajeIndice, setMensajeIndice] = useState(0);
+
+  const MENSAJES_CARGA = [
+    "Despertando los servidores...",
+    "Preparando el entorno de trabajo...",
+    "Alistando el sistema, gracias por la paciencia...",
+    "Estableciendo conexión con la base de datos...",
+    "Cargando módulos de análisis estadístico..."
+  ];
+
+  useEffect(() => {
+    let checkInterval;
+    let messageInterval;
+
+    const chequearConexion = async () => {
+      try {
+        const res = await api.verificarEstado();
+        if (res && res.status === "OK") {
+          setServidorListo(true);
+          clearInterval(checkInterval);
+          clearInterval(messageInterval);
+        }
+      } catch (err) {
+        // Ignorar errores de conexión
+      }
+    };
+
+    chequearConexion();
+
+    checkInterval = setInterval(chequearConexion, 3000);
+
+    messageInterval = setInterval(() => {
+      setMensajeIndice((prev) => (prev + 1) % MENSAJES_CARGA.length);
+    }, 4000);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearInterval(messageInterval);
+    };
+  }, []);
 
   // Estados para recuperación de contraseña
   const [vista, setVista] = useState("login"); // login | forgot | reset
@@ -149,19 +190,47 @@ export default function Login({ onLogin }) {
                 </div>
               </div>
 
-              <button type="submit" style={{
-                backgroundColor: 'var(--accent-color)',
-                padding: '12px',
-                fontSize: '1rem',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: '5px',
-                fontWeight: 'bold'
-              }}>
+              <button 
+                type="submit" 
+                disabled={!servidorListo}
+                style={{
+                  backgroundColor: 'var(--accent-color)',
+                  padding: '12px',
+                  fontSize: '1rem',
+                  color: 'white',
+                  border: 'none',
+                  cursor: servidorListo ? 'pointer' : 'not-allowed',
+                  borderRadius: '5px',
+                  fontWeight: 'bold',
+                  opacity: servidorListo ? 1 : 0.6,
+                  transition: 'opacity 0.2s'
+                }}
+              >
                 Ingresar
               </button>
             </form>
+
+            {!servidorListo && (
+              <div style={{
+                position: 'fixed',
+                bottom: '20px',
+                right: '20px',
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--text-main)',
+                border: '1px solid var(--border-color)',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                zIndex: 10000,
+                fontSize: '0.85rem',
+                fontStyle: 'italic',
+                maxWidth: '300px',
+                textAlign: 'center',
+                lineHeight: '1.4'
+              }}>
+                {MENSAJES_CARGA[mensajeIndice]}
+              </div>
+            )}
 
             <div style={{ marginTop: '15px', textAlign: 'center', fontSize: '0.9rem' }}>
               <Link 

@@ -9,5 +9,9 @@ export default defineConfig({
       // Esto permite que Vite sirva las fuentes de KaTeX desde node_modules
       allow: ['..'] 
     }
+  },
+  build: {
+    sourcemap: false,
+    minify: 'esbuild'
   }
 })

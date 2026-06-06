@@ -14,6 +14,8 @@ import Registro from "./pages/Registro";
 import Perfil from "./pages/Perfil";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Admin from "./pages/Admin";
+import GestionDocente from "./pages/GestionDocente";
 
 import SelectorRol from './components/ui/SelectorRol';
 
@@ -132,6 +134,8 @@ function App() {
                       } />
 
                       <Route path="/perfil" element={<Perfil usuario={usuario} setUsuario={setUsuario} />} />
+                      <Route path="/admin" element={usuario?.rol === "Administrador" ? <Admin /> : <Navigate to="/" />} />
+                      <Route path="/gestion-docente" element={usuario?.rol === "Docente" || usuario?.rol === "Administrador" ? <GestionDocente usuario={usuario} /> : <Navigate to="/" />} />
                     </>
                   )}
                 </Routes>

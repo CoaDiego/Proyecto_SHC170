@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 # Importamos la base de datos y modelos
 from database import get_db
-from models import Usuario, Inscripcion, Archivo, HistorialCalculo, Clase
+from models import Usuario, Inscripcion, Archivo, HistorialCalculo, Clase, Notificacion
 
 load_dotenv()
 
@@ -108,6 +108,15 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user = db.query(Usuario).filter(Usuario.email == email).first()
     if user is None:
         raise credentials_exception
+        
+    # Verificar si el usuario está activo
+    if not getattr(user, "activo", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cuenta suspendida",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
     return user
 
 # Dependencia para validar roles (RBAC)
@@ -215,12 +224,16 @@ async def login_local(credentials: UsuarioLogin, db: Session = Depends(get_db)):
     if not user_info or not verify_password(credentials.password, user_info.password):
         return JSONResponse(status_code=401, content={"error": "Correo o contraseña incorrectos"})
     
-    # 3. Generamos el token JWT firmado
+    # 3. Verificamos si el usuario está activo
+    if not getattr(user_info, "activo", True):
+        return JSONResponse(status_code=403, content={"error": "Cuenta suspendida"})
+        
+    # 4. Generamos el token JWT firmado
     access_token = create_access_token(
         data={"id": user_info.id, "email": user_info.email, "rol": user_info.rol}
     )
     
-    # 4. Devolvemos los datos y el token al frontend
+    # 5. Devolvemos los datos y el token al frontend
     return {
         "token": access_token,
         "id": user_info.email,
@@ -407,6 +420,10 @@ class CambiarRol(BaseModel):
     email: str
     nuevo_rol: str
 
+class CambiarEstado(BaseModel):
+    email: str
+    activo: bool
+
 @router.put("/cambiar_rol")
 async def cambiar_rol(datos: CambiarRol, db: Session = Depends(get_db), current_user: Usuario = Depends(require_role("Administrador"))):
     usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
@@ -415,10 +432,74 @@ async def cambiar_rol(datos: CambiarRol, db: Session = Depends(get_db), current_
     
     usuario.rol = datos.nuevo_rol
     usuario.perfil = datos.nuevo_rol
+    
+    # Crear notificación para el usuario sobre su cambio de rol
+    nueva_notificacion = Notificacion(
+        tipo="rol_update",
+        mensaje=f"Tu cuenta ha sido actualizada. Tu nuevo rol en la plataforma es: {datos.nuevo_rol}.",
+        usuario_id=usuario.id,
+        leido=False
+    )
+    db.add(nueva_notificacion)
+    
     db.commit()
     return {"message": f"El rol del usuario ha sido actualizado a {datos.nuevo_rol}"}
+
+@router.put("/cambiar_estado")
+async def cambiar_estado(datos: CambiarEstado, db: Session = Depends(get_db), current_user: Usuario = Depends(require_role("Administrador"))):
+    usuario = db.query(Usuario).filter(Usuario.email == datos.email).first()
+    if not usuario:
+        return JSONResponse(status_code=404, content={"error": "Usuario no encontrado"})
+        
+    if usuario.id == current_user.id:
+        return JSONResponse(status_code=400, content={"error": "No puedes suspender tu propia cuenta"})
+        
+    usuario.activo = datos.activo
+    db.commit()
+    estado_str = "activado" if datos.activo else "suspendido"
+    return {"message": f"El usuario ha sido {estado_str} con éxito"}
+
+@router.delete("/eliminar_usuario/{email}")
+async def admin_eliminar_usuario(email: str, db: Session = Depends(get_db), current_user: Usuario = Depends(require_role("Administrador"))):
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    if not usuario:
+        return JSONResponse(status_code=404, content={"error": "Usuario no encontrado"})
+        
+    if usuario.id == current_user.id:
+        return JSONResponse(status_code=400, content={"error": "No puedes eliminar tu propia cuenta"})
+        
+    # 1. Eliminar inscripciones
+    db.query(Inscripcion).filter(Inscripcion.estudiante_id == usuario.id).delete(synchronize_session=False)
+    # 2. Eliminar historial
+    db.query(HistorialCalculo).filter(HistorialCalculo.usuario_id == usuario.id).delete(synchronize_session=False)
+    # 3. Eliminar archivos
+    db.query(Archivo).filter(Archivo.usuario_id == usuario.id).delete(synchronize_session=False)
+    
+    # 4. Manejar las clases que tiene si es docente
+    clases_docente = db.query(Clase).filter(Clase.docente_id == usuario.id).all()
+    for clase in clases_docente:
+        db.query(Inscripcion).filter(Inscripcion.clase_id == clase.id).delete(synchronize_session=False)
+        db.query(Archivo).filter(Archivo.clase_id == clase.id).delete(synchronize_session=False)
+        db.query(HistorialCalculo).filter(HistorialCalculo.clase_id == clase.id).delete(synchronize_session=False)
+        db.delete(clase)
+        
+    db.delete(usuario)
+    db.commit()
+    return {"message": "Usuario eliminado con éxito"}
 
 @router.get("/usuarios")
 async def obtener_usuarios(db: Session = Depends(get_db), current_user: Usuario = Depends(require_role("Administrador"))):
     usuarios = db.query(Usuario).all()
-    return [{"email": u.email, "nombre": u.nombre, "rol": u.rol} for u in usuarios]
+    return [
+        {
+            "id": u.id,
+            "email": u.email,
+            "nombre": u.nombre,
+            "rol": u.rol,
+            "perfil": u.perfil,
+            "institucion": u.institucion,
+            "activo": u.activo,
+            "fecha_creacion": u.fecha_creacion.strftime("%Y-%m-%d %H:%M:%S") if u.fecha_creacion else None
+        }
+        for u in usuarios
+    ]

@@ -4,18 +4,74 @@ import OscuroClaro from "./oscuro_claro";
 import escudoAdmin from "../../assets/images/Logo-Adm.png";
 import '../../styles/components/ui/Menu.css';
 import { alerta } from "../../utils/Notificaciones";
+import { api } from "../../services/api";
 
 export default function Menu({ usuario, setUsuario }) {
   const [isOpen, setIsOpen] = useState(false);
-  // 🚀 1. Nuevo estado para controlar cuándo se abre el submenú (útil para móviles)
+  // Nuevo estado para controlar cuándo se abre el submenú (útil para móviles)
   const [dropdownOpen, setDropdownOpen] = useState(false); 
+  const [gruposDropdownOpen, setGruposDropdownOpen] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const perfilRef = useRef(null);
+
+  // --- ESTADOS PARA SISTEMA DE NOTIFICACIONES ---
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const notifRef = useRef(null);
+
+  const cargarNotificaciones = async () => {
+    try {
+      const data = await api.obtenerNotificaciones();
+      setNotificaciones(data);
+    } catch (error) {
+      console.error("Error al cargar notificaciones:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (usuario) {
+      cargarNotificaciones();
+      const interval = setInterval(cargarNotificaciones, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setNotificaciones([]);
+    }
+  }, [usuario]);
+
+  const handleMarcarLeida = async (id, e) => {
+    e.stopPropagation(); // Evitar que el dropdown se cierre
+    try {
+      await api.marcarNotificacionLeida(id);
+      setNotificaciones(prev => 
+        prev.map(n => n.id === id ? { ...n, leido: true } : n)
+      );
+    } catch (error) {
+      console.error("Error al marcar como leída:", error);
+    }
+  };
+
+  const handleMarcarTodasLeidas = async (e) => {
+    e.stopPropagation(); // Evitar que el dropdown se cierre
+    try {
+      await api.marcarTodasLeidas();
+      setNotificaciones(prev => 
+        prev.map(n => ({ ...n, leido: true }))
+      );
+      alerta.exito("Leídas", "Todas las notificaciones marcadas como leídas");
+    } catch (error) {
+      console.error("Error al marcar todas como leídas:", error);
+    }
+  };
+
+  const noLeidasCount = notificaciones.filter(n => !n.leido).length;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (perfilRef.current && !perfilRef.current.contains(event.target)) {
         setMenuAbierto(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -23,9 +79,11 @@ export default function Menu({ usuario, setUsuario }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);  
+
   const closeMenu = () => {
     setIsOpen(false);
-    setDropdownOpen(false); // 🚀 Cerramos también el submenú
+    setDropdownOpen(false); // Cerramos también el submenú
+    setGruposDropdownOpen(false);
   };
   
   const navigate = useNavigate();
@@ -33,24 +91,21 @@ export default function Menu({ usuario, setUsuario }) {
   const navLinksRef = useRef(null);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
-  // 🚀 2. Detectamos si estamos en alguna de las páginas de la calculadora
+  // Detectamos si estamos en alguna de las páginas de la calculadora
   const isCalculadoraActive = location.pathname === '/calculadora' || location.pathname === '/MAT251';
+  const isGruposActive = location.pathname === '/grupos' || location.pathname === '/gestion-docente';
 
   useEffect(() => {
     const updateUnderline = () => {
-      // 🚀 3. Modificamos la búsqueda para que también detecte nuestro "span" activo del submenú
       let activeLink = navLinksRef.current?.querySelector('a.active, span.active');
       if (activeLink) {
         let leftPos = activeLink.offsetLeft;
         let width = activeLink.offsetWidth;
 
         // Corregimos la posición si es parte del menú desplegable
-        // ya que su contenedor (li) tiene position: relative y offsetLeft devuelve 0
         const dropdownParent = activeLink.closest('.dropdown-container');
         if (dropdownParent) {
           leftPos = dropdownParent.offsetLeft;
-          // Queremos que el ancho de la línea sea del span "Calculadora", no de todo el li
-          // aunque el li no tiene padding, el span es más preciso.
           const span = dropdownParent.querySelector('span');
           width = span ? span.offsetWidth : dropdownParent.offsetWidth;
         }
@@ -87,7 +142,7 @@ export default function Menu({ usuario, setUsuario }) {
           <li><NavLink to="/" onClick={closeMenu}>Inicio</NavLink></li>
           <li><NavLink to="/archivos" onClick={closeMenu}>Archivos</NavLink></li>
           
-          {/* 🚀 4. EL NUEVO CONTENEDOR DESPLEGABLE */}
+          {/* EL CONTENEDOR DESPLEGABLE */}
           <li 
             className="nav-item dropdown-container"
             onClick={() => setDropdownOpen(!dropdownOpen)} // Abrir solo con clic
@@ -128,7 +183,35 @@ export default function Menu({ usuario, setUsuario }) {
           </li>
 
           <li><NavLink to="/historial" onClick={closeMenu}>Historial</NavLink></li>
-          <li><NavLink to="/grupos" onClick={closeMenu}>Grupos</NavLink></li>
+          {usuario && (usuario.rol === "Docente" || usuario.rol === "Administrador") ? (
+            <li 
+              className="nav-item dropdown-container"
+              onClick={() => setGruposDropdownOpen(!gruposDropdownOpen)}
+            >
+              <span className={`nav-link-dropdown ${isGruposActive ? 'active' : ''}`} style={{ cursor: 'pointer' }}>
+                Grupos
+              </span>
+
+              <ul className={`dropdown-menu ${gruposDropdownOpen ? 'show' : ''}`}>
+                <li className="dropdown-li">
+                  <NavLink to="/grupos" onClick={closeMenu} className="dropdown-item">
+                    Gestión Grupos
+                  </NavLink>
+                </li>
+                <li className="dropdown-li">
+                  <NavLink to="/gestion-docente" onClick={closeMenu} className="dropdown-item">
+                    Gestión Alumnos
+                  </NavLink>
+                </li>
+              </ul>
+            </li>
+          ) : (
+            <li><NavLink to="/grupos" onClick={closeMenu}>Grupos</NavLink></li>
+          )}
+
+          {usuario && usuario.rol === "Administrador" && (
+            <li><NavLink to="/admin" onClick={closeMenu}>Admin</NavLink></li>
+          )}
          
          <span className="nav-underline" style={underlineStyle} />
         </ul>
@@ -144,52 +227,123 @@ export default function Menu({ usuario, setUsuario }) {
         </div>
 
         {usuario && (
-          <div className="relative" ref={perfilRef}>
-            <div 
-              className="perfil-usuario-menu" 
-              title={`${usuario.nombre} - ${usuario.rol}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuAbierto(!menuAbierto);
-              }}
-            >
-              <div className="avatar-naranja">
-                {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
-              </div>
-              <span className="user-name-text">
-                {usuario.nombre?.split(' ')[0] || 'Usuario'}
-              </span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             
-            {/* Submenú desplegable al hacer clic */}
-            {menuAbierto && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50">
-                <div
-                  onClick={() => {
-                    navigate('/perfil');
-                    closeMenu();
-                    setMenuAbierto(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                  style={{ transition: 'background-color 0.2s', color: 'var(--text-main)' }}
-                >
-                  Mi Perfil
+            {/* CAMPANA DE NOTIFICACIONES */}
+            <div className="notificaciones-container" ref={notifRef}>
+              <button 
+                className="bell-btn" 
+                onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+                title="Notificaciones"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {noLeidasCount > 0 && (
+                  <span className="notif-badge">{noLeidasCount}</span>
+                )}
+              </button>
+
+              {notifDropdownOpen && (
+                <div className="notif-dropdown">
+                  <div className="notif-header">
+                    <h4 className="notif-title">Notificaciones</h4>
+                    {notificaciones.length > 0 && (
+                      <button className="notif-clear-btn" onClick={handleMarcarTodasLeidas}>
+                        Marcar todo como leído
+                      </button>
+                    )}
+                  </div>
+                  <ul className="notif-list">
+                    {notificaciones.length === 0 ? (
+                      <div className="notif-empty">No tienes notificaciones</div>
+                    ) : (
+                      notificaciones.map(n => (
+                        <li 
+                          key={n.id} 
+                          className={`notif-item ${!n.leido ? 'unread' : ''}`}
+                          onClick={(e) => !n.leido && handleMarcarLeida(n.id, e)}
+                        >
+                          <span className="notif-item-msg">{n.mensaje}</span>
+                          <div className="notif-item-meta">
+                            <span className={`notif-badge-type ${n.tipo === 'sistema' ? 'sistema' : 'personal'}`}>
+                              {n.tipo === 'sistema' ? 'Sistema' : 'Personal'}
+                            </span>
+                            <span>{n.fecha_creacion.split(' ')[0]}</span>
+                          </div>
+                        </li>
+                      ))
+                    )}
+                  </ul>
                 </div>
-                <div
-                  onClick={() => {
-                    localStorage.removeItem("token");
-                    setUsuario(null);
-                    navigate('/login');
-                    closeMenu();
-                    setMenuAbierto(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold cursor-pointer"
-                  style={{ transition: 'background-color 0.2s' }}
-                >
-                  Cerrar sesión
+              )}
+            </div>
+
+            {/* PERFIL USUARIO */}
+            <div className="relative" ref={perfilRef}>
+              <div 
+                className="perfil-usuario-menu" 
+                title={`${usuario.nombre} - ${usuario.rol}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuAbierto(!menuAbierto);
+                }}
+              >
+                <div className="avatar-naranja">
+                  {usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '👤'}
                 </div>
+                <span className="user-name-text">
+                  {usuario.nombre?.split(' ')[0] || 'Usuario'}
+                </span>
               </div>
-            )}
+              
+              {/* Submenú desplegable al hacer clic */}
+              {menuAbierto && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50">
+                  <div
+                    onClick={() => {
+                      navigate('/perfil');
+                      closeMenu();
+                      setMenuAbierto(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                    style={{ transition: 'background-color 0.2s', color: 'var(--text-main)' }}
+                  >
+                    Mi Perfil
+                  </div>
+                  
+                  {usuario.rol === "Administrador" && (
+                    <div
+                      onClick={() => {
+                        navigate('/admin');
+                        closeMenu();
+                        setMenuAbierto(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                      style={{ transition: 'background-color 0.2s', color: 'var(--text-main)', fontWeight: 'bold' }}
+                    >
+                      Panel de Admin
+                    </div>
+                  )}
+
+                  <div
+                    onClick={() => {
+                      localStorage.removeItem("token");
+                      setUsuario(null);
+                      navigate('/login');
+                      closeMenu();
+                      setMenuAbierto(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold cursor-pointer"
+                    style={{ transition: 'background-color 0.2s' }}
+                  >
+                    Cerrar sesión
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
         )}
       </div>

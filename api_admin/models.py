@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, Boolean
 from sqlalchemy.sql import func
 from database import Base
 
@@ -12,6 +12,8 @@ class Usuario(Base):
     rol = Column(String(50), default="Estudiante")
     perfil = Column(String(50), default="Estudiante Externo")
     institucion = Column(String(100), default="")
+    activo = Column(Boolean, default=True, nullable=False)
+    ultimo_aviso_global_id = Column(Integer, default=0, nullable=False)
     fecha_creacion = Column(DateTime, default=func.now())
 
 # --- TABLAS PARA GESTIÓN DE CLASES ---
@@ -77,3 +79,19 @@ class HistorialCalculo(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)  # Quién ejecutó el cálculo
     clase_id = Column(Integer, ForeignKey("clases.id"), nullable=True)  # Opcional (por si calculó de forma libre sin estar en clase)
     archivo_id = Column(Integer, ForeignKey("archivos.id"), nullable=True)  # Qué archivo Excel se utilizó para este análisis
+
+
+class Notificacion(Base):
+    """
+    Registra notificaciones para los usuarios, ya sean personales o globales de sistema.
+    """
+    __tablename__ = "notificaciones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tipo = Column(String(50), nullable=False)  # "personal" o "sistema"
+    mensaje = Column(Text, nullable=False)
+    leido = Column(Boolean, default=False, nullable=False)
+    fecha_creacion = Column(DateTime, default=func.now())
+    
+    # Relación opcional con Usuario (si es personal)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)

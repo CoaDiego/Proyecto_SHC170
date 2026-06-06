@@ -467,7 +467,7 @@ export default function Grupos() {
                         e.currentTarget.style.color = "#dc2626";
                       }}
                     >
-                      🗑️ Eliminar Curso
+                      Eliminar Curso
                     </button>
                   )}
                 </div>
@@ -651,7 +651,7 @@ export default function Grupos() {
       {mostrarModalEliminar && cursoAEliminar && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(0,0,0,0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999 }}>
           <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "10px", width: "400px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)", border: "1px solid rgba(220, 38, 38, 0.3)" }}>
-            <h2 style={{ marginTop: 0, color: "#dc2626" }}>⚠️ Eliminar Curso</h2>
+            <h2 style={{ marginTop: 0, color: "#dc2626" }}>Eliminar Curso</h2>
             <p style={{ color: "var(--text-main)", fontSize: "0.95rem", marginBottom: "15px" }}>
               ¿Estás seguro de que deseas eliminar permanentemente el curso <strong>{cursoAEliminar.nombre}</strong>?
             </p>

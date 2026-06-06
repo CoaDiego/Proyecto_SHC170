@@ -2,18 +2,16 @@ import os
 import json
 from datetime import datetime
 from typing import Any, Dict, Optional
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database import get_db
 import models
-from routers.archivos import sanitizar_nombre_carpeta
+from routers.auth import get_current_user
 
 router = APIRouter()
-HISTORIAL_FOLDER = "historial"
-os.makedirs(HISTORIAL_FOLDER, exist_ok=True)
 
 class RegistroHistorial(BaseModel):
     autor: str
@@ -21,67 +19,78 @@ class RegistroHistorial(BaseModel):
     archivo_origen: str
     snapshot: Optional[Dict[str, Any]] = None
 
-def obtener_ruta_historial(autor: str, db: Session) -> str:
-    user = db.query(models.Usuario).filter(models.Usuario.nombre == autor).first()
-    if user:
-        nombre_sanitizado = sanitizar_nombre_carpeta(user.nombre)
-        carpeta_nombre = f"{nombre_sanitizado}_{user.id}"
-    else:
-        nombre_sanitizado = sanitizar_nombre_carpeta(autor)
-        carpeta_nombre = nombre_sanitizado
-    return os.path.join(HISTORIAL_FOLDER, carpeta_nombre)
-
 @router.post("/guardar_historial")
-async def guardar_historial(registro: RegistroHistorial, db: Session = Depends(get_db)):
+async def guardar_historial(registro: RegistroHistorial, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)):
     try:
-        user_historial_folder = obtener_ruta_historial(registro.autor, db)
-        os.makedirs(user_historial_folder, exist_ok=True)
+        snapshot_str = json.dumps(registro.snapshot) if registro.snapshot else "{}"
         
-        historial_file = os.path.join(user_historial_folder, "historial.json")
-        historial_data = []
-        if os.path.exists(historial_file):
-            with open(historial_file, "r", encoding="utf-8") as f:
-                historial_data = json.load(f)
+        nuevo_registro = models.HistorialCalculo(
+            tipo_analisis=registro.calculo,
+            nombre_trabajo=registro.archivo_origen,
+            parametros_json="{}",
+            resultados_json=snapshot_str,
+            usuario_id=current_user.id
+        )
         
-        nuevo_registro = {
-            "id": f"HIST_{int(datetime.now().timestamp())}",
-            "fecha": datetime.now().strftime("%d/%m/%Y"),
-            "hora": datetime.now().strftime("%H:%M:%S"),
-            "calculo": registro.calculo,
-            "archivo_origen": registro.archivo_origen,
-            "snapshot": registro.snapshot
+        db.add(nuevo_registro)
+        db.commit()
+        db.refresh(nuevo_registro)
+        
+        return {
+            "message": "Historial guardado con éxito",
+            "registro": {
+                "id": nuevo_registro.id,
+                "fecha": nuevo_registro.fecha_creacion.strftime("%d/%m/%Y"),
+                "hora": nuevo_registro.fecha_creacion.strftime("%H:%M:%S"),
+                "calculo": nuevo_registro.tipo_analisis,
+                "archivo_origen": nuevo_registro.nombre_trabajo,
+                "snapshot": registro.snapshot
+            }
         }
-        
-        historial_data.insert(0, nuevo_registro)
-        with open(historial_file, "w", encoding="utf-8") as f:
-            json.dump(historial_data, f, indent=4)
-            
-        return {"message": "Historial guardado con éxito", "registro": nuevo_registro}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @router.get("/obtener_historial")
-async def obtener_historial(autor: str = Query(...), db: Session = Depends(get_db)):
-    user_historial_folder = obtener_ruta_historial(autor, db)
-    historial_file = os.path.join(user_historial_folder, "historial.json")
-    if not os.path.exists(historial_file):
-        return {"historial": []}
+async def obtener_historial(autor: Optional[str] = None, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)):
+    try:
+        registros = db.query(models.HistorialCalculo).filter(
+            models.HistorialCalculo.usuario_id == current_user.id
+        ).order_by(models.HistorialCalculo.fecha_creacion.desc()).all()
         
-    with open(historial_file, "r", encoding="utf-8") as f:
-        return {"historial": json.load(f)}
+        historial = []
+        for reg in registros:
+            try:
+                snapshot_data = json.loads(reg.resultados_json) if reg.resultados_json else {}
+            except Exception:
+                snapshot_data = {}
+                
+            historial.append({
+                "id": reg.id,
+                "fecha": reg.fecha_creacion.strftime("%d/%m/%Y") if reg.fecha_creacion else "",
+                "hora": reg.fecha_creacion.strftime("%H:%M:%S") if reg.fecha_creacion else "",
+                "calculo": reg.tipo_analisis,
+                "archivo_origen": reg.nombre_trabajo,
+                "snapshot": snapshot_data
+            })
+            
+        return {"historial": historial}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @router.delete("/eliminar_historial/{registro_id}")
-async def eliminar_historial(registro_id: str, autor: str = Query(...), db: Session = Depends(get_db)):
-    user_historial_folder = obtener_ruta_historial(autor, db)
-    historial_file = os.path.join(user_historial_folder, "historial.json")
-    if not os.path.exists(historial_file):
-        return JSONResponse(status_code=404, content={"error": "Historial no encontrado"})
+async def eliminar_historial(registro_id: int, autor: Optional[str] = None, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)):
+    try:
+        registro = db.query(models.HistorialCalculo).filter(
+            models.HistorialCalculo.id == registro_id,
+            models.HistorialCalculo.usuario_id == current_user.id
+        ).first()
         
-    with open(historial_file, "r", encoding="utf-8") as f:
-        historial_data = json.load(f)
+        if not registro:
+            return JSONResponse(status_code=404, content={"error": "Historial no encontrado o no pertenece al usuario actual"})
+            
+        db.delete(registro)
+        db.commit()
         
-    nuevo_historial = [reg for reg in historial_data if reg.get("id") != registro_id]
-    with open(historial_file, "w", encoding="utf-8") as f:
-        json.dump(nuevo_historial, f, indent=4)
-        
-    return {"message": "Registro eliminado con éxito"}
+        return {"message": "Registro eliminado con éxito"}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})

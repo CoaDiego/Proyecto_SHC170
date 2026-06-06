@@ -2,19 +2,21 @@ import random
 import os
 import shutil
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db
-from models import Clase, Inscripcion, Usuario, Archivo, HistorialCalculo
+from models import Clase, Inscripcion, Usuario, Archivo, HistorialCalculo, Notificacion
+from routers.auth import get_current_user
 
 router = APIRouter()
 
 class NuevaClase(BaseModel):
     nombre: str
     docente_email: str 
-    fecha_limite_matriculacion: str = None  # Agregamos esta propiedad
+    fecha_limite_matriculacion: Optional[str] = None
 
 class UnirseClase(BaseModel):
     codigo_acceso: str
@@ -23,7 +25,8 @@ class UnirseClase(BaseModel):
 class ActualizarClase(BaseModel):
     id: int
     nombre: str
-    fecha_limite_matriculacion: str = None
+    fecha_limite_matriculacion: Optional[str] = None
+    resetear_codigo: Optional[bool] = False
 
 @router.post("/crear_clase")
 async def crear_clase(datos: NuevaClase, db: Session = Depends(get_db)):
@@ -115,6 +118,16 @@ async def unirse_clase(datos: UnirseClase, db: Session = Depends(get_db)):
         
     nueva_inscripcion = Inscripcion(clase_id=clase.id, estudiante_id=estudiante.id)
     db.add(nueva_inscripcion)
+    
+    # Crear notificación para el docente del grupo
+    nueva_notificacion = Notificacion(
+        tipo="matriculacion",
+        mensaje=f"El estudiante {estudiante.nombre} ({estudiante.email}) se ha inscrito a tu clase '{clase.nombre}'.",
+        usuario_id=clase.docente_id,
+        leido=False
+    )
+    db.add(nueva_notificacion)
+    
     db.commit()
     return {"message": f"Te has unido a {clase.nombre} exitosamente"}
 
@@ -199,3 +212,84 @@ async def eliminar_clase(clase_id: int, user_email: str = Query(...), db: Sessio
     db.commit()
     
     return {"message": "Curso eliminado exitosamente"}
+
+@router.get("/clases/{clase_id}/estudiantes")
+async def obtener_estudiantes_clase(clase_id: int, user_email: str = Query(...), db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.email == user_email).first()
+    if not usuario:
+        return JSONResponse(status_code=404, content={"error": "Usuario no encontrado"})
+        
+    clase = db.query(Clase).filter(Clase.id == clase_id).first()
+    if not clase:
+        return JSONResponse(status_code=404, content={"error": "Clase no encontrada"})
+        
+    if usuario.rol != "Administrador" and clase.docente_id != usuario.id:
+        return JSONResponse(
+            status_code=403, 
+            content={"error": "No tienes permisos para ver los alumnos de esta clase"}
+        )
+        
+    inscripciones = db.query(Inscripcion).filter(Inscripcion.clase_id == clase_id).all()
+    estudiantes_list = []
+    for ins in inscripciones:
+        est = db.query(Usuario).filter(Usuario.id == ins.estudiante_id).first()
+        if est:
+            estudiantes_list.append({
+                "id": est.id,
+                "nombre": est.nombre,
+                "email": est.email,
+                "fecha_creacion": ins.fecha_creacion.strftime("%Y-%m-%d %H:%M:%S") if ins.fecha_creacion else "N/A"
+            })
+    return estudiantes_list
+
+@router.delete("/clases/{clase_id}/desmatricular/{estudiante_id}")
+async def desmatricular_estudiante(clase_id: int, estudiante_id: int, user_email: str = Query(...), db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(Usuario.email == user_email).first()
+    if not usuario:
+        return JSONResponse(status_code=404, content={"error": "Usuario no encontrado"})
+        
+    clase = db.query(Clase).filter(Clase.id == clase_id).first()
+    if not clase:
+        return JSONResponse(status_code=404, content={"error": "Clase no encontrada"})
+        
+    if usuario.rol != "Administrador" and clase.docente_id != usuario.id:
+        return JSONResponse(
+            status_code=403, 
+            content={"error": "No tienes permisos para modificar esta clase"}
+        )
+        
+    inscripcion = db.query(Inscripcion).filter(
+        Inscripcion.clase_id == clase_id,
+        Inscripcion.estudiante_id == estudiante_id
+    ).first()
+    
+    if not inscripcion:
+        return JSONResponse(status_code=404, content={"error": "Inscripción no encontrada"})
+        
+    db.delete(inscripcion)
+    db.commit()
+    return {"message": "Estudiante desmatriculado exitosamente"}
+
+@router.get("/clases/mis-clases")
+async def obtener_mis_clases_docente(db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    if current_user.rol == "Administrador":
+        clases = db.query(Clase).all()
+    else:
+        clases = db.query(Clase).filter(Clase.docente_id == current_user.id).all()
+        
+    res_list = []
+    for c in clases:
+        docente_creador = db.query(Usuario).filter(Usuario.id == c.docente_id).first()
+        docente_nombre = docente_creador.nombre if docente_creador else "Desconocido"
+        docente_email = docente_creador.email if docente_creador else ""
+        res_list.append({
+            "id": c.id,
+            "nombre": c.nombre,
+            "codigo": c.codigo_acceso,
+            "alumnos": db.query(Inscripcion).filter(Inscripcion.clase_id == c.id).count(),
+            "archivos": 0,
+            "fecha_limite_matriculacion": c.fecha_limite_matriculacion,
+            "docente_nombre": docente_nombre,
+            "docente_email": docente_email
+        })
+    return res_list

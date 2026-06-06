@@ -8,6 +8,48 @@ export const BASE_URL = import.meta.env.VITE_API_URL;
 
 
 export const api = {
+  // --- VERIFICAR ESTADO DEL SERVIDOR ---
+  verificarEstado: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/health`);
+      if (!res.ok) return { status: "error" };
+      return await res.json();
+    } catch (err) {
+      return { status: "error" };
+    }
+  },
+
+  // --- OBTENER CURSOS DEL DOCENTE LOGUEADO ---
+  obtenerClasesDocente: async () => {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const res = await fetch(`${BASE_URL}/clases/mis-clases`, {
+      method: "GET",
+      headers: headers
+    });
+    if (!res.ok) throw new Error("Error al obtener las clases del docente");
+    return await res.json();
+  },
+
+  // --- OBTENER ESTUDIANTES DE UNA CLASE ---
+  obtenerEstudiantesClase: async (claseId, userEmail) => {
+    const res = await fetch(`${BASE_URL}/clases/${claseId}/estudiantes?user_email=${encodeURIComponent(userEmail)}`);
+    if (!res.ok) throw new Error("Error al obtener los estudiantes de la clase");
+    return await res.json();
+  },
+
+  // --- DESMATRICULAR/ELIMINAR ESTUDIANTE DE UNA CLASE ---
+  desmatricularEstudiante: async (claseId, estudianteId, userEmail) => {
+    const res = await fetch(`${BASE_URL}/clases/${claseId}/desmatricular/${estudianteId}?user_email=${encodeURIComponent(userEmail)}`, {
+      method: "DELETE"
+    });
+    if (!res.ok) throw new Error("Error al eliminar al estudiante de la clase");
+    return await res.json();
+  },
+
   // --- INICIO DE SESION LOCAL ---
   loginLocal: async (email, password) => {
     const res = await fetch(`${BASE_URL}/login_local`, {
@@ -384,6 +426,82 @@ guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al eliminar el curso");
+    return data;
+  },
+
+  // --- ADMINISTRACIÓN DE USUARIOS ---
+  obtenerUsuarios: async () => {
+    const res = await fetch(`${BASE_URL}/usuarios`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al obtener la lista de usuarios");
+    return data;
+  },
+
+  cambiarRol: async (email, nuevo_rol) => {
+    const res = await fetch(`${BASE_URL}/cambiar_rol`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, nuevo_rol }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al cambiar el rol");
+    return data;
+  },
+
+  cambiarEstado: async (email, activo) => {
+    const res = await fetch(`${BASE_URL}/cambiar_estado`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, activo }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al cambiar el estado del usuario");
+    return data;
+  },
+
+  eliminarUsuario: async (email) => {
+    const res = await fetch(`${BASE_URL}/eliminar_usuario/${encodeURIComponent(email)}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al eliminar el usuario");
+    return data;
+  },
+
+  // --- SISTEMA DE NOTIFICACIONES ---
+  obtenerNotificaciones: async () => {
+    const res = await fetch(`${BASE_URL}/notificaciones`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al obtener notificaciones");
+    return data;
+  },
+
+  marcarNotificacionLeida: async (id) => {
+    const res = await fetch(`${BASE_URL}/notificaciones/${id}/leer`, {
+      method: "PUT",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al marcar la notificación como leída");
+    return data;
+  },
+
+  marcarTodasLeidas: async () => {
+    const res = await fetch(`${BASE_URL}/notificaciones/leer_todas`, {
+      method: "PUT",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al marcar todas las notificaciones como leídas");
+    return data;
+  },
+
+  crearNotificacion: async (tipo, mensaje, usuario_id = null) => {
+    const res = await fetch(`${BASE_URL}/notificaciones`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo, mensaje, usuario_id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al crear la notificación");
     return data;
   },
 };

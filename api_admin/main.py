@@ -4,7 +4,7 @@ load_dotenv() # Cargar variables de entorno desde .env
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, archivos, calculos, historial, grupos
+from routers import auth, archivos, calculos, historial, grupos, notificaciones
 from database import engine
 import models
 
@@ -35,6 +35,7 @@ app.include_router(archivos.router)
 app.include_router(calculos.router)
 app.include_router(historial.router)
 app.include_router(grupos.router)
+app.include_router(notificaciones.router)
 
 # Utilidades globales del núcleo
 VISITAS_FILE = "visitas.txt"
@@ -64,3 +65,17 @@ async def visitas():
     except Exception:
         pass
     return {"visitas": count}
+
+@app.get("/health")
+async def health_check():
+    try:
+        from sqlalchemy import text
+        from database import SessionLocal
+        db = SessionLocal()
+        try:
+            db.execute(text("SELECT 1"))
+        finally:
+            db.close()
+        return {"status": "OK"}
+    except Exception as e:
+        return {"status": "error", "message": "Database connection failed"}
