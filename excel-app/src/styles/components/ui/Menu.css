@@ -804,18 +804,13 @@ html.dark .notif-badge-type.personal {
     text-overflow: ellipsis;
   }
 
-  /* Evitar desbordamiento a la izquierda del dropdown de notificaciones */
-  .notificaciones-container {
-    position: static !important; /* Libera el posicionamiento relativo para alinear al navbar */
-  }
-
   .notif-dropdown {
-    position: absolute !important;
-    top: 100% !important;
-    right: 5% !important;
+    position: fixed !important;
+    top: 70px !important;
     left: 5% !important;
-    width: auto !important; /* El ancho se calcula dinámicamente entre left y right (90% del ancho) */
-    margin-top: 8px !important;
+    width: 90vw !important;
+    right: auto !important;
+    z-index: 9999 !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
   }
 }

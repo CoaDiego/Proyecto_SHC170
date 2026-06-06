@@ -67,7 +67,8 @@ async def obtener_notificaciones(db: Session = Depends(get_db), current_user: mo
             })
         return res
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print("Error en obtener_notificaciones:", str(e))
+        return []
 
 @router.put("/notificaciones/{notificacion_id}/leer")
 async def marcar_como_leida(notificacion_id: int, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)):
