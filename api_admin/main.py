@@ -15,6 +15,8 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",         # Desarrollo local (Vite)
     "http://127.0.0.1:5173",         # Desarrollo local alternativo
+    "http://localhost:3000",         # Desarrollo local (React alternativo)
+    "http://127.0.0.1:3000",         # Desarrollo local (React alternativo)
     "https://calculadora-estadistica-3inh.onrender.com",  # Producción en Render
     "https://administracion-calculadora.vercel.app",  # Enlace oficial Vercel
     "https://proyecto-shc-170-54eovb4bb-coadiegos-projects.vercel.app", # Enlace temporal Vercel
