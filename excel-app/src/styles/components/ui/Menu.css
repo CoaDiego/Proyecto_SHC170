@@ -760,5 +760,62 @@ html.dark .notif-badge-type.personal {
   font-style: italic;
 }
 
+/* =========================================
+   8. ESTILOS RESPONSIVOS PARA MÓVIL (< 768px)
+   ========================================= */
+@media screen and (max-width: 768px) {
+  /* Distribución correcta de los elementos en el Navbar */
+  .main-navbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 15px !important;
+  }
 
+  .nav-brand {
+    flex: 0 0 auto !important;
+  }
 
+  .menu-derecha {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    margin-left: 0 !important;
+    margin-right: 10px !important;
+    gap: 12px !important;
+  }
+
+  .hamburger-menu {
+    flex: 0 0 auto !important;
+  }
+
+  /* Ajuste de avatar de perfil y nombre */
+  .perfil-usuario-menu {
+    padding: 4px !important;
+    gap: 5px !important;
+  }
+
+  .user-name-text {
+    font-size: 0.8rem !important;
+    max-width: 70px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Evitar desbordamiento a la izquierda del dropdown de notificaciones */
+  .notificaciones-container {
+    position: static !important; /* Libera el posicionamiento relativo para alinear al navbar */
+  }
+
+  .notif-dropdown {
+    position: absolute !important;
+    top: 100% !important;
+    right: 5% !important;
+    left: 5% !important;
+    width: auto !important; /* El ancho se calcula dinámicamente entre left y right (90% del ancho) */
+    margin-top: 8px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+  }
+}

@@ -8,6 +8,8 @@ from routers import auth, archivos, calculos, historial, grupos, notificaciones
 from database import engine
 import models
 
+# Crear tablas automáticamente si no existen (como la de notificaciones)
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
