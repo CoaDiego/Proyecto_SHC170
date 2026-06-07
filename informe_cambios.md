@@ -1,99 +1,79 @@
-# 📊 Informe Técnico de Cambios y Mejoras
+# 📊 Informe Técnico de Desarrollo y Mejoras
 
-Este documento detalla todas las modificaciones, refactorizaciones y correcciones de errores implementadas el día de hoy en el software estadístico, tanto para el Frontend (React) como para el Backend (FastAPI).
+Este documento detalla todas las modificaciones, refactorizaciones y correcciones de errores aplicadas el día de hoy en el proyecto **Software Estadístico**, tanto en el Frontend (React) como en el Backend (FastAPI), para implementar gestión por roles, verificar el estado del sistema, mejorar el diseño responsivo en móviles y robustecer el control de errores en producción.
 
 ---
 
 ## 🔍 Resumen General
 
-Se han completado con éxito dos fases de desarrollo orientadas a robustecer el sistema en áreas críticas como:
-1. **Precisión Matemática-Estadística:** Notación de intervalos dinámicos y cierre del último intervalo.
-2. **Visualizaciones de Gráficos:** Estructura de polígono cerrado e integración de ojivas puras.
-3. **Seguridad y Organización en el Servidor:** Sanitización de nombres de directorios y carpetas de usuarios/historial.
-4. **Experiencia de Usuario (UX) Avanzada:** Panel lateral colapsable fluido, visualizador de contraseñas, reseteo de código de matriculación y estrategias de guardado seguro no destructivas para archivos de Excel.
+Se han completado con éxito cinco áreas clave de desarrollo y depuración:
+1. **Control de Acceso y Gestión por Roles (Docente vs. Admin):** Implementación de la gestión de alumnos matriculados por grupo para docentes, restricciones de listados y desmatriculación segura ("Eliminar estudiante").
+2. **Sistema de Health Check & Polling:** Verificación de estado de base de datos activa antes de permitir el inicio de sesión con alertas flotantes tipo toast en la esquina inferior izquierda.
+3. **Limpieza Visual & Estética Profesional:** Eliminación de emojis decorativos e iconos redundantes, mejorando la legibilidad en modo oscuro de desplegables y opciones.
+4. **Diseño Responsivo en Móviles (Tablas y Navbar):** Conversión de tablas complejas de usuarios y alumnos a vistas de tarjetas apiladas interactivas. Posicionamiento del dropdown de notificaciones para evitar desbordamientos en pantallas pequeñas.
+5. **Robustez y Despliegue en la Nube:** Creación automática de tablas al arrancar la API, control de fallos en endpoints críticos (evitando el Error 500) y apertura regulada de CORS para Vercel y entornos locales.
 
 ---
 
 ## 🛠️ Detalle de Cambios por Componente
 
-### 1. Edición y Sincronización de Columnas (Calculadora de Estadística)
-*   **Hook de Control:** En [useCalculadoraExcel.js](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/hooks/useCalculadoraExcel.js), añadimos la lógica para actualizar la estructura de datos local con la función `handleActualizarColumna`.
-*   **Componente de Vista:** En [Calculos.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Calculos.jsx), colocamos un botón interactivo y un modal de edición que permite actualizar los valores celda por celda o copiando/pegando un bloque de valores completo. Al confirmar la edición, todos los cálculos del reporte e índices estadísticos se regeneran en tiempo real.
-
-> [!TIP]
-> Esto evita la necesidad de re-subir planillas Excel completas ante errores tipográficos mínimos.
-
----
-
-### 2. Backend Seguro y Sanitización de Directorios (FastAPI)
-*   **Modulo de Archivos:** En [archivos.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/archivos.py), creamos funciones helper para la creación estandarizada de directorios utilizando el formato `{nombre_sanitizado}_{id}` para evitar colisiones y fallos de permisos en el sistema operativo.
-*   **Migración e Historial:** Refactorizamos [historial.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/historial.py) para que las carpetas del historial de análisis del usuario se generen bajo la misma lógica segura.
+### 1. Gestión de Estudiantes para el Rol "Docente" (RBAC)
+*   **Nueva Interfaz Frontend:** Creamos [GestionDocente.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/GestionDocente.jsx) para proveer un panel de control limpio a los profesores. Incluye un selector dinámico de cursos/clases, listado de estudiantes y botón explícito para desmatricular alumnos con la etiqueta **"Eliminar estudiante"**.
+*   **Endpoints de API Protegidos:** Añadimos endpoints clave en [grupos.py](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/grupos.py) utilizando `Depends(get_current_user)` para:
+    *   `GET /clases/mis-clases`: Filtra y retorna solo las clases asignadas al docente identificado por el token.
+    *   `GET /clases/{clase_id}/estudiantes`: Carga la lista de estudiantes inscritos en dicho grupo.
+    *   `DELETE /clases/{clase_id}/desmatricular/{estudiante_id}`: Permite desmatricular a un estudiante.
+*   **Ruteo y Navegación Dinámica:**
+    *   Registramos la ruta `/gestion-docente` en [App.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/App.jsx).
+    *   Modificamos [Menu.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/ui/Menu.jsx) para remover el enlace directo a "Gestión alumnos" y crear en su lugar un dropdown para "Grupos" con dos opciones limpias ("Gestión Grupos" y "Gestión Alumnos"), visibles solo para usuarios autenticados con rol `Docente` o `Administrador`.
 
 ---
 
-### 3. Interfaz de Usuario e Interacciones del Frontend
-*   **Visibilidad de Contraseñas:** Se integró un toggle interactivo con icono SVG en [Login.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Login.jsx) para alternar el tipo de campo (`text`/`password`) y facilitar el login seguro.
-*   **Reseteo de Cursos:** En [Grupos.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Grupos.jsx) y el backend en [grupos.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/grupos.py), añadimos un botón de restablecimiento para generar un nuevo código único `MAT-{id}-{hash}`.
-*   **Panel Lateral Colapsable:** Optimizamos la transición css de colapso en [PanelConfiguracion.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/Resultados/PanelConfiguracion.jsx) y [PanelResultados.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/Resultados/PanelResultados.jsx), ajustando el ancho del menú a `0px` exactos, removiendo sombras y bordes al cerrarse de modo que el espacio de gráficos y tablas ocupe el ancho total libre.
-*   **Ampliación del Tour:** Actualizamos la guía de `driver.js` para incluir pasos que expliquen y destaquen estas nuevas características del entorno de trabajo.
+### 2. Health Check de Base de Datos y Polling de Inicio
+*   **Endpoint `/health`:** En [main.py](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/api_admin/main.py) añadimos un endpoint de verificación de salud de la base de datos que ejecuta una consulta SQL básica (`SELECT 1`). Si responde, retorna `{"status": "OK"}`. Si falla, maneja la excepción internamente retornando un mensaje descriptivo sin colapsar el servidor.
+*   **Lógica de Login:** En [Login.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Login.jsx), se implementó un sistema de sondeo periódico (polling) al montar el componente. Mientras la base de datos no responda con "OK", el botón de inicio de sesión permanece deshabilitado.
+*   **Notificación Flotante:** Mostramos un toast flotante en la esquina inferior izquierda (`bottom: 20px; left: 20px;`) avisando al usuario que el servidor se está inicializando (mitigando los retrasos de cold start en Render).
 
 ---
 
-### 4. Precisión de Gráficos Estadísticos (Recharts)
-*   **Polígono de Frecuencias Cerrado:** Modificamos el procesado de datos en [GraficoIntervalos.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/graficos/GraficoIntervalos.jsx) para inyectar dinámicamente dos extremos virtuales con frecuencia cero ($y=0$). Esto obliga al gráfico lineal a bajar y anclarse al eje horizontal $X$.
-*   **Ojivas Estrictas:** Reemplazamos la librería de visualización en las curvas acumuladas por `<LineChart>` plano. Se quitaron los gradientes e iluminaciones inferiores de tipo `<AreaChart>` para eliminar lecturas visuales confusas sobre el área bajo la curva.
+### 3. Limpieza Visual e Interfaz Limpia
+*   **Remoción de Emojis e Iconos:** Eliminamos iconos de engranajes (`⚙️`), advertencias y candados innecesarios del encabezado en [Admin.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Admin.jsx), del perfil en [Perfil.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Perfil.jsx) y de las vistas de [Grupos.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Grupos.jsx).
+*   **Lectura en Modo Oscuro:** Modificamos las clases CSS globales de inputs y dropdowns (`<select>` y `<option>`) para forzar colores de fondo y texto legibles en modo oscuro, evitando el problema de texto invisible (blanco sobre blanco).
 
 ---
 
-### 5. Lógica de Agrupación por Intervalos
-*   **Control del Límite Superior:** Se corrigieron los algoritmos de cálculo para respetar la notación seleccionada (`[a, b)`, `(a, b)` o `[a, b]`).
-*   **Regla Estadística Crítica:** Independientemente de la opción seleccionada, la lógica fuerza a que **el último intervalo siempre se cierre en ambos límites (`[a, b]`)**. Esto garantiza que el valor máximo de la muestra nunca quede fuera del rango acumulado.
+### 4. Responsividad Extrema en Móviles (Tablas y Notificaciones)
+*   **Tablas a Tarjetas (Admin y Docente):** En [App.css](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/App.css) y de forma específica para `.tabla-responsiva-panel` (dentro de `@media screen and (max-width: 768px)`), transformamos el layout de tabla ocultando el `thead` y convirtiendo las filas `tr` y columnas `td` en bloques apilados con diseño de tarjeta.
+*   **Etiquetas Dinámicas ::before:** Inyectamos etiquetas legibles a la izquierda de cada valor en el panel de administración (`USUARIO:`, `ROL:`, `ESTADO:`, `REGISTRO:`, `ACCIONES:`) para dar una lectura clara.
+*   **Botones y Dropdowns Táctiles:** Agrandamos los botones de suspender y eliminar y los organizamos de forma fluida a lo ancho de la tarjeta para facilitar la interacción táctil en celulares.
+*   **Dropdown de Notificaciones Infallible:** En [Menu.css](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/styles/components/ui/Menu.css), modificamos la clase `.notif-dropdown` en móviles para usar `position: fixed !important; top: 70px !important; left: 5% !important; width: 90vw !important; right: auto !important; z-index: 9999 !important;`. Esto extrae la caja del flujo del navbar y la centra en la pantalla con el ancho del dispositivo, eliminando el desbordamiento hacia la izquierda.
 
 ---
 
-### 6. Guardado No Destructivo (Excel de Entrada)
-*   **Modal Multiópción:** Añadimos un modal interactivo en [ExcelContent.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/excel/ExcelContent.jsx) al disparar "Guardar Cambios" con tres estrategias:
-    1.  `overwrite`: Sobrescribe la hoja Excel actual.
-    2.  `new_column`: Agrega las columnas modificadas con la etiqueta `(Editado)`, preservando el histórico.
-    3.  `new_sheet`: Escribe los cambios en una nueva pestaña incremental de nombre `Datos_Editados_X`.
-*   **Backend Dynamic Payload:** En [api.js](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/services/api.js) and [archivos.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/archivos.py), modificamos la API para procesar y ejecutar cada una de estas estrategias a través de Pandas y `openpyxl`.
+### 5. Configuración de Red, CORS e Inicialización de BD en la Nube
+*   **Orígenes de CORS Ampliados:** Actualizamos la lista de orígenes autorizados en [main.py](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/api_admin/main.py) para incluir el puerto `3000` (desarrollo local secundario de React) y las URLs oficiales de producción en Vercel, permitiendo todos los métodos, cabeceras y credenciales de sesión.
+*   **Creación de Tablas Automática:** Agregamos `models.Base.metadata.create_all(bind=engine)` en la inicialización de FastAPI en `main.py`. Al arrancar el servicio en Render, la API creará automáticamente las tablas faltantes (como `notificaciones`) sin corromper la información existente.
+*   **Protección contra el Error 500:** Modificamos el endpoint `GET /notificaciones` en [notificaciones.py](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/notificaciones.py) para capturar excepciones internas del driver SQL, imprimir los errores detalladamente en la consola del servidor de Render para fines de depuración y retornar un arreglo vacío `[]` al cliente para que la aplicación del navegador nunca colapse visualmente.
 
 ---
 
-### 7. Sistema de Autenticación JWT, Cifrado Bcrypt y Control de Roles (RBAC)
-*   **Cifrado Bcrypt & Retrocompatibilidad:** Implementamos en [auth.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/auth.py) el hashing de contraseñas mediante `passlib` y `bcrypt` al registrar nuevos usuarios. Diseñamos un mecanismo de validación con *fallback* para verificar contraseñas antiguas sin hashear (texto plano), previniendo que se bloquee a usuarios previos.
-*   **JSON Web Tokens (JWT):** Configuramos la emisión de tokens JWT firmados en `/login_local`. El payload contiene el id, email y rol del usuario, con un tiempo de expiración de 24 horas. Los parámetros criptográficos (`SECRET_KEY`, `ALGORITHM`) son leídos de forma segura desde un archivo [.env](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/.env).
-*   **Control de Accesos (RBAC):** Desarrollamos las dependencias `get_current_user` y `require_role(allowed_roles)` para bloquear accesos no autorizados en el backend. Creamos los endpoints protegidos `/me` y `/docente-only` para comprobar el funcionamiento, y restringimos `/usuarios` y `/cambiar_rol` únicamente a administradores.
-*   **Interceptor Global de Peticiones:** Añadimos un interceptor global sobre `window.fetch` en [main.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/main.jsx) para inyectar automáticamente la cabecera `Authorization: Bearer <token>` en todas las llamadas a la API y reaccionar a respuestas de estado `401 Unauthorized` limpiando el token e instruyendo la redirección del navegador.
-*   **Persistencia de Sesión:** En [App.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/App.jsx) implementamos una llamada asíncrona de restauración de sesión basada en token que se ejecuta al montar la aplicación (F5), y un cargador elegante para evitar el parpadeo de pantallas internas no logueadas.
+## 📈 Tabla Resumen de Archivos Modificados
 
----
-
-## 📈 Tabla Resumen de Archivos Tocados
-
-| Módulo/Área | Archivo | Acción | Propósito |
+| Módulo | Archivo | Acción | Propósito del Cambio |
 | :--- | :--- | :--- | :--- |
-| **Frontend** | [useCalculadoraExcel.js](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/hooks/useCalculadoraExcel.js) | Modificado | Hook de edición e integración de columna |
-| **Frontend** | [Calculos.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Calculos.jsx) | Modificado | Modal de edición de datos y pasos del tour |
-| **Frontend** | [PanelConfiguracion.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/Resultados/PanelConfiguracion.jsx) | Modificado | Gestión de transición colapsable lateral izquierda |
-| **Frontend** | [PanelResultados.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/Resultados/PanelResultados.jsx) | Modificado | Ajuste responsivo de ancho ante colapso |
-| **Frontend** | [Login.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Login.jsx) | Modificado | Icono interactivo para revelar contraseña y guardado de token en localStorage |
-| **Frontend** | [Grupos.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Grupos.jsx) | Modificado | Botón para re-generar token de matriculación |
-| **Frontend** | [GraficoIntervalos.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/graficos/GraficoIntervalos.jsx) | Modificado | Polígono de frecuencia cerrado y ojivas planas |
-| **Frontend** | [ExcelContent.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/excel/ExcelContent.jsx) | Modificado | Modal interactivo de guardado multi-estrategia |
-| **Frontend** | [api.js](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/services/api.js) | Modificado | Estructura de payload con parámetro de guardado y endpoint de verificación `/me` |
-| **Frontend** | [main.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/main.jsx) | Modificado | Interceptor global de fetch para inyectar token JWT y redirección 401 |
-| **Frontend** | [App.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/App.jsx) | Modificado | Validación y restauración de sesión al arrancar la app con pantalla de carga |
-| **Frontend** | [Perfil.jsx](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Perfil.jsx) | Modificado | Limpieza de token de localStorage al cerrar sesión y eliminar cuenta |
-| **Backend** | [archivos.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/archivos.py) | Modificado | Lógica de guardado en Excel y sanitización de nombres |
-| **Backend** | [historial.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/historial.py) | Modificado | Carpetas seguras para reportes históricos |
-| **Backend** | [grupos.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/grupos.py) | Modificado | Lógica de base de datos para resetear token de grupo |
-| **Backend** | [requirements.txt](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/requirements.txt) | Modificado | Inclusión de pyjwt, passlib, bcrypt y python-dotenv |
-| **Backend** | [.env](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/.env) | Nuevo | Clave secreta y algoritmo de firma de tokens JWT |
-| **Backend** | [main.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/main.py) | Modificado | Carga inicial de variables de entorno mediante load_dotenv |
-| **Backend** | [auth.py](file:///c:/Users/ASUS/Desktop/Semestre 1-2026/Trabajo Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/auth.py) | Modificado | Hashing de passwords, login JWT, dependencias de seguridad y endpoints de prueba |
+| **Backend** | [main.py](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/api_admin/main.py) | Modificado | Endpoint `/health`, importaciones de orígenes de CORS (puerto 3000) y creación automática de tablas físicas al iniciar. |
+| **Backend** | [grupos.py](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/grupos.py) | Modificado | Nuevos endpoints de consulta de clases por docente, estudiantes del grupo y desmatriculación de alumnos. |
+| **Backend** | [notificaciones.py](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/api_admin/routers/notificaciones.py) | Modificado | Manejo robusto de excepciones (try/except) en `GET /notificaciones` retornando fallback `[]` para mitigar errores 500. |
+| **Frontend** | [App.css](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/App.css) | Modificado | Media queries responsivos para transformar la tabla de administración `.tabla-responsiva-panel` a tarjetas legibles y botones táctiles. |
+| **Frontend** | [Menu.css](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/styles/components/ui/Menu.css) | Modificado | Centrado absoluto de dropdown de notificaciones móviles mediante posicionamiento `fixed` y distribución Flexbox en el navbar. |
+| **Frontend** | [Menu.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/components/ui/Menu.jsx) | Modificado | Estructura dropdown de grupos (Gestión Grupos / Gestión Alumnos), ruteo dinámico de roles y limpieza de emojis en el perfil. |
+| **Frontend** | [App.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/App.jsx) | Modificado | Registro de la ruta `/gestion-docente` y enlace con la sesión de usuario. |
+| **Frontend** | [Admin.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Admin.jsx) | Modificado | Clases responsivas en el marcado de tabla, títulos limpios sin emojis y buscador alineado al 100% de ancho en móviles. |
+| **Frontend** | [Login.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Login.jsx) | Modificado | Polling asíncrono `/health` al iniciar sesión y mensaje toast de espera posicionado en la esquina inferior izquierda. |
+| **Frontend** | [Perfil.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/Perfil.jsx) | Modificado | Limpieza visual (eliminación de iconos de candados y tarjetas) y estilización con variables de tema nativas. |
+| **Frontend** | [GestionDocente.jsx](file:///c:/Users/ASUS/Desktop/Semestre%201-2026/Trabajo%20Dirigido/Proyecto/Proyecto_SHC170/excel-app/src/pages/GestionDocente.jsx) | Nuevo | Componente principal para el rol docente con carga selectiva de cursos, roster de alumnos y desmatriculación de alumnos. |
 
 ---
 
 > [!IMPORTANT]
-> Todos los cambios han sido validados localmente y se encuentran listos para revisión y despliegue final en producción.
+> Todos los archivos modificados fueron compilados exitosamente mediante Vite y las actualizaciones han sido confirmadas e implementadas en la rama principal (`main`) de tu repositorio de GitHub.
