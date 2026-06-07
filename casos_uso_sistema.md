@@ -4,7 +4,27 @@ Este documento contiene la especificación formal y refinada de los **Casos de U
 
 ---
 
-## 📂 Relación de Casos de Uso (CU)
+## 📋 Resumen del Modelo de Casos de Uso
+
+*   **CU-01:** Gestión de Autenticación
+*   **CU-02:** Gestión de Cuenta de Usuario
+*   **CU-03:** Gestión de Aulas Virtuales
+*   **CU-04:** Matriculación de Estudiantes
+*   **CU-05:** Administración de Estudiantes
+*   **CU-06:** Gestión de Archivos
+*   **CU-07:** Preparación de Datos
+*   **CU-08:** Análisis de Estadística Descriptiva
+*   **CU-09:** Análisis de Correlación
+*   **CU-10:** Análisis de Series Temporales
+*   **CU-11:** Visualización de Gráficos
+*   **CU-12:** Exportación de Resultados
+*   **CU-13:** Gestión de Historial
+*   **CU-14:** Gestión de Notificaciones
+*   **CU-15:** Administración del Sistema
+
+---
+
+## 📂 Relación Detallada de Casos de Uso (CU)
 
 ---
 
