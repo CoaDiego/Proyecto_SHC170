@@ -1,6 +1,29 @@
 # 📋 Product Backlog Completo (Memoria Técnica)
 
-Este documento detalla el **Product Backlog** estructurado para el desarrollo del **Software Estadístico**. Al ser un proyecto desarrollado por un **único ingeniero**, el backlog ha sido dimensionado para reflejar el esfuerzo unipersonal y el rendimiento real de los sprints, incluyendo los retrasos técnicos y aplazamientos históricos experimentados en la base de código.
+Este documento detalla el **Product Backlog** estructurado para el desarrollo del **Software Estadístico**. Al ser un proyecto desarrollado por un **único ingeniero**, el backlog ha sido dimensionado para reflejar el esfuerzo unipersonal y el rendimiento real de los Sprints, incluyendo los retrasos técnicos y aplazamientos históricos experimentados en la base de código.
+
+> [!NOTE]
+> **Planificación Agile Unipersonal:** El cronograma de desarrollo del Product Backlog fue diseñado sin dependencias cruzadas entre desarrolladores, optimizando el tiempo de entrega y absorbiendo la deuda técnica de forma directa en el Sprint 4 y 5.
+
+---
+
+## 📈 Cronograma de Sprints e Hitos de Desarrollo
+
+El siguiente diagrama ilustra el flujo de avance real del proyecto, destacando las desviaciones y la transferencia de historias de usuario debido a la deuda técnica:
+
+```mermaid
+graph TD
+    S1[<b>Sprint 1: Holgura (+10h)</b><br>CU-08 Descrip.<br>CU-06 Ingesta Excel<br>CU-07 Prep. Variables<br>CU-11 Gráficos Base] --> S2[<b>Sprint 2: A Tiempo con Deuda</b><br>CU-09 Regresión y Correl.<br>CU-06/07 Tabla Dinámica<br><i>*Deuda: Paso a paso pospuesto</i>]
+    S2 --> S3[<b>Sprint 3: Retraso Crítico</b><br>CU-10 Series Tiempo: T7<br>CU-11 Refinamiento UI<br>CU-12 Copiado a Excel<br><i>*Índices T8: Aplazado a S4</i>]
+    S3 --> S4[<b>Sprint 4: Absorción de Retraso</b><br>CU-10 Índices: T8<br>CU-01 Autenticación<br>CU-02 Cuenta Usuario<br>CU-12 Reportes PDF<br>CU-13 Historial JSON]
+    S4 --> S5[<b>Sprint 5: Estabilización</b><br>CU-03 Aulas Virtuales<br>CU-04 Matriculación Estud.<br>CU-05 Admin. Estudiantes<br>CU-14 Notificaciones<br>CU-15 Admin. Sistema]
+
+    style S1 fill:#d1e7dd,stroke:#0f5132,stroke-width:2px;
+    style S2 fill:#fff3cd,stroke:#664d03,stroke-width:2px;
+    style S3 fill:#f8d7da,stroke:#842029,stroke-width:2px;
+    style S4 fill:#cfe2ff,stroke:#084298,stroke-width:2px;
+    style S5 fill:#e2e3e5,stroke:#41464b,stroke-width:2px;
+```
 
 ---
 
@@ -53,7 +76,10 @@ Este documento detalla el **Product Backlog** estructurado para el desarrollo de
 
 ## ⚙️ Notas de Planificación y Gestión de Desviaciones
 
-Como Product Owner y Arquitecto, la asignación de sprints y el flujo del desarrollo unipersonal fue estructurado considerando los siguientes hitos de rendimiento técnico:
+Como Product Owner y Arquitecto, la asignación de Sprints y el flujo del desarrollo unipersonal fue estructurado considerando los siguientes hitos de rendimiento técnico:
+
+> [!WARNING]
+> **Gestión de Retrasos en el Sprint 3:** La complejidad algorítmica de los modelos de Series de Tiempo (Tema 7) y el copiado de tablas asíncrono causaron un retraso crítico, forzando la transferencia del desarrollo de Números Índices (Tema 8) al Sprint 4. Esto se estabilizó exitosamente gracias al rendimiento del Sprint 4.
 
 *   **Sprint 1 (Holgura y Productividad):** Se completó el motor analítico básico (estadística descriptiva, cargas simples e histogramas base) con un ahorro de 10 horas debido al uso de algoritmos nativos eficientes en Python y mapeadores de React directos.
 *   **Sprint 2 (Deuda Técnica Temprana):** Se cubrió a tiempo el motor bivariado (Correlación y Regresión), pero para lograrlo se contrajo deuda técnica posponiendo los cálculos paso a paso del desglose matemático (lo cual se catalogó como deuda de refactorización posterior).
