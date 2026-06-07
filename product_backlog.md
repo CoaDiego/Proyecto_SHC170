@@ -1,35 +1,24 @@
-# 📋 Product Backlog Completo (Memoria Técnica)
+# 📋 Especificación del Product Backlog del Sistema
 
-Este documento detalla el **Product Backlog** estructurado para el desarrollo del **Software Estadístico**. Al ser un proyecto desarrollado por un **único ingeniero**, el backlog ha sido dimensionado para reflejar el esfuerzo unipersonal y el rendimiento real de los Sprints, incluyendo los retrasos técnicos y aplazamientos históricos experimentados en la base de código.
-
-> [!NOTE]
-> **Planificación Agile Unipersonal:** El cronograma de desarrollo del Product Backlog fue diseñado sin dependencias cruzadas entre desarrolladores, optimizando el tiempo de entrega y absorbiendo la deuda técnica de forma directa en el Sprint 4 y 5.
+Este documento contiene la especificación formal y detallada del **Product Backlog** del **Software Estadístico**, estructurado bajo los principios de la metodología Scrum. Al ser un proyecto desarrollado de manera unipersonal por un **único ingeniero**, el backlog ha sido dimensionado para reflejar fielmente el esfuerzo individual y la velocidad de desarrollo real a lo largo de los sprints.
 
 ---
 
-## 📈 Cronograma de Sprints e Hitos de Desarrollo
+## 📋 Resumen del Plan de Sprints
 
-El siguiente diagrama ilustra el flujo de avance real del proyecto, destacando las desviaciones y la transferencia de historias de usuario debido a la deuda técnica:
+A continuación, se presenta la distribución cronológica y los objetivos generales definidos para cada periodo de desarrollo:
 
-```mermaid
-graph TD
-    S1[<b>Sprint 1: Holgura (+10h)</b><br>CU-08 Descrip.<br>CU-06 Ingesta Excel<br>CU-07 Prep. Variables<br>CU-11 Gráficos Base] --> S2[<b>Sprint 2: A Tiempo con Deuda</b><br>CU-09 Regresión y Correl.<br>CU-06/07 Tabla Dinámica<br><i>*Deuda: Paso a paso pospuesto</i>]
-    S2 --> S3[<b>Sprint 3: Retraso Crítico</b><br>CU-10 Series Tiempo: T7<br>CU-11 Refinamiento UI<br>CU-12 Copiado a Excel<br><i>*Índices T8: Aplazado a S4</i>]
-    S3 --> S4[<b>Sprint 4: Absorción de Retraso</b><br>CU-10 Índices: T8<br>CU-01 Autenticación<br>CU-02 Cuenta Usuario<br>CU-12 Reportes PDF<br>CU-13 Historial JSON]
-    S4 --> S5[<b>Sprint 5: Estabilización</b><br>CU-03 Aulas Virtuales<br>CU-04 Matriculación Estud.<br>CU-05 Admin. Estudiantes<br>CU-14 Notificaciones<br>CU-15 Admin. Sistema]
-
-    style S1 fill:#d1e7dd,stroke:#0f5132,stroke-width:2px;
-    style S2 fill:#fff3cd,stroke:#664d03,stroke-width:2px;
-    style S3 fill:#f8d7da,stroke:#842029,stroke-width:2px;
-    style S4 fill:#cfe2ff,stroke:#084298,stroke-width:2px;
-    style S5 fill:#e2e3e5,stroke:#41464b,stroke-width:2px;
-```
+*   **Sprint 1:** Implementación del motor analítico descriptivo básico, ingesta inicial de planillas de cálculo y generación de gráficos base.
+*   **Sprint 2:** Incorporación del módulo de regresión y correlación lineal bivariada, junto con el desarrollo de la tabla de visualización dinámica de datos.
+*   **Sprint 3:** Desarrollo de algoritmos de series temporales correspondientes al Tema 7 y optimización de herramientas de exportación tabular directa.
+*   **Sprint 4:** Finalización del Tema 8 de series temporales, desarrollo de la capa de seguridad, autenticación, gestión del perfil del usuario e historial de reportes.
+*   **Sprint 5:** Desarrollo del entorno colaborativo de aulas virtuales, matriculación de estudiantes, administración académica y el panel del administrador del sistema.
 
 ---
 
 ## 📊 Tabla del Product Backlog
 
-| ID PBI | CU Asociado | Título del PBI | Historia de Usuario | Sprint y Estado |
+| ID PBI | Caso de Uso Asociado | Título del Product Backlog Item | Historia de Usuario | Sprint y Estado |
 | :--- | :--- | :--- | :--- | :--- |
 | **PBI-01.1** | CU-01: Gestión de Autenticación | Registro de Usuarios | Como Estudiante o Docente quiero crear una cuenta para poder acceder a las herramientas del software. | Sprint 4 (Terminado) |
 | **PBI-01.2** | CU-01: Gestión de Autenticación | Inicio de Sesión Seguro (JWT) | Como Usuario quiero autenticarme con credenciales seguras para resguardar mis datos e historial. | Sprint 4 (Terminado) |
@@ -57,7 +46,7 @@ graph TD
 | **PBI-09.2** | CU-09: Análisis de Correlación | Recta de Regresión Lineal | Como Usuario o Administrador quiero obtener la ecuación de la recta para modelar el comportamiento bivariado. | Sprint 2 (Terminado) |
 | **PBI-09.3** | CU-09: Análisis de Correlación | Predicciones del Modelo | Como Usuario o Administrador quiero ingresar valores y estimar proyecciones basadas en la regresión. | Sprint 2 (Terminado) |
 | **PBI-10.1** | CU-10: Análisis de Series Temporales | Tendencias Históricas (Tema 7) | Como Usuario o Administrador quiero calcular tendencias a largo plazo para evaluar series cronológicas. | Sprint 3 (Terminado) |
-| **PBI-10.2** | CU-10: Análisis de Series Temporales | Índices de Precios y Cantidades (Tema 8) | Como Usuario o Administrador quiero estimar índices compuestos para analizar variaciones socioeconómicas. | Sprint 3 $\rightarrow$ Aplazado y terminado en Sprint 4 |
+| **PBI-10.2** | CU-10: Análisis de Series Temporales | Índices de Precios y Cantidades (Tema 8) | Como Usuario o Administrador quiero estimar índices compuestos para analizar variaciones socioeconómicas. | Sprint 3 -> Aplazado y terminado en Sprint 4 |
 | **PBI-11.1** | CU-11: Visualización de Gráficos | Histogramas Dinámicos | Como Usuario o Administrador quiero generar histogramas de frecuencia para evaluar visualmente la variable. | Sprint 1 (Terminado) |
 | **PBI-11.2** | CU-11: Visualización de Gráficos | Polígonos de Extremos Cerrados y Ojivas | Como Usuario o Administrador quiero ver polígonos anclados a cero y curvas ojivas acumulativas para reportar datos. | Sprint 3 (Terminado) |
 | **PBI-12.1** | CU-12: Exportación de Resultados | Copiado Rápido a Portapapeles | Como Usuario o Administrador quiero copiar tablas directamente en formato Excel para abrirlas en otro software. | Sprint 3 (Terminado) |
@@ -76,13 +65,10 @@ graph TD
 
 ## ⚙️ Notas de Planificación y Gestión de Desviaciones
 
-Como Product Owner y Arquitecto, la asignación de Sprints y el flujo del desarrollo unipersonal fue estructurado considerando los siguientes hitos de rendimiento técnico:
+El desarrollo de la aplicación por un único ingeniero requirió de una gestión activa de las desviaciones y la deuda técnica acumulada:
 
-> [!WARNING]
-> **Gestión de Retrasos en el Sprint 3:** La complejidad algorítmica de los modelos de Series de Tiempo (Tema 7) y el copiado de tablas asíncrono causaron un retraso crítico, forzando la transferencia del desarrollo de Números Índices (Tema 8) al Sprint 4. Esto se estabilizó exitosamente gracias al rendimiento del Sprint 4.
-
-*   **Sprint 1 (Holgura y Productividad):** Se completó el motor analítico básico (estadística descriptiva, cargas simples e histogramas base) con un ahorro de 10 horas debido al uso de algoritmos nativos eficientes en Python y mapeadores de React directos.
-*   **Sprint 2 (Deuda Técnica Temprana):** Se cubrió a tiempo el motor bivariado (Correlación y Regresión), pero para lograrlo se contrajo deuda técnica posponiendo los cálculos paso a paso del desglose matemático (lo cual se catalogó como deuda de refactorización posterior).
-*   **Sprint 3 (Retraso Crítico Algorítmico):** El desarrollo de Series de Tiempo (Tema 7) y el copiado directo al portapapeles consumieron más horas de las presupuestas debido al análisis de orden cronológico en arrays y problemas de copiado asíncrono en navegadores móviles. Esto provocó el **aplazamiento de Números Índices (Tema 8)**, el cual se catalogó como iniciado pero incompleto.
-*   **Sprint 4 (Recuperación y Absorción):** Se completó exitosamente el Tema 8 de Series Temporales (retrasado del Sprint 3) y se absorbieron los retrasos implementando la autenticación robusta, la configuración del perfil, la serialización JSON del historial y el conversor a PDF.
-*   **Sprint 5 (Estabilización y Despliegue):** Se completó el desarrollo del ecosistema colaborativo (Aulas Virtuales, Inscripciones y Administración de estudiantes), el sistema de notificaciones asíncronas y el control global de roles del administrador, dejando la aplicación 100% operativa y estabilizada.
+*   **Planificación de Holgura (Sprint 1):** La implementación inicial de la estadística descriptiva y la ingesta de archivos se completó antes del tiempo estimado. Esto generó una reserva de 10 horas que facilitó la absorción de tareas complejas en periodos subsiguientes.
+*   **Gestión de Deuda Técnica (Sprint 2):** Se cumplieron los plazos de entrega de la regresión y la correlación lineal, pero se aplazó temporalmente el desglose matemático detallado ("paso a paso") para evitar demoras críticas en la interfaz de usuario.
+*   **Desviación Algorítmica (Sprint 3):** Los requisitos matemáticos de las series temporales de la primera fase (Tema 7) y la sincronización de formatos de exportación requirieron un esfuerzo técnico mayor al estimado. Por esta razón, el desarrollo de números índices de la segunda fase (Tema 8) debió trasladarse formalmente al Sprint 4.
+*   **Absorción de Retrasos (Sprint 4):** Se integró exitosamente el Tema 8 postergado y se completaron los módulos de perfil de usuario, reportes en PDF y el historial de análisis en los tiempos previstos para este bloque de trabajo.
+*   **Consolidación y Cierre (Sprint 5):** Se culminó la implementación de las herramientas de colaboración (aulas virtuales, administración de alumnos) y la seguridad del sistema, garantizando la puesta en producción del software.
