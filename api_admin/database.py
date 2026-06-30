@@ -2,6 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno del archivo .env
+load_dotenv()
 
 # En producción, leemos la URL de la base de datos desde variables de entorno.
 # Si no está definida, usamos la conexión por defecto de XAMPP local.
