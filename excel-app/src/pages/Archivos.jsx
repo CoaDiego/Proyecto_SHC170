@@ -96,9 +96,9 @@ export default function Archivos({ usuario }) {
   // EFECTO PARA DETECTAR SI VENIMOS DE LA PÁGINA DE GRUPOS
   useEffect(() => {
     if (location.state && location.state.cursoIdSeleccionado) {
-      // Si recibimos un código, saltamos a la pestaña de cursos y lo seleccionamos
+      // Si recibimos un código, saltamos a la pestaña de cursos y lo seleccionamos (NUEVO: asegurar String)
       setTabActiva("cursos");
-      setCursoSeleccionado(location.state.cursoIdSeleccionado);
+      setCursoSeleccionado(String(location.state.cursoIdSeleccionado));
       // Limpiamos de forma segura el estado de react-router
       navigate("/archivos", { replace: true, state: {} });
     }
@@ -196,8 +196,8 @@ export default function Archivos({ usuario }) {
       return;
     }
 
-    const confirmar = window.confirm(`¿Eliminar "${filename}" de forma permanente?`);
-    if (!confirmar) return;
+    // ELIMINADO: const confirmar = window.confirm(`¿Eliminar "${filename}" de forma permanente?`);
+    // ELIMINADO: if (!confirmar) return;
 
     try {
       await api.eliminarArchivo(filename, usuario.nombre, tabActiva === "cursos" ? cursoSeleccionado : "");
@@ -427,7 +427,7 @@ export default function Archivos({ usuario }) {
                     -- Elige un curso para ver material --
                   </option>
                   {misCursos.map((c) => (
-                    <option key={c.id} value={c.id} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)" }}>
+                    <option key={c.id} value={String(c.id)} style={{ backgroundColor: "var(--bg-input)", color: "var(--text-main)" }}>
                       {c.nombre}
                     </option>
                   ))}

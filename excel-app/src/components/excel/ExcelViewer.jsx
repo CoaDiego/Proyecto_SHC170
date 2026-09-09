@@ -53,7 +53,7 @@ export default function ExcelViewer({ files, onSelect, onDelete, onDownload, rol
 
               {/* IZQUIERDA: Nombre del archivo */}
               <div className="container_name_file">
-                <p>
+                <p title={f.filename}> {/* MODIFICADO: Atributo title para mostrar tooltip al pasar el cursor */}
                   {f.filename}
                 </p>
               </div>
@@ -63,6 +63,7 @@ export default function ExcelViewer({ files, onSelect, onDelete, onDownload, rol
                 <button
                   onClick={() => onSelect(f.filename)}
                   className="container_button_1"
+                  title="Ver datos del archivo"
                   onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "var(--accent-color)"; e.currentTarget.style.color = "white"; }}
                   onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--accent-color)"; }}
                 >
@@ -73,6 +74,7 @@ export default function ExcelViewer({ files, onSelect, onDelete, onDownload, rol
                   <button
                     onClick={() => onDownload(f.filename)}
                     className="container_button_download"
+                    title="Descargar archivo"
                     onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "var(--primary-color)"; e.currentTarget.style.color = "white"; }}
                     onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--primary-color)"; }}
                   >
@@ -81,7 +83,7 @@ export default function ExcelViewer({ files, onSelect, onDelete, onDownload, rol
                       <polyline points="7 10 12 15 17 10"></polyline>
                       <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Descargar
+                    <span className="btn-label">Descargar</span> {/* MODIFICADO: Etiqueta responsive */}
                   </button>
                 )}
 
@@ -90,6 +92,7 @@ export default function ExcelViewer({ files, onSelect, onDelete, onDownload, rol
                   <button
                     onClick={() => handleDeleteArchivo(f.filename)}
                     className="container_button_2"
+                    title="Eliminar archivo"
                     onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#ef4444"; e.currentTarget.style.color = "white"; }}
                     onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#ef4444"; }}
                     style={{ display: "flex", alignItems: "center", gap: "4px" }}
@@ -100,7 +103,7 @@ export default function ExcelViewer({ files, onSelect, onDelete, onDownload, rol
                       <line x1="10" y1="11" x2="10" y2="17"></line>
                       <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
-                    Eliminar
+                    <span className="btn-label">Eliminar</span> {/* MODIFICADO: Etiqueta responsive */}
                   </button>
                 )}
                 

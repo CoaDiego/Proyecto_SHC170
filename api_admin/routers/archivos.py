@@ -85,7 +85,10 @@ async def upload_file(
         shutil.copyfileobj(file.file, buffer)
 
     if clase_id:
-        user = db.query(models.Usuario).filter(models.Usuario.nombre == autor).first()
+        # MODIFICADO: Buscar por nombre o por email para evitar fallos cuando autor envíe cualquiera de los dos
+        user = db.query(models.Usuario).filter(
+            (models.Usuario.nombre == autor) | (models.Usuario.email == autor)
+        ).first()
         user_id = user.id if user else 1
         
         existente = db.query(models.Archivo).filter(

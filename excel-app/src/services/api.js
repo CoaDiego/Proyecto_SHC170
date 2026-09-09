@@ -319,11 +319,17 @@ export const api = {
     }
   },
 
-guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
+  guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
     try {
+      // MODIFICADO: Inclusión de cabecera de autenticación JWT requerida por el backend
+      const token = localStorage.getItem("token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
       const res = await fetch(`${BASE_URL}/guardar_historial`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({
           autor: autor,
           calculo: calculo,
@@ -344,8 +350,13 @@ guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
   
   obtenerHistorial: async (autor) => {
     try {
+      // MODIFICADO: Cabecera JWT en la consulta del historial
+      const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(
         `${BASE_URL}/obtener_historial?autor=${encodeURIComponent(autor)}`,
+        { headers }
       );
       if (!res.ok)
         throw new Error("Error al obtener el historial del servidor");
@@ -358,9 +369,13 @@ guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
 
   eliminarHistorial: async (registro_id, autor) => {
     try {
+      // MODIFICADO: Cabecera JWT al eliminar historial
+      const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(
         `${BASE_URL}/eliminar_historial/${registro_id}?autor=${encodeURIComponent(autor)}`,
-        { method: "DELETE" },
+        { method: "DELETE", headers },
       );
       if (!res.ok) throw new Error("Error al eliminar el registro");
       return await res.json();

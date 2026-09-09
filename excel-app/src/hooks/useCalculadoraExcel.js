@@ -206,8 +206,41 @@ export function useCalculadoraExcel(filename, sheet, datosPrecargados = null, cu
       if (comparativa.length === 0) {
         setErrorNumerico(true); setResultado(null);
       } else {
-        setErrorNumerico(false);
-        comparativa.sort((a, b) => b.indicadores.r2 - a.indicadores.r2);
+        // MODIFICADO: Ordenación robusta aplicando el Principio de Parsimonia para evitar sobreajuste polinomial,
+        // penalizando equilibradamente modelos Cuadráticos (1.10) y Cúbicos (1.30) y soportando doble propiedad ('modelo', 'tipo' o 'tipoModelo').
+        comparativa.sort((a, b) => {
+          const s_a = a.indicadores?.error_estandar;
+          const s_b = b.indicadores?.error_estandar;
+          const r2_a = a.indicadores?.r2 || 0;
+          const r2_b = b.indicadores?.r2 || 0;
+
+          const esValidoA = typeof s_a === 'number' && !isNaN(s_a) && isFinite(s_a) && s_a > 0;
+          const esValidoB = typeof s_b === 'number' && !isNaN(s_b) && isFinite(s_b) && s_b > 0;
+
+          if (esValidoA && !esValidoB) return -1;
+          if (!esValidoA && esValidoB) return 1;
+
+          if (esValidoA && esValidoB) {
+            // Normalizamos el nombre del modelo (soporta 'modelo', 'tipo' o 'tipoModelo', sin tildes y en minúsculas)
+            const nombreA = (a.modelo || a.tipo || a.tipoModelo || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const nombreB = (b.modelo || b.tipo || b.tipoModelo || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            // Factores de parsimonia equilibrados
+            const factor_a = nombreA.includes('cubica') ? 1.30 : (nombreA.includes('cuadratica') ? 1.10 : 1.0);
+            const factor_b = nombreB.includes('cubica') ? 1.30 : (nombreB.includes('cuadratica') ? 1.10 : 1.0);
+            
+            const score_a = s_a * factor_a;
+            const score_b = s_b * factor_b;
+
+            const diffError = score_a - score_b;
+            
+            if (Math.abs(diffError) < 1e-9) return r2_b - r2_a;
+            
+            return diffError;
+          }
+          return r2_b - r2_a;
+        });
+
         setResultado({ tipo: "regresion", comparativa: comparativa });
       }
       return;

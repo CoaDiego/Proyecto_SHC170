@@ -103,7 +103,8 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
                 }
             });
 
-            const imgData = canvas.toDataURL('image/png');
+            // MODIFICADO: Uso de 'image/jpeg' con calidad 0.80 para reducir el peso en MB
+            const imgData = canvas.toDataURL('image/jpeg', 0.80);
             const imgProps = pdf.getImageProperties(imgData);
             const imgHeight = (imgProps.height * contentWidth) / imgProps.width;
 
@@ -113,8 +114,8 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
                 currentY = margin; // Reiniciamos en la nueva página
             }
 
-            // 3. Añadimos la sección
-            pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
+            // 3. Añadimos la sección con formato JPEG optimizado
+            pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, imgHeight, undefined, 'FAST');
             currentY += imgHeight + 0.2; // Espacio de 0.2in entre secciones
         }
 
