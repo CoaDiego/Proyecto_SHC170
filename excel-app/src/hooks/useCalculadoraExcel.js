@@ -10,6 +10,19 @@ import * as IndicesMath from "../utils/estadisticaIndices";
 import { api } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
 
+/**
+ * Hook personalizado para gestionar el estado y realizar las operaciones de la calculadora estadística.
+ * 
+ * Se encarga de cargar datos de una hoja de cálculo, realizar operaciones de limpieza,
+ * calcular frecuencias, promedios, intervalos de clase, regresiones, índices compuestos y
+ * series de tiempo mediante integraciones con algoritmos en javascript local.
+ * 
+ * @param {string} filename Nombre del archivo Excel en el servidor.
+ * @param {number|string} sheet Número o índice de la hoja de cálculo.
+ * @param {Array<Object>} [datosPrecargados=null] Conjunto inicial de datos alternativo.
+ * @param {string} [curso=""] Código o identificador del curso relacionado.
+ * @returns {Object} Estado de las columnas, métodos de actualización de celdas, resultados y variables de configuración.
+ */
 export function useCalculadoraExcel(filename, sheet, datosPrecargados = null, curso = "") {
   const { variables, usuario } = useModuleData();
   const [exceldataoriginal, setExcelDataOriginal] = useState([]);

@@ -57,7 +57,7 @@ export default function MarcoWidgetMAT251({ id, titulo, children, anchoCompleto 
   return (
     <>
       {/* ========================================================== */}
-      {/* 📦 VISTA NORMAL: LA CAJA ATRAPADA EN LA CUADRÍCULA           */}
+      {/* Vista normal: el contenedor se renderiza dentro del grid */}
       {/* ========================================================== */}
       <div ref={setNodeRef} id={id} style={style} className={`widget-grafico pdf-section ${isMinimized ? 'minimizada' : ''}`}>
         <div className="widget-header">
@@ -102,7 +102,7 @@ export default function MarcoWidgetMAT251({ id, titulo, children, anchoCompleto 
       </div>
 
       {/* ========================================================== */}
-      {/* 🚀 VISTA MAXIMIZADA: EL MODAL PANTALLA COMPLETA              */}
+      {/* Vista maximizada: el contenedor se renderiza en pantalla completa */}
       {/* ========================================================== */}
       {isMaximized && (
         <div

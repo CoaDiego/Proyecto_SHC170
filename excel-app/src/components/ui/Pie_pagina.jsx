@@ -48,7 +48,7 @@ export default function Pie_pagina() {
           © 2026 Universidad Mayor Real y Pontificia de San Francisco Xavier de Chuquisaca
         </div>
         
-        {/* ✨ AQUÍ ESTÁN TUS NUEVOS ICONOS PROFESIONALES ✨ */}
+        {/*  AQUÍ ESTÁN TUS NUEVOS ICONOS PROFESIONALES  */}
         <div className="pie-redes">
           
           {/* 1. Página Oficial (Icono de Globo) */}

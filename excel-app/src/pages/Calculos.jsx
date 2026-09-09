@@ -388,7 +388,7 @@ export default function Calculos() {
   } = useCalculadoraExcel(selectedFile, selectedSheet, datosHistorial, origenArchivos === "curso" ? cursoSeleccionado : "");
 
 
-  // 🚀 2. EL BLINDAJE: Memoria interna para detectar cambios REALES
+  // Almacenamiento en caché interna para la detección precisa de cambios en la configuración
   const estadosActuales = useRef({
     archivo: selectedFile,
     hoja: selectedSheet,
@@ -461,7 +461,7 @@ export default function Calculos() {
         if (conf.tipoIntervalo) setTipoIntervalo(conf.tipoIntervalo);
         if (conf.metodoK) setMetodoK(conf.metodoK);
         if (conf.kPersonalizado) setKPersonalizado(conf.kPersonalizado);
-        if (conf.percentilK) setPercentilK(conf.percentilK); // 👈 TEMA 3: PERCENTILES
+        if (conf.percentilK) setPercentilK(conf.percentilK); // Asignación del percentil k para el análisis unidimensional
         
         // Restaurar Parámetros Series de Tiempo
         if (conf.metodoSeries) setMetodoSeries(conf.metodoSeries);
@@ -469,7 +469,7 @@ export default function Calculos() {
         if (conf.pesos) setPesos(conf.pesos);
         if (conf.alfa) setAlfa(conf.alfa);
 
-        // 👈 TEMA 8: NÚMEROS ÍNDICES COMPLETO
+        // Procesamiento de la configuración para la estimación de números índices
         if (conf.subTemaIndices) setSubTemaIndices(conf.subTemaIndices);
         if (conf.colPrecioBase) setColPrecioBase(conf.colPrecioBase);
         if (conf.colCantidadBase) setColCantidadBase(conf.colCantidadBase);

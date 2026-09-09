@@ -7,7 +7,7 @@ import {
 export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, isMaximized = false, selectedColumn }) {
   if (!graficos || graficos.length === 0) return null;
 
-  // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
+  // Definición de variables tipográficas y dimensiones dinámicas
   const isMobile = window.innerWidth < 768;
   const fontSizeAxis = isMaximized ? (isMobile ? 12 : 14) : 11;
   const fontSizeRef = isMaximized ? (isMobile ? 18 : 24) : 18;
@@ -80,12 +80,12 @@ export default function GraficoTendenciaPosicion({ tipo, graficos, indicadores, 
             label={{ value: selectedColumn || 'Límite Superior', position: 'insideBottom', offset: -10, fill: 'var(--text-variable)', style: { textAnchor: 'middle', fontWeight: 'bold' } }}
           />
           <YAxis
-            domain={[0, 1]} // 👈 DOMINIO CORREGIDO: De 0 a 1
+            domain={[0, 1]} // Definición del dominio de escala entre cero y uno
             stroke="var(--text-variable)"
             tick={{ fontSize: fontSizeAxis, fill: 'var(--text-variable)' }}
             label={{ value: 'Frecuencia Acumulada', angle: -90, position: 'insideLeft', offset: -10, style: { textAnchor: 'middle', fontWeight: 'bold' } }}
           />
-          {/* 👈 TOOLTIP: Mostramos formato decimal limpio */}
+          {/* Formateo y visualización de valores en notación decimal */}
           <Tooltip formatter={(value) => [value.toFixed(4), 'Proporción']} />
           
           <Line type="linear" dataKey="P_i" stroke="#e67e22" strokeWidth={isMaximized ? 5 : 3} dot={{ r: isMaximized ? 8 : 5 }} activeDot={{ r: isMaximized ? 12 : 8 }} name="Ojiva" />

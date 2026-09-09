@@ -55,7 +55,7 @@ function textEditor({ row, column, onRowChange, onClose }) {
   );
 }
 
-// 🆕 1. Agregamos `curso = ""` en las props
+// Adición del parámetro 'curso' con valor predeterminado vacío a las propiedades
 export default function ExcelContent({ filename, autor, curso = "", onSheetChange, mostrarTabla = true, permitirEdicion = true }) {
   const { usuario } = useData();
   const nombreAutor = autor || (usuario ? usuario.nombre : null);
@@ -350,7 +350,7 @@ export default function ExcelContent({ filename, autor, curso = "", onSheetChang
               onRowsChange={handleRowsChange}
               rowKeyGetter={(row) => row._id}
               className="rdg-light personalizado"
-              style={{ flex: 1, minHeight: 0 }} /* 👈 3. EL TOQUE FINAL: La tabla recibe la instrucción exacta */
+              style={{ flex: 1, minHeight: 0 }} /* Configuración del contenedor de la tabla con altura mínima flexible */
             />
           </div>
 

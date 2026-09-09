@@ -1,31 +1,46 @@
-# Entorno virtual y caché
+# Entornos virtuales de Python
 venv/
+.venv/
+env/
+ENV/
 api_admin/venv/
+api_admin/.venv/
+api_admin/env/
+
+# Caché y archivos compilados de Python
 __pycache__/
-api_admin/__pycache__/
-api_admin/routers/__pycache__/
+**/__pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Configuración y secretos (Muy importante para producción)
+# Configuración, claves y secretos (Evitar subirlos a producción)
 .env
+.env*.local
 api_admin/.env
+api_admin/.env*.local
 excel-app/.env
+excel-app/.env*.local
 
-# Datos del usuario y cargas locales
+# Datos de usuario, subidas locales y temporales del backend
 excels/
 api_admin/excels/
 api_admin/historial/
 api_admin/visitas.txt
 
-# Node / Frontend build
+# Dependencias de Node y compilaciones del Frontend
 node_modules/
-excel-app/node_modules/
+**/node_modules/
+dist/
+dist-ssr/
 excel-app/dist/
 excel-app/dist-ssr/
 
-# Logs y temporales
+# Editor de código, logs y temporales del sistema
 *.log
 logs/
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+

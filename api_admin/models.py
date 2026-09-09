@@ -3,6 +3,12 @@ from sqlalchemy.sql import func
 from database import Base
 
 class Usuario(Base):
+    """
+    Representa a los usuarios del sistema.
+    
+    Almacena información de acceso, credenciales cifradas, roles y perfiles
+    de estudiantes, docentes y administradores del sistema de estadística.
+    """
     __tablename__ = "usuarios"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -19,6 +25,12 @@ class Usuario(Base):
 # --- TABLAS PARA GESTIÓN DE CLASES ---
 
 class Clase(Base):
+    """
+    Representa un aula o grupo virtual creado por un docente.
+    
+    Permite asociar a los alumnos mediante un código de acceso único y
+    establecer límites temporales para el registro de estudiantes.
+    """
     __tablename__ = "clases"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -31,6 +43,11 @@ class Clase(Base):
     fecha_creacion = Column(DateTime, default=func.now())
 
 class Inscripcion(Base):
+    """
+    Entidad de asociación para matricular estudiantes en una clase.
+    
+    Funciona como tabla puente entre la entidad Usuario y Clase.
+    """
     __tablename__ = "inscripciones"
     # Esta es la tabla puente. Une a un estudiante con una clase.
     
@@ -40,7 +57,7 @@ class Inscripcion(Base):
     fecha_creacion = Column(DateTime, default=func.now())
 
 
-# --- 🆕 NUEVAS TABLAS: ARCHIVOS HISTORIAL DE CÁLCULOS ---
+# --- REGISTRO DE ARCHIVOS E HISTORIAL DE ANÁLISIS ---
 
 class Archivo(Base):
     """
@@ -71,7 +88,7 @@ class HistorialCalculo(Base):
     nombre_trabajo = Column(String(150), nullable=False)  # Título que el usuario le da a su cálculo
     fecha_creacion = Column(DateTime, default=func.now())
     
-    # 📝 Guardamos configuraciones (columnas seleccionadas) y los resultados (medias, tablas, etc.) como texto estructurado (JSON string)
+    # Se almacenan las configuraciones (columnas seleccionadas) y los resultados (valores y tablas) como texto en formato JSON.
     parametros_json = Column(Text, nullable=False)
     resultados_json = Column(Text, nullable=False)
     

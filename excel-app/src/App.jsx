@@ -19,7 +19,7 @@ import GestionDocente from "./pages/GestionDocente";
 
 import SelectorRol from './components/ui/SelectorRol';
 
-// 👇 1. IMPORTAMOS EL DATAPROVIDER DE LA CARPETA EXCEL
+// Importación del DataProvider del módulo Excel
 import { DataProvider, CalculadoraDataProvider, MAT251DataProvider, ActiveModuleContext } from "./components/excel/DataContext"; 
 
 import LtiTester from "./pages/LtiTester";
@@ -29,8 +29,18 @@ import api from "./services/api";
 
 import "./App.css"; 
 
+/**
+ * Componente principal de la aplicación React.
+ * 
+ * Gestiona el enrutamiento de la aplicación, el estado de autenticación del usuario,
+ * la restauración de la sesión activa al recargar la página (persistencia local)
+ * y provee los contextos globales de datos del simulador estadístico.
+ * 
+ * @component
+ * @returns {React.ReactElement} Estructura de navegación y proveedores de la aplicación.
+ */
 function App() {
-  // 🆕 1. Cambiamos el estado para que guarde los datos del usuario (null = nadie logueado)
+  // Modificación del estado para almacenar la sesión del usuario (el valor nulo indica ausencia de autenticación)
   const [usuario, setUsuario] = useState(null);
   const [cargandoSesion, setCargandoSesion] = useState(true);
 
@@ -53,7 +63,7 @@ function App() {
     restaurarSesion();
   }, []);
 
-  // 🆕 2. Variable derivada: Si usuario no es nulo, significa que alguien inició sesión
+  // Variable derivada que determina si el usuario está autenticado si el objeto no es nulo
   const isAuth = usuario !== null;
 
   if (cargandoSesion) {
@@ -69,7 +79,7 @@ function App() {
   }
 
   return (
-    // 👇 2. ENVOLVEMOS TODA LA APLICACIÓN CON EL DATAPROVIDER Y LOS PROVIDERS DE MÓDULOS
+    // Integración de los proveedores globales de contexto en la raíz de la aplicación
     <DataProvider usuario={usuario} setUsuario={setUsuario}>
       <CalculadoraDataProvider usuario={usuario}>
         <MAT251DataProvider usuario={usuario}>
@@ -95,10 +105,10 @@ function App() {
                 <Routes>
                   {!isAuth ? (
                     <>
-                      {/* 🆕 3. Pasamos setUsuario a tus puertas de acceso en lugar de setIsAuth */}
+                      {/* Suministro del método de actualización del usuario a los componentes de acceso en lugar de la bandera de autenticación previa */}
                       <Route path="/login" element={<Login onLogin={setUsuario} />} />
                       
-                      {/* 🆕 NUEVO: Añadimos la ruta del Registro aquí */}
+                      {/* Definición de la ruta para el módulo de registro de usuarios */}
                       <Route path="/registro" element={<Registro />} />
 
                       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -124,7 +134,7 @@ function App() {
                       <Route path="/lti-tester" element={<Navigate to="/" />} />
                       <Route path="/login" element={<Navigate to="/" />} />
                       
-                      {/* 🆕 NUEVO: Si ya inició sesión y trata de registrarse, lo mandamos al inicio */}
+                      {/* Redirección automática al inicio si un usuario autenticado intenta acceder al registro */}
                       <Route path="/registro" element={<Navigate to="/" />} />
                       
                       <Route path="/MAT251" element={

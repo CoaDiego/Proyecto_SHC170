@@ -33,7 +33,7 @@ export default function PanelConfiguracion({
   usuario, setSelectedSheet,
   columns, variables,
   calculo, setCalculo,
-  // 🚀 NUEVOS PARÁMETROS PARA CONTROLAR EL TIPO DE DATOS
+  // Definición de parámetros para el control del tipo de datos
   tipoDatos, setTipoDatos, 
   subTemaIndices, setSubTemaIndices,
   colPrecioBase, setColPrecioBase, colCantidadBase, setColCantidadBase,
@@ -57,7 +57,7 @@ export default function PanelConfiguracion({
       rdgColumns.push({
         key: colKey,
         name,
-        renderEditCell: textEditor, // 👈 Ahora sabe cómo editar
+        renderEditCell: textEditor, // Callback que define la función de edición en celda
         editable: true,
         resizable: true,
         cellClass: cssClass,
@@ -158,7 +158,7 @@ export default function PanelConfiguracion({
             {columns.length > 0 || variables.length > 0 ? (
               <div style={{ background: "var(--bg-card)", padding: "15px", borderRadius: "8px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "15px" }}>
                 
-                {/* 🚀 BOTONERA PARA FORMATO DE DATOS */}
+                {/* Grupo de botones para la configuración del formato de datos */}
                 <div style={{ padding: "10px", backgroundColor: "rgba(0,0,0,0.05)", borderRadius: "6px", border: "1px solid var(--border-color)" }}>
                   <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>Formato de los Datos:</label>
                   <div style={{ display: "flex", gap: "10px" }}>

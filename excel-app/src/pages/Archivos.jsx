@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import ExcelViewer from "../components/excel/ExcelViewer";
 import ExcelUploader from "../components/excel/ExcelUploader";
 import ExcelContent from "../components/excel/ExcelContent";
-import BannerEntornoBeta from "../components/ui/BannerEntornoBeta";
 
 import { api, BASE_URL } from "../services/api";
 import { alerta } from "../utils/Notificaciones";
@@ -21,7 +20,7 @@ export default function Archivos({ usuario }) {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  // 🆕 ESTADO PARA LAS PESTAÑAS
+  // Estado para controlar la pestaña activa
   const [tabActiva, setTabActiva] = useState("personales"); // 'personales' o 'cursos'
 
   const location = useLocation();
@@ -150,7 +149,7 @@ export default function Archivos({ usuario }) {
     }
   };
 
-  // 🚀 CRÍTICO: Este useEffect debe observar estos 3 cambios
+  // Efecto para sincronizar los cambios en la clase actual, el usuario y la pestaña seleccionada
   useEffect(() => {
     loadFiles();
   }, [usuario, tabActiva, cursoSeleccionado]);
@@ -240,7 +239,6 @@ export default function Archivos({ usuario }) {
 
   return (
     <div className="page-container">
-      <BannerEntornoBeta />
       {/* Marca de agua de fondo */}
       <div 
         style={{
@@ -327,7 +325,7 @@ export default function Archivos({ usuario }) {
         {/* ========================================================= */}
         {panelAbierto && (
           <div className="archivos-col-izq">
-          {/* 🆕 SELECTOR DE PESTAÑAS */}
+          {/*  SELECTOR DE PESTAÑAS */}
           <div
             id="tour-pestanas"
             style={{

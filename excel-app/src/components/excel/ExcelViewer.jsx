@@ -85,7 +85,7 @@ export default function ExcelViewer({ files, onSelect, onDelete, onDownload, rol
                   </button>
                 )}
 
-                {/* 🚀 2. EL CAMBIO: Envolvemos el botón con esta validación de seguridad */}
+                {/* Validación de seguridad para la habilitación condicional del control */}
                 {(esPersonal || ['Docente', 'Administrador'].includes(rol)) && (
                   <button
                     onClick={() => handleDeleteArchivo(f.filename)}

@@ -23,7 +23,7 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      const BASE_URL = import.meta.env.VITE_API_URL;
+      const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
       console.log(`[ForgotPassword] Iniciando recuperación para: ${email}`);
       console.log(`[ForgotPassword] POST URL: ${BASE_URL}/api/auth/forgot-password`);
       

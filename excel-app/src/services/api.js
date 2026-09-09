@@ -4,7 +4,7 @@
 
 /*uvicorn main:app --reload*/
 
-export const BASE_URL = import.meta.env.VITE_API_URL;
+export const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 
 export const api = {
@@ -63,7 +63,12 @@ export const api = {
 
   // --- OBTENER PERFIL ACTUAL (JWT) ---
   obtenerPerfilActual: async () => {
-    const res = await fetch(`${BASE_URL}/me`);
+    const token = localStorage.getItem("token");
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const res = await fetch(`${BASE_URL}/me`, { headers });
     if (!res.ok) throw new Error("Sesión inválida o expirada");
     return await res.json();
   },
@@ -83,7 +88,7 @@ export const api = {
 
   // --- Función para obtener las hojas de un Excel ---
   obtenerHojas: async (filename, autor = "", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL
     let url = `${BASE_URL}/sheets/${encodeURIComponent(filename)}?`;
     if (autor) url += `autor=${encodeURIComponent(autor)}&`;
     if (curso) url += `curso=${encodeURIComponent(curso)}`;
@@ -95,7 +100,7 @@ export const api = {
 
   // --- Función unificada para leer los datos de la hoja ---
   obtenerDatosHoja: async (filename, hoja, autor = "", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL y eliminamos el duplicado viejo
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL y eliminamos el duplicado viejo
     let url = `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hoja}`;
     if (autor) url += `&autor=${encodeURIComponent(autor)}`;
     if (curso) url += `&curso=${encodeURIComponent(curso)}`;
@@ -107,7 +112,7 @@ export const api = {
 
   // --- OBTENER LISTA DE ARCHIVOS ---
   obtenerArchivos: async (autor, visibilidad = "personal", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL
     let url = `${BASE_URL}/files?autor=${encodeURIComponent(autor)}&visibilidad=${visibilidad}`;
     if (curso) url += `&curso=${encodeURIComponent(curso)}`;
 
@@ -118,7 +123,7 @@ export const api = {
 
   // --- VER EXCEL (Solo metadatos/estructura) ---
   verExcel: async (filename, hoja = 0, autor = "", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL
     let url = `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hoja}`;
     if (autor) url += `&autor=${encodeURIComponent(autor)}`;
     if (curso) url += `&curso=${encodeURIComponent(curso)}`;
@@ -323,7 +328,7 @@ guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
           autor: autor,
           calculo: calculo,
           archivo_origen: archivo,
-          snapshot: snapshotCompleto, // 👈 La clave coincide exactamente con el backend
+          snapshot: snapshotCompleto, // Parámetro que coincide con la clave requerida por el servidor
         }),
       });
       if (!res.ok) {

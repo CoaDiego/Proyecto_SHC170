@@ -1,5 +1,5 @@
 // src/utils/exportUtils.js
-import { alerta } from './Notificaciones'; // 🆕 Importamos tu sistema de alertas
+import { alerta } from './Notificaciones'; // Importación del sistema de notificaciones y alertas
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -45,7 +45,7 @@ export const copiarTablaAExcel = async (datos, nombreCalculo) => {
             }
         }
         
-        // 🆕 Usamos alerta.exito de tu proyecto
+        // Disparo de notificación de confirmación exitosa
         alerta.exito(
             "¡Tabla copiada!", 
             `Los datos de ${nombreCalculo.replace(/_/g, " ")} están listos para Ctrl+V en Excel.`
@@ -53,7 +53,7 @@ export const copiarTablaAExcel = async (datos, nombreCalculo) => {
         
     } catch (err) {
         console.error("Error al copiar:", err);
-        // 🆕 Usamos alerta.error de tu proyecto
+        // Disparo de notificación de error
         alerta.error(
             "Error al copiar", 
             "Tu navegador bloqueó el copiado automático."

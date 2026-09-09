@@ -45,7 +45,7 @@ export default function MarcoWidget({ id, titulo, children, anchoCompleto = fals
   return (
     <>
       {/* ========================================================== */}
-      {/* 📦 VISTA NORMAL: LA CAJA ATRAPADA EN LA CUADRÍCULA           */}
+      {/*  VISTA NORMAL: LA CAJA ATRAPADA EN LA CUADRÍCULA           */}
       {/* ========================================================== */}
       <div ref={setNodeRef} id={id} style={style} className={`widget-grafico pdf-section ${isMinimized ? 'minimizada' : ''}`}>
         <div className="widget-header">
@@ -99,7 +99,7 @@ export default function MarcoWidget({ id, titulo, children, anchoCompleto = fals
       </div>
 
       {/* ========================================================== */}
-      {/* 🚀 VISTA MAXIMIZADA: EL MODAL PANTALLA COMPLETA              */}
+      {/*  VISTA MAXIMIZADA: EL MODAL PANTALLA COMPLETA              */}
       {/* ========================================================== */}
       {isMaximized && (
         <div

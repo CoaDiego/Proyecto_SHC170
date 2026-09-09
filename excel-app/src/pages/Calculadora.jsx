@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom"; // 👈 1. IMPORTAMOS USELOCATION
+import { useLocation } from "react-router-dom"; // Importación del hook useLocation
 import Datos from "./Datos";
 import Calculos from "./Calculos";
 import TablaDinamica from "../components/excel/TablaDinamica";
 import { useCalculadoraExcel } from "../hooks/useCalculadoraExcel";
-import BannerEntornoBeta from "../components/ui/BannerEntornoBeta";
 
 import "../styles/pages/Calculadora.css";
 
 export default function Calculadora() {
-  const location = useLocation(); // 👈 2. CAPTURAMOS LOS DATOS DEL HISTORIAL
+  const location = useLocation(); // Captura del estado de navegación para el historial
   const paramsReabrir = location.state || {};
   
-  // 👈 3. EXTRAEMOS EL SNAPSHOT EXACTAMENTE COMO LO ENVIASTE DESDE HISTORIAL.JSX
+  // Extracción del estado o instantánea transferida desde el módulo del historial
   const { archivoReabrir, calculoReabrir, snapshot } = paramsReabrir;
 
   const [mostrarDatos, setMostrarDatos] = useState(false);
@@ -23,7 +22,7 @@ export default function Calculadora() {
   const [selectedSheet, setSelectedSheet] = useState(0);
   const [selectedCourse, setSelectedCourse] = useState("");
 
-  // 🚀 4. PASAMOS EL SNAPSHOT AL HOOK (¡LA MAGIA SUCEDE AQUÍ!)
+  // Traspaso del estado obtenido del historial al hook de cálculos
   const stats = useCalculadoraExcel(
     selectedFile,
     selectedSheet,
@@ -33,7 +32,6 @@ export default function Calculadora() {
 
   return (
     <div className="contenedor-principal-sistema">
-      <BannerEntornoBeta />
       <div className="ventana-contenido-principal">
         {/* Le pasamos paramsReabrir a Calculos para que sepa qué cálculo seleccionar */}
         <Calculos stats={stats} paramsReabrir={paramsReabrir} />
