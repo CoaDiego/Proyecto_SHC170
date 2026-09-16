@@ -14,7 +14,9 @@ from database import get_db
 import models
 
 router = APIRouter()
-EXCEL_FOLDER = "excels"
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+EXCEL_FOLDER = os.path.join(BASE_DIR, "excels")
 os.makedirs(EXCEL_FOLDER, exist_ok=True)
 
 def sanitizar_nombre_carpeta(nombre: str) -> str:

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Menu from "./components/ui/Menu";
 import Pie_pagina from "./components/ui/Pie_pagina"; 
 import { useState, useEffect } from "react";
