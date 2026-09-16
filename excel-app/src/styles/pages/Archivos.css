@@ -76,8 +76,8 @@
 }
 
 .archivos-col-izq {
-    flex: 0 0 35%;
-    min-width: 280px;
+    flex: 0 0 38%;
+    min-width: 320px;
     display: flex;
     flex-direction: column;
     gap: 15px;

@@ -5,7 +5,7 @@ import { api } from "../services/api";
 import { alerta } from '../utils/Notificaciones';
 import '../styles/components/ui/Login.css';
 
-// 🆕 Importamos tu componente original (Ajusta la ruta si tu carpeta se llama distinto)
+// Importación del componente de cambio de tema claro/oscuro
 import OscuroClaro from "../components/ui/oscuro_claro.jsx";
 
 export default function Login({ onLogin }) {
@@ -117,7 +117,7 @@ export default function Login({ onLogin }) {
   return (
     <div className="login-container" style={{ position: 'relative' }}>
       
-      {/* 🆕 Aquí insertamos tu botón oficial en la esquina superior izquierda */}
+      {/*  Aquí insertamos tu botón oficial en la esquina superior izquierda */}
       <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1000 }}>
         <OscuroClaro />
       </div>

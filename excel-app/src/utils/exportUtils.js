@@ -1,5 +1,5 @@
 // src/utils/exportUtils.js
-import { alerta } from './Notificaciones'; // 🆕 Importamos tu sistema de alertas
+import { alerta } from './Notificaciones'; // Importación del sistema de notificaciones y alertas
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -45,7 +45,7 @@ export const copiarTablaAExcel = async (datos, nombreCalculo) => {
             }
         }
         
-        // 🆕 Usamos alerta.exito de tu proyecto
+        // Disparo de notificación de confirmación exitosa
         alerta.exito(
             "¡Tabla copiada!", 
             `Los datos de ${nombreCalculo.replace(/_/g, " ")} están listos para Ctrl+V en Excel.`
@@ -53,7 +53,7 @@ export const copiarTablaAExcel = async (datos, nombreCalculo) => {
         
     } catch (err) {
         console.error("Error al copiar:", err);
-        // 🆕 Usamos alerta.error de tu proyecto
+        // Disparo de notificación de error
         alerta.error(
             "Error al copiar", 
             "Tu navegador bloqueó el copiado automático."
@@ -103,7 +103,8 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
                 }
             });
 
-            const imgData = canvas.toDataURL('image/png');
+            // MODIFICADO: Uso de 'image/jpeg' con calidad 0.80 para reducir el peso en MB
+            const imgData = canvas.toDataURL('image/jpeg', 0.80);
             const imgProps = pdf.getImageProperties(imgData);
             const imgHeight = (imgProps.height * contentWidth) / imgProps.width;
 
@@ -113,8 +114,8 @@ export const generarPDFReporte = async (elementId, nombreArchivo = "Reporte_Esta
                 currentY = margin; // Reiniciamos en la nueva página
             }
 
-            // 3. Añadimos la sección
-            pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
+            // 3. Añadimos la sección con formato JPEG optimizado
+            pdf.addImage(imgData, 'JPEG', margin, currentY, contentWidth, imgHeight, undefined, 'FAST');
             currentY += imgHeight + 0.2; // Espacio de 0.2in entre secciones
         }
 

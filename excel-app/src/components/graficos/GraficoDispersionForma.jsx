@@ -41,7 +41,7 @@ export default function GraficoDispersionForma({ tipo, resultado, isMaximized = 
 
   const [zoomActivo, setZoomActivo] = useState(false);
 
-  // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
+  // Definición de variables tipográficas y dimensiones dinámicas
   const isMobile = window.innerWidth < 768;
   const fontSmall = isMaximized && !isMobile ? 16 : 11;
   const fontMed = isMaximized && !isMobile ? 20 : 14;

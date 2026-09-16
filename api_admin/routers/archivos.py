@@ -14,7 +14,9 @@ from database import get_db
 import models
 
 router = APIRouter()
-EXCEL_FOLDER = "excels"
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+EXCEL_FOLDER = os.path.join(BASE_DIR, "excels")
 os.makedirs(EXCEL_FOLDER, exist_ok=True)
 
 def sanitizar_nombre_carpeta(nombre: str) -> str:
@@ -85,7 +87,10 @@ async def upload_file(
         shutil.copyfileobj(file.file, buffer)
 
     if clase_id:
-        user = db.query(models.Usuario).filter(models.Usuario.nombre == autor).first()
+        # MODIFICADO: Buscar por nombre o por email para evitar fallos cuando autor envíe cualquiera de los dos
+        user = db.query(models.Usuario).filter(
+            (models.Usuario.nombre == autor) | (models.Usuario.email == autor)
+        ).first()
         user_id = user.id if user else 1
         
         existente = db.query(models.Archivo).filter(

@@ -1,30 +1,64 @@
+"""
+Enrutador de Cálculos Estadísticos (FastAPI)
+
+Este módulo expone los puntos de entrada para procesar cálculos estadísticos
+unidimensionales, bivariados y multivariantes. Se conecta con las funciones
+matemáticas definidas en el núcleo del sistema (MAT151/MAT251).
+"""
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional, List
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-# Importamos tus módulos matemáticos existentes
+# Importación de módulos matemáticos del sistema
 from MAT151 import tema3, tema4, tema5, tema6
 
 router = APIRouter()
 
 class DataInput(BaseModel):
+    """
+    Modelo de entrada para cálculos estadísticos unidimensionales.
+    
+    Attributes:
+        datos (List[float]): Lista de datos numéricos a analizar.
+        tipo (str): Tipo de cálculo solicitado (ej. "media", "mediana").
+        tema (str): Tema matemático al que corresponde (ej. "tema3", "tema4").
+        pesos (Optional[List[float]]): Pesos asociados para cálculos de media ponderada.
+    """
     datos: List[float]
     tipo: str   
     tema: str
     pesos: Optional[List[float]] = None
 
 class DataBivariada(BaseModel):
+    """
+    Modelo de entrada para análisis bivariado de datos.
+    
+    Attributes:
+        x (List[float]): Colección de datos de la variable independiente.
+        y (List[float]): Colección de datos de la variable dependiente.
+        tipo (str): Tipo de cálculo solicitado (ej. "covarianza", "correlacion").
+    """
     x: List[float]
     y: List[float]
     tipo: str  
 
 class DataMultivariante(BaseModel):
+    """
+    Modelo de entrada para análisis de regresión multivariante.
+    
+    Attributes:
+        X (List[List[float]]): Matriz de variables independientes transpuesta.
+        y (List[float]): Vector de la variable dependiente.
+        tipo (str): Tipo de cálculo solicitado.
+    """
     X: List[List[float]]  
     y: List[float]        
     tipo: str             
 
+# Mapeo de funciones del tema 3 (Medidas de Tendencia Central)
 tema3_funciones = {
     "media": tema3.calcular_media,
     "media_geometrica": tema3.calcular_media_geometrica,
@@ -36,6 +70,7 @@ tema3_funciones = {
     "moda_agrupada": tema3.moda_agrupada
 }
 
+# Mapeo de funciones del tema 4 (Medidas de Dispersión)
 tema4_funciones = {
     "varianza": tema4.calcular_varianza,
     "desviacion": tema4.calcular_desviacion,
@@ -50,6 +85,15 @@ temas_dict = {
 
 @router.post("/calcular")
 async def calcular(data: DataInput):
+    """
+    Procesa cálculos unidimensionales basados en el tema y tipo solicitados.
+    
+    Args:
+        data (DataInput): Datos e identificadores del cálculo requerido.
+        
+    Returns:
+        dict: Resultado del cálculo estadístico o mensaje de error estructurado.
+    """
     datos = data.datos
     tema = data.tema.lower()
     tipo = data.tipo.lower()
@@ -79,6 +123,15 @@ async def calcular(data: DataInput):
 
 @router.post("/calcular_bivariada")
 async def calcular_bivariada(data: DataBivariada):
+    """
+    Procesa análisis bivariados sobre dos conjuntos de datos correspondientes a variables X e Y.
+    
+    Args:
+        data (DataBivariada): Listas de datos y el cálculo solicitado (ej. correlación).
+        
+    Returns:
+        dict: Coeficientes, ecuaciones de regresión lineal o cálculo solicitado.
+    """
     x, y, tipo = data.x, data.y, data.tipo.lower()
     try:
         if tipo == "covarianza":
@@ -100,11 +153,21 @@ async def calcular_bivariada(data: DataBivariada):
 
 @router.post("/calcular_multivariante")
 async def calcular_multivariante(data: DataMultivariante):
+    """
+    Realiza una estimación de regresión lineal múltiple con scikit-learn.
+    
+    Args:
+        data (DataMultivariante): Matriz de variables independientes X y vector objetivo y.
+        
+    Returns:
+        dict: Intercepto y coeficientes estimados del modelo lineal.
+    """
     X, y, tipo = data.X, data.y, data.tipo.lower()
     if tipo != "regresion_multivariante":
         return {"error": f"Tipo de cálculo '{tipo}' no soportado"}
 
     try:
+        # Transposición de la matriz de entrada para ajustarse al formato de scikit-learn (muestras, características)
         X_array = np.array(X).T  
         y_array = np.array(y)
 

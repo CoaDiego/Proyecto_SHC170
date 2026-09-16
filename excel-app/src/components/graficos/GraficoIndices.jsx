@@ -8,7 +8,7 @@ export default function GraficoIndices({ resultado, isMaximized = false, selecte
 
   const [zoomEjeY, setZoomEjeY] = useState(false);
 
-  // 🔠 LETRAS Y TAMAÑOS DINÁMICOS
+  // Definición de variables tipográficas y dimensiones dinámicas
   const isMobile = window.innerWidth < 768;
   const fontSmall = isMaximized && !isMobile ? 14 : 11;
   const fontAxis = isMaximized && !isMobile ? 16 : 12;

@@ -4,7 +4,7 @@
 
 /*uvicorn main:app --reload*/
 
-export const BASE_URL = import.meta.env.VITE_API_URL;
+export const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 
 export const api = {
@@ -63,7 +63,12 @@ export const api = {
 
   // --- OBTENER PERFIL ACTUAL (JWT) ---
   obtenerPerfilActual: async () => {
-    const res = await fetch(`${BASE_URL}/me`);
+    const token = localStorage.getItem("token");
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const res = await fetch(`${BASE_URL}/me`, { headers });
     if (!res.ok) throw new Error("Sesión inválida o expirada");
     return await res.json();
   },
@@ -83,7 +88,7 @@ export const api = {
 
   // --- Función para obtener las hojas de un Excel ---
   obtenerHojas: async (filename, autor = "", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL
     let url = `${BASE_URL}/sheets/${encodeURIComponent(filename)}?`;
     if (autor) url += `autor=${encodeURIComponent(autor)}&`;
     if (curso) url += `curso=${encodeURIComponent(curso)}`;
@@ -95,7 +100,7 @@ export const api = {
 
   // --- Función unificada para leer los datos de la hoja ---
   obtenerDatosHoja: async (filename, hoja, autor = "", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL y eliminamos el duplicado viejo
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL y eliminamos el duplicado viejo
     let url = `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hoja}`;
     if (autor) url += `&autor=${encodeURIComponent(autor)}`;
     if (curso) url += `&curso=${encodeURIComponent(curso)}`;
@@ -107,7 +112,7 @@ export const api = {
 
   // --- OBTENER LISTA DE ARCHIVOS ---
   obtenerArchivos: async (autor, visibilidad = "personal", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL
     let url = `${BASE_URL}/files?autor=${encodeURIComponent(autor)}&visibilidad=${visibilidad}`;
     if (curso) url += `&curso=${encodeURIComponent(curso)}`;
 
@@ -118,7 +123,7 @@ export const api = {
 
   // --- VER EXCEL (Solo metadatos/estructura) ---
   verExcel: async (filename, hoja = 0, autor = "", curso = "") => {
-    // 🛠️ CORREGIDO: Cambiamos API_URL por BASE_URL
+    // Corrección: reemplazo de la constante API_URL por la constante BASE_URL
     let url = `${BASE_URL}/view/${encodeURIComponent(filename)}?hoja=${hoja}`;
     if (autor) url += `&autor=${encodeURIComponent(autor)}`;
     if (curso) url += `&curso=${encodeURIComponent(curso)}`;
@@ -314,16 +319,22 @@ export const api = {
     }
   },
 
-guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
+  guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
     try {
+      // MODIFICADO: Inclusión de cabecera de autenticación JWT requerida por el backend
+      const token = localStorage.getItem("token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
       const res = await fetch(`${BASE_URL}/guardar_historial`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({
           autor: autor,
           calculo: calculo,
           archivo_origen: archivo,
-          snapshot: snapshotCompleto, // 👈 La clave coincide exactamente con el backend
+          snapshot: snapshotCompleto, // Parámetro que coincide con la clave requerida por el servidor
         }),
       });
       if (!res.ok) {
@@ -339,8 +350,13 @@ guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
   
   obtenerHistorial: async (autor) => {
     try {
+      // MODIFICADO: Cabecera JWT en la consulta del historial
+      const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(
         `${BASE_URL}/obtener_historial?autor=${encodeURIComponent(autor)}`,
+        { headers }
       );
       if (!res.ok)
         throw new Error("Error al obtener el historial del servidor");
@@ -353,9 +369,13 @@ guardarEnHistorial: async (autor, calculo, archivo, snapshotCompleto) => {
 
   eliminarHistorial: async (registro_id, autor) => {
     try {
+      // MODIFICADO: Cabecera JWT al eliminar historial
+      const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(
         `${BASE_URL}/eliminar_historial/${registro_id}?autor=${encodeURIComponent(autor)}`,
-        { method: "DELETE" },
+        { method: "DELETE", headers },
       );
       if (!res.ok) throw new Error("Error al eliminar el registro");
       return await res.json();

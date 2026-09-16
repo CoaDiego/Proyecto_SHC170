@@ -25,13 +25,13 @@ const StatLabel = ({ formulaKey, formulaLatex, align = "center" }) => {
 export default function TablasUnidimensionales({ 
   resultado, calculo, formatearCelda, filtroFractil, setFiltroFractil, modoImpresion = false 
 }) {
-  // 🚀 NUEVO ESTADO: Controla qué columnas ve el usuario
+  // Estado para controlar la visibilidad de las columnas en pantalla
   const [vistaDatos, setVistaDatos] = useState("individuales");
 
   if (!resultado) return null;
   if (resultado.tipo === "bivariada" || resultado.tipo === "bivariada_avanzada") return null;
 
-  // 🚀 COMPONENTE REUTILIZABLE: Los Radio Buttons
+  // Componente reutilizable para la selección por medio de botones de opción
   const SelectorVista = () => {
     // Si estamos imprimiendo en PDF, ocultamos los botones
     if (modoImpresion) return null;
@@ -88,7 +88,7 @@ export default function TablasUnidimensionales({
             Copiar Tabla
           </button>
         </div>
-        {/* 🚀 Colchón de 70px para evitar que el tooltip active el scroll */}
+        {/*  Colchón de 70px para evitar que el tooltip active el scroll */}
        <div className="container_tablas_academica" style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
           <table className="tabla-academica">
             <thead>
@@ -105,7 +105,7 @@ export default function TablasUnidimensionales({
                   <tr key={i}>
                     <td style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "bold" }}>
                       {nombreLimpio}
-                      {/* 🚀 Lógica corregida con paréntesis para que no se dupliquen */}
+                      {/*  Lógica corregida con paréntesis para que no se dupliquen */}
                       {row["Medida"].includes("(x̄)") && <StatLabel formulaKey="x̄" formulaLatex="\bar{x}" align="left" />}
                       {row["Medida"].includes("(Me)") && <StatLabel formulaKey="Me" align="left" />}
                       {row["Medida"].includes("(Mo)") && <StatLabel formulaKey="Mo" align="left" />}
@@ -208,7 +208,7 @@ export default function TablasUnidimensionales({
                 </button>
               ))}
             </div>
-            {/* 🚀 Colchón de 70px aplicado a Medidas de Posición */}
+            {/*  Colchón de 70px aplicado a Medidas de Posición */}
             <div style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
               <table className="tabla-academica">
                 <thead>
@@ -281,7 +281,7 @@ export default function TablasUnidimensionales({
             Copiar Tabla
           </button>
         </div>
-        {/* 🚀 Colchón de 70px aplicado a Medidas de Dispersión */}
+        {/*  Colchón de 70px aplicado a Medidas de Dispersión */}
         <div style={{ overflowX: "auto", overflowY: "hidden", marginBottom: "30px", paddingBottom: "70px" }}>
           <table className="tabla-academica">
             <thead>
@@ -329,7 +329,7 @@ export default function TablasUnidimensionales({
             Copiar Tabla
           </button>
         </div>
-        {/* 🚀 Colchón de 70px aplicado a Medidas de Forma */}
+        {/*  Colchón de 70px aplicado a Medidas de Forma */}
        <div style={{ overflowX: "auto", overflowY: "hidden", paddingBottom: "70px" }}>
           <table className="tabla-academica">
             <thead>

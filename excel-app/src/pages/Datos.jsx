@@ -182,7 +182,7 @@ const SimuladorMAT251 = () => {
             }
 
 
-            // 🌟 LA RED DE CAPTURA CORREGIDA 🌟
+            // Estructura de control para la validación y captura de datos del portapapeles
             const datosValidos = [];
             let contadorNumeros = 0;
             let contadorTextos = 0;
@@ -241,7 +241,7 @@ const SimuladorMAT251 = () => {
             actualizarVariable(id, {
                 rangoLabel: `${getExcelChar(cMin)}${rMin + 1}:${getExcelChar(cMax)}${rMax + 1}`,
                 coords: { rMin, rMax, cMin, cMax },
-                datos: datosValidos, // 👈 Ahora esto ya no estará vacío
+                datos: datosValidos, // Envío de la colección depurada de datos no vacíos
                 sheet: currentSheet,
                 tipo: tipoDetectado,
                 nombresColumnas: nombresColumnas
@@ -263,7 +263,7 @@ const SimuladorMAT251 = () => {
                     cMax: Math.max(inicio.c, fin.c)
                 };
 
-                // 🌟 LA MISMA RED DE CAPTURA QUE USAMOS EN EL BOTÓN 🌟
+                // Estructura reutilizada para la validación de la estructura de datos del portapapeles
                 const datosValidos = [];
                 let contadorNumeros = 0;
                 let contadorTextos = 0;

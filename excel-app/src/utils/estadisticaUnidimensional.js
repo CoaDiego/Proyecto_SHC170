@@ -1,14 +1,41 @@
 // src/utils/estadisticaUnidimensional.js
 
-// ==========================================
-// --- FUNCIONES BÁSICAS DE APOYO ---
-// ==========================================
+/**
+ * Utilidades matemáticas básicas de apoyo.
+ * @namespace
+ */
 export const basicMath = {
+  /**
+   * Obtiene la suma acumulada de un arreglo de números.
+   * @param {number[]} arr - Arreglo numérico.
+   * @returns {number} Suma total.
+   */
   sum: (arr) => arr.reduce((a, b) => a + b, 0),
+  
+  /**
+   * Ordena un arreglo de números de forma ascendente sin mutar el original.
+   * @param {number[]} arr - Arreglo numérico.
+   * @returns {number[]} Arreglo ordenado.
+   */
   sort: (arr) => [...arr].sort((a, b) => a - b),
+  
+  /**
+   * Obtiene la media aritmética simple de un arreglo de números.
+   * @param {number[]} arr - Arreglo numérico.
+   * @returns {number} Media aritmética.
+   */
   mean: (arr) => arr.reduce((a, b) => a + b, 0) / arr.length,
 };
 
+/**
+ * Calcula la mediana exacta de un conjunto de datos ordenados.
+ * 
+ * Si el conjunto tiene una longitud impar, retorna el elemento central.
+ * Si es par, retorna el promedio de los dos elementos centrales.
+ * 
+ * @param {number[]} datosOrdenados - Arreglo de números ordenados de forma ascendente.
+ * @returns {number} Mediana de la muestra.
+ */
 export const calcularMediana = (datosOrdenados) => {
   const mid = Math.floor(datosOrdenados.length / 2);
   return datosOrdenados.length % 2 !== 0
@@ -16,6 +43,15 @@ export const calcularMediana = (datosOrdenados) => {
     : (datosOrdenados[mid - 1] + datosOrdenados[mid]) / 2;
 };
 
+/**
+ * Calcula la moda o modas de un conjunto de datos.
+ * 
+ * Devuelve "Amodal" si todas las frecuencias son iguales a uno.
+ * En caso contrario, devuelve las modas separadas por comas.
+ * 
+ * @param {number[]} datos - Arreglo de datos.
+ * @returns {string} Moda estimada.
+ */
 export const calcularModa = (datos) => {
   const counts = {};
   datos.forEach((n) => (counts[n] = (counts[n] || 0) + 1));
@@ -25,6 +61,12 @@ export const calcularModa = (datos) => {
   return modas.join(", ");
 };
 
+/**
+ * Calcula los cuartiles Q1, Q2 y Q3 utilizando interpolación lineal.
+ * 
+ * @param {number[]} datosOrdenados - Arreglo de números ordenados de forma ascendente.
+ * @returns {Object} Objeto con las claves Q1, Q2 y Q3.
+ */
 export const calcularCuartiles = (datosOrdenados) => {
   const q = (p) => {
     const pos = (datosOrdenados.length - 1) * p;
@@ -42,6 +84,17 @@ export const calcularCuartiles = (datosOrdenados) => {
 // ==========================================
 // --- TEMA 2: FRECUENCIAS E INTERVALOS ---
 // ==========================================
+
+/**
+ * Construye la tabla de distribución de frecuencias para datos individuales no agrupados.
+ * 
+ * Calcula frecuencias absolutas (f_i), acumuladas ascendentes (F_i),
+ * acumuladas descendentes (F_i_inv), relativas (p_i), acumuladas relativas (P_i) y
+ * relativas acumuladas descendentes (P_i_inv).
+ * 
+ * @param {number[]} datos - Arreglo de datos originales.
+ * @returns {Object[]} Tabla de frecuencias estructurada.
+ */
 export const calcularFrecuencias = (datos) => {
   const N = datos.length;
   if (N === 0) return [];
@@ -79,6 +132,19 @@ export const calcularFrecuencias = (datos) => {
   return tabla;
 };
 
+/**
+ * Agrupa los datos continuos o cuantitativos en intervalos de clase.
+ * 
+ * Soporta configuraciones de número de intervalos (Sturges, raíz, logaritmo,
+ * personalizada) y el tipo de límite (abierto, cerrado, semiabierto).
+ * 
+ * @param {number[]} datos - Arreglo de datos numéricos.
+ * @param {Object} config - Configuración de intervalos.
+ * @param {string} config.metodoK - Regla para el número de intervalos (sturges, cuadratica, logaritmica, personalizada).
+ * @param {number|string} config.kPersonalizado - Cantidad de clases personalizada.
+ * @param {string} config.tipoIntervalo - Límite del intervalo (abierto, cerrado, semiabierto).
+ * @returns {Object[]} Tabla de frecuencias agrupadas.
+ */
 export const calcularDistribucionIntervalos = (datos, config) => {
   const { metodoK, kPersonalizado, tipoIntervalo } = config;
   if (datos.length === 0) return [];
@@ -169,8 +235,24 @@ export const calcularDistribucionIntervalos = (datos, config) => {
 // --- TEMA 3 Y 4: DESCRIPTIVA, TENDENCIA, FORMA ---
 // ==========================================
 
+/**
+ * Proporción del error absoluto relativo entre el valor exacto y el agrupado.
+ * 
+ * @param {number} exacto - Valor calculado con datos desagrupados.
+ * @param {number} agrupado - Valor calculado con datos agrupados por intervalos.
+ * @returns {number} Fracción del error absoluto.
+ */
 const calcErrorProp = (exacto, agrupado) => exacto === 0 ? 0 : Number(Math.abs((exacto - agrupado) / exacto).toFixed(4));
 
+/**
+ * Calcula todas las medidas descriptivas básicas en datos individuales de forma simultánea.
+ * 
+ * Retorna una colección estructurada con categorías de Tendencia Central, Promedios,
+ * Dispersión, Dispersión Relativa, Posición, Forma y Extremos.
+ * 
+ * @param {number[]} datos - Arreglo de datos cuantitativos.
+ * @returns {Object[]|null} Colección de estadígrafos evaluados o null si el arreglo está vacío.
+ */
 export const calcularDescriptivaTotal = (datos) => {
   const n = datos.length;
   if (n === 0) return null;
@@ -223,6 +305,16 @@ export const calcularDescriptivaTotal = (datos) => {
   ];
 };
 
+/**
+ * Calcula y compara las medidas de tendencia central para datos individuales vs. agrupados.
+ * 
+ * Estima la media, mediana, moda, media geométrica y media armónica bajo ambas modalidades,
+ * y reporta la tasa de error introducida por el agrupamiento.
+ * 
+ * @param {number[]} datos - Arreglo de datos cuantitativos.
+ * @param {Object} config - Configuración de intervalos de agrupación.
+ * @returns {Object[]} Lista comparativa de estadígrafos de tendencia central y datos de soporte para gráficos.
+ */
 export const calcularTendenciaCentral = (datos, config) => {
   const { metodoK, kPersonalizado, tipoIntervalo } = config;
   const n = datos.length;
@@ -368,6 +460,16 @@ export const calcularTendenciaCentral = (datos, config) => {
   ];
 };
 
+/**
+ * Calcula y compara las medidas de dispersión (variabilidad) y forma para datos agrupados e individuales.
+ * 
+ * Estima desviación media, desviación mediana, rango intercuartílico, varianza, desviación estándar,
+ * coeficiente de variación, asimetría de Fisher y curtosis. También calcula inliers y outliers para boxplots.
+ * 
+ * @param {number[]} datos - Arreglo de datos cuantitativos.
+ * @param {Object} config - Configuración de intervalos de clase.
+ * @returns {Object} Tablas comparativas de dispersión, forma y datos estadísticos de soporte para histogramas y boxplots.
+ */
 export const calcularVariabilidadYForma = (datos, config) => {
   const n = datos.length;
   if (n < 4) return { tipo: "variabilidad_y_forma", dispersion: [], forma: [] };
@@ -604,6 +706,17 @@ export const calcularVariabilidadYForma = (datos, config) => {
   };
 };
 
+/**
+ * Calcula los cuartiles, deciles y un percentil opcional bajo las modalidades individual y agrupada.
+ * 
+ * Evalúa los valores exactos mediante interpolación lineal de rangos e interpolación agrupada
+ * para luego cuantificar la desviación de error.
+ * 
+ * @param {number[]} datos - Arreglo de datos cuantitativos.
+ * @param {number|string} kPerc - Valor del percentil a calcular (1-99).
+ * @param {Object} config - Parámetros de configuración del agrupamiento de clase.
+ * @returns {Object[]} Lista estructurada con las estimaciones y errores comparativos.
+ */
 export const calcularFractiles = (datos, kPerc, config) => {
   const { metodoK, kPersonalizado, tipoIntervalo } = config;
   const n = datos.length;

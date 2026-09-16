@@ -155,6 +155,8 @@ export default function TablaRegresion({
                 const datosComparativa = resultado.comparativa.map((m, idx) => ({
                   "Modelo": m.tipoModelo.charAt(0).toUpperCase() + m.tipoModelo.slice(1) + (idx === 0 ? " ⭐" : ""),
                   "Ecuación de Regresión": m.ecuacion,
+                  "Coeficiente r / R": ["cuadratica", "cubica"].includes(m.tipoModelo) ? `R = ${m.indicadores.r.toFixed(4)}` : m.indicadores.r.toFixed(4),
+                  "Forma Correlacional": m.formaCorrelacionalTexto || "",
                   "Coeficiente de Determinación (R²)": `${(m.indicadores.r2 * 100).toFixed(2)}%`,
                   "Error Estándar de Estimación": m.indicadores.error_estandar.toFixed(4)
                 }));
@@ -174,6 +176,12 @@ export default function TablaRegresion({
                 <th>Modelo</th>
                 <th>Ecuación de Regresión</th>
                 <th>
+                  <StatLabel formulaKey="r" formulaLatex="r" />
+                  <div style={{ fontSize: "0.8em", color: modoImpresion ? "#555555" : "var(--text-muted)", fontWeight: "normal" }}>
+                    Forma Correlacional
+                  </div>
+                </th>
+                <th>
                   <StatLabel formulaKey="R²" formulaLatex="R^2" />
                 </th>
                 <th>
@@ -192,6 +200,13 @@ export default function TablaRegresion({
                   </td>
                   <td style={{ fontSize: "1.05em" }}>
                     {m.ecuacionLatex ? <Latex formula={m.ecuacionLatex} /> : m.ecuacion}
+                  </td>
+                  <td style={{ fontSize: "0.85em", verticalAlign: "middle", padding: "4px 6px" }}>
+                    {m.formaCorrelacionalLatex ? (
+                      <Latex formula={m.formaCorrelacionalLatex} />
+                    ) : (
+                      m.indicadores.r.toFixed(4)
+                    )}
                   </td>
                   <td style={{ fontWeight: "bold" }}>{(m.indicadores.r2 * 100).toFixed(2)}%</td>
                   <td>{m.indicadores.error_estandar.toFixed(4)}</td>

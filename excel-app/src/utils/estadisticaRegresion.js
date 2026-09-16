@@ -222,8 +222,41 @@ export const calcularRegresionSimple = (arrX, arrY, tipo = "lineal") => {
   const r2 = sst !== 0 ? 1 - (sse / sst) : 0;
   const errorEstandar = n > gradosLibertad ? Math.sqrt(sse / (n - gradosLibertad)) : 0;
   
-  // Para correlación en polinomios complejos, tomamos la raíz de R^2 positiva
-  const r = (tipo === "cuadratica" || tipo === "cubica") ? Math.sqrt(Math.max(0, r2)) : (b >= 0 ? 1 : -1) * Math.sqrt(Math.max(0, r2));
+  // Cálculo del coeficiente de correlación (r)
+  let signoR = 1;
+  if (tipo === "reciproco") {
+    signoR = b >= 0 ? -1 : 1; // En modelo recíproco Y = a + b/X, dY/dX = -b/X^2 (signo invertido respecto a X)
+  } else if (tipo === "cuadratica" || tipo === "cubica") {
+    signoR = 1; // En polinomios no monótonos se utiliza la Correlación Múltiple (siempre R >= 0)
+  } else {
+    signoR = b >= 0 ? 1 : -1; // En lineales/transformadas la dirección sigue el signo de la pendiente b
+  }
+  const r = signoR * Math.sqrt(Math.max(0, r2));
+
+  // Generación dinámica de la Forma Correlacional
+  const valRFormatted = r.toFixed(4);
+  let formaCorrelacionalLatex = "";
+  let formaCorrelacionalTexto = "";
+
+  if (tipo === "lineal") {
+    formaCorrelacionalLatex = `Z_Y = ${valRFormatted} Z_X`;
+    formaCorrelacionalTexto = `ZY = ${valRFormatted} ZX`;
+  } else if (tipo === "logaritmica") {
+    formaCorrelacionalLatex = `Z_Y = ${valRFormatted} Z_{\\ln(X)}`;
+    formaCorrelacionalTexto = `ZY = ${valRFormatted} Zln(X)`;
+  } else if (tipo === "exponencial") {
+    formaCorrelacionalLatex = `Z_{\\ln(Y)} = ${valRFormatted} Z_X`;
+    formaCorrelacionalTexto = `Zln(Y) = ${valRFormatted} ZX`;
+  } else if (tipo === "potencial") {
+    formaCorrelacionalLatex = `Z_{\\ln(Y)} = ${valRFormatted} Z_{\\ln(X)}`;
+    formaCorrelacionalTexto = `Zln(Y) = ${valRFormatted} Zln(X)`;
+  } else if (tipo === "reciproco") {
+    formaCorrelacionalLatex = `Z_Y = ${valRFormatted} Z_{\\frac{1}{X}}`;
+    formaCorrelacionalTexto = `ZY = ${valRFormatted} Z(1/X)`;
+  } else if (tipo === "cuadratica" || tipo === "cubica") {
+    formaCorrelacionalLatex = `R = ${valRFormatted} \\text{ (Múltiple)}`;
+    formaCorrelacionalTexto = `R = ${valRFormatted} (Múltiple)`;
+  }
 
   // Ordenar para el dibujo del gráfico
   const datosOrdenados = [...datosValidos].sort((p1, p2) => p1.xOriginal - p2.xOriginal);
@@ -231,6 +264,8 @@ export const calcularRegresionSimple = (arrX, arrY, tipo = "lineal") => {
 
   return {
     tipoModelo: tipo, n_validos: n, ecuacion: cadenaEcuacion, ecuacionLatex: ecuacionLatex,
+    formaCorrelacionalLatex: formaCorrelacionalLatex,
+    formaCorrelacionalTexto: formaCorrelacionalTexto,
     indicadores: { r2: r2, r: r, error_estandar: errorEstandar },
     datosGrafico: datosGrafico, funcionPredictora: predecirY,
     // 🛡️ EXPORTAMOS LAS TABLAS COMPLETAS PARA LA VISTA

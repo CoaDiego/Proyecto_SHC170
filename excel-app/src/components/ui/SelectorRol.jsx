@@ -7,7 +7,7 @@ export default function SelectorRol() {
   // Si no hay usuario, no mostramos el simulador
   if (!usuario) return null;
 
-  // 🛡️ VALIDACIÓN DE SEGURIDAD 
+  // Validación y control de permisos de acceso 
   // Verificamos si es Administrador o si ya se puso un disfraz pero su rol real (rolOriginal) es Administrador
   const esAdministrador = usuario.rol === 'Administrador' || usuario.rolOriginal === 'Administrador';
 
@@ -19,7 +19,7 @@ export default function SelectorRol() {
     const usuarioActualizado = { 
       ...usuario, 
       rol: nuevoRol,
-      // 🆕 Guardamos tu rol verdadero en secreto para que el botón no desaparezca
+      // Persistencia local del rol de usuario original para la continuidad de la visualización
       rolOriginal: usuario.rolOriginal || usuario.rol 
     };
     
@@ -38,7 +38,7 @@ export default function SelectorRol() {
     <div 
       style={{ 
         position: 'fixed', 
-        bottom: '20px', 
+        bottom: '80px', 
         left: '20px',
         zIndex: 999999, 
         background: 'var(--bg-card)', // Ajustado para modo oscuro

@@ -766,7 +766,7 @@ export default function PanelConfiguracion({
                           Percentil (1 - 99):
                         </label>
                         
-                        {/* 🚀 Controles personalizados e indestructibles */}
+                        {/* Controles de edición personalizados */}
                         <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--border-color)", borderRadius: "2px", overflow: "hidden", backgroundColor: "var(--bg-card)" }}>
                           <button 
                             type="button"

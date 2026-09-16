@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { alerta } from '../utils/Notificaciones';
+// NUEVO: Importación de driver.js para el tour guiado
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 export default function GestionDocente({ usuario }) {
   const [clases, setClases] = useState([]);
@@ -8,6 +11,57 @@ export default function GestionDocente({ usuario }) {
   const [estudiantes, setEstudiantes] = useState([]);
   const [cargandoClases, setCargandoClases] = useState(true);
   const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
+
+  // NUEVO: Función para iniciar el tour guiado interactivo
+  const iniciarTour = () => {
+    const driverObj = driver({
+      showProgress: true,
+      nextBtnText: 'Siguiente',
+      prevBtnText: 'Anterior',
+      doneBtnText: 'Finalizar',
+      progressText: '{{current}} de {{total}}',
+      steps: [
+        {
+          element: '#tour-titulo-gestion',
+          popover: {
+            title: 'Gestión de Alumnos',
+            description: '¡Bienvenido! En este panel puedes administrar los estudiantes matriculados en tus asignaturas.',
+            side: "bottom",
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-selector-curso',
+          popover: {
+            title: 'Seleccionar Curso',
+            description: 'Elige la asignatura o clase que deseas administrar para cargar la lista de alumnos.',
+            side: "bottom",
+            align: 'start'
+          }
+        },
+        {
+          element: '#tour-tabla-estudiantes',
+          popover: {
+            title: 'Lista de Estudiantes',
+            description: 'Aquí verás el nombre completo, correo electrónico y fecha de matriculación de cada estudiante.',
+            side: "top",
+            align: 'start'
+          }
+        },
+        {
+          element: '.tour-btn-eliminar-estudiante',
+          popover: {
+            title: 'Desmatricular Alumno',
+            description: 'Haz clic aquí si necesitas remover a un alumno del curso seleccionado de forma permanente.',
+            side: "left",
+            align: 'center'
+          }
+        }
+      ]
+    });
+
+    driverObj.drive();
+  };
 
   useEffect(() => {
     if (usuario?.email) {
@@ -73,7 +127,7 @@ export default function GestionDocente({ usuario }) {
       
       {/* CABECERA */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
-        <div>
+        <div id="tour-titulo-gestion">
           <h2 style={{ fontSize: '2rem', margin: '0 0 5px 0', color: 'var(--text-main)' }}>
             Gestión de Alumnos
           </h2>
@@ -82,47 +136,62 @@ export default function GestionDocente({ usuario }) {
           </p>
         </div>
 
-        {/* Selector de Curso */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label style={{ color: 'var(--text-main)', fontWeight: 'bold', fontSize: '0.9rem' }}>
-            Curso:
-          </label>
-          {cargandoClases ? (
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Cargando cursos...</span>
-          ) : clases.length === 0 ? (
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No tienes cursos asignados</span>
-          ) : (
-            <select
-              value={claseSeleccionada}
-              onChange={handleSeleccionarClase}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--bg-input)',
-                color: 'var(--text-main)',
-                outline: 'none',
-                fontWeight: 'bold',
-                fontSize: '0.9rem',
-                cursor: 'pointer'
-              }}
-            >
-              {clases.map((c) => (
-                <option 
-                  key={c.id} 
-                  value={c.id} 
-                  style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-main)' }}
-                >
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          )}
+        {/* NUEVO: Botón de Guía Rápida y Selector de Curso */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+          <button
+            onClick={iniciarTour}
+            className="guia-rapida-flotante"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span className="guia-rapida-flotante-texto">Guía Rápida</span>
+          </button>
+
+          <div id="tour-selector-curso" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <label style={{ color: 'var(--text-main)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+              Curso:
+            </label>
+            {cargandoClases ? (
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Cargando cursos...</span>
+            ) : clases.length === 0 ? (
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No tienes cursos asignados</span>
+            ) : (
+              <select
+                value={claseSeleccionada}
+                onChange={handleSeleccionarClase}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-input)',
+                  color: 'var(--text-main)',
+                  outline: 'none',
+                  fontWeight: 'bold',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer'
+                }}
+              >
+                {clases.map((c) => (
+                  <option 
+                    key={c.id} 
+                    value={c.id} 
+                    style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-main)' }}
+                  >
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
       </div>
 
       {/* CONTENIDO PRINCIPAL */}
       <div 
+        id="tour-tabla-estudiantes"
         className="grafico-card" 
         style={{ 
           borderRadius: '12px', 
@@ -179,6 +248,7 @@ export default function GestionDocente({ usuario }) {
                     <td data-label="Acciones" style={{ padding: '15px', textAlign: 'center' }}>
                       <button
                         onClick={() => handleEliminarEstudiante(est.id, est.nombre)}
+                        className="tour-btn-eliminar-estudiante"
                         style={{
                           padding: '6px 12px',
                           borderRadius: '6px',

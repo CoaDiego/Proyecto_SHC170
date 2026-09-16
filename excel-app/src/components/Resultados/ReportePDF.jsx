@@ -24,7 +24,7 @@ export default function ReportePDF({
   return (
     <div style={{ position: "fixed", left: "200vw", top: "200vh", opacity: 0, pointerEvents: "none" }}>
       
-      {/* 🚀 EL BLINDAJE CONTRA EL MODO OSCURO: Estilos incrustados solo para este PDF */}
+      {/*  EL BLINDAJE CONTRA EL MODO OSCURO: Estilos incrustados solo para este PDF */}
       <style>{`
         #reporte-formal-pdf {
           --bg-card: #ffffff !important;
